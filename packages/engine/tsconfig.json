@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // No "DOM" lib on purpose: the engine must run in Node with no browser APIs.
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["src", "test"]
+}

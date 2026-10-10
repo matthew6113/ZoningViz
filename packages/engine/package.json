@@ -1,0 +1,13 @@
+{
+  "name": "@zoningviz/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TypeScript zoning engine: resolve rules, build solids, measure. No browser dependencies.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

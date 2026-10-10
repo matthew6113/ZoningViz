@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# Dev-only API response cache (Phase 1)
+.cache/
+
+# Generated parcel tiles (Phase 5) — build with scripts/build-tiles.ts
+*.pmtiles
+
+.DS_Store
+.env
+.env.*
