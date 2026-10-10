@@ -2,6 +2,9 @@ import type { Step } from "@zoningviz/engine";
 import { useEffect, useRef } from "react";
 import { num } from "./format";
 
+/** Matches the phone breakpoint in styles.css. */
+const STACKED_LAYOUT_MAX_PX = 860;
+
 const STATUS_LABEL: Record<Step["status"], string> = {
   cut: "Cuts",
   already_satisfied: "Already satisfied",
@@ -21,7 +24,11 @@ export interface RuleCardsProps {
 export function RuleCards({ steps, revealed, current, onSetback }: RuleCardsProps) {
   const currentRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    // Only where the card column scrolls on its own (desktop). On phones it
+    // would scroll the whole page away from the canvas and the controls.
+    if (window.matchMedia(`(min-width: ${STACKED_LAYOUT_MAX_PX + 1}px)`).matches) {
+      currentRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
   }, [current]);
 
   return (

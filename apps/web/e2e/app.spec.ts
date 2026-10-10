@@ -113,6 +113,7 @@ test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) 
   await next(page).click();
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toContainText("4 stories");
+  await expect(page.getByTestId("summary")).toBeInViewport();
   await page.screenshot({ path: `${SHOTS}/hampshire-result.png` });
 });
 

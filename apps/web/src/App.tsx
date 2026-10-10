@@ -1,6 +1,6 @@
 import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions } from "@zoningviz/engine";
 import { availableDistricts } from "@zoningviz/jurisdictions/sf";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useEngine, useEnvelope, useLot } from "./data/hooks";
 import type { LoadedLot } from "./data/loadLot";
 import { Scene } from "./scene/Scene";
@@ -111,6 +111,7 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
   return (
     <Layout
       back={back}
+      scrollToTop={view.kind === "finale"}
       scene={
         <Scene
           outline={result.lot.outline}
@@ -165,7 +166,24 @@ function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions 
   return options;
 }
 
-function Layout({ back, scene, controls, side }: { back: React.ReactNode; scene: React.ReactNode; controls?: React.ReactNode; side: React.ReactNode }) {
+function Layout({
+  back,
+  scene,
+  controls,
+  side,
+  scrollToTop = false,
+}: {
+  back: React.ReactNode;
+  scene: React.ReactNode;
+  controls?: React.ReactNode;
+  side: React.ReactNode;
+  /** Bring the top of the side panel (the result summary) into view. */
+  scrollToTop?: boolean;
+}) {
+  const sideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (scrollToTop) sideRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [scrollToTop]);
   return (
     <main className="lot-view">
       <div className="stage">
@@ -173,7 +191,9 @@ function Layout({ back, scene, controls, side }: { back: React.ReactNode; scene:
         <div className="scene-wrap">{scene}</div>
         {controls}
       </div>
-      <aside className="side">{side}</aside>
+      <aside className="side" ref={sideRef}>
+        {side}
+      </aside>
     </main>
   );
 }

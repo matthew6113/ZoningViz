@@ -10,6 +10,7 @@ What the SF adapter relies on, checked against `https://data.sf.gov`, and where 
 | Height and Bulk Districts | `h9wh-cg3m` | `height` (label), `gen_hght` (number), `the_geom` (MultiPolygon) | **The geometry column is `the_geom`, not `shape`.** There are 269 distinct labels. Some polygons are huge (one is 20k vertices, about 800 KB). |
 | Zoning Districts | `3i4a-hu95` | `zoning`, `districtna` (also `zoning_sim`, `gen`, `url`, `codesectio`, `the_geom`) | Used only when a parcel's `zoning_code` is blank. |
 | Assessor Secured Property Tax Rolls | `wv5m-vpq2` | `lot_area` | Used only for one-off cross-checks; the app doesn't read it. |
+| Building Footprints | `ynuv-fyni` | `sf16_bldgid`, `mblr` ("SF" + block/lot), `hgt_median_m` (median LiDAR height above ground, meters, 2010 survey), `shape`, `data_as_of` | Context only. `getBuildings()` fetches the lot's bbox + 150 ft and drops buildings standing on the lot itself. The app keeps only the lot's own block, so buildings across the street don't block the street-side camera. The dataset is dated 2023-09-11, but the heights date from 2010. |
 
 Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` (Unix seconds). Parcel rows also carry `data_as_of`.
 

@@ -1,5 +1,5 @@
 import { Edges, Html, Line, OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { projectMultiPolygon, type Dimension, type Floor, type FrontCandidate, type Solid, type XY } from "@zoningviz/engine";
 import type { SfBuilding } from "@zoningviz/jurisdictions/sf";
 import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
@@ -44,8 +44,7 @@ export function Scene(props: SceneProps) {
       <color attach="background" args={["#f7f6f2"]} />
       <hemisphereLight args={["#ffffff", "#d9d3c4", 1.6]} />
       <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
-      <PerspectiveCamera key={framing.key} makeDefault fov={35} near={1} far={50_000} position={framing.camera} />
-      <OrbitControls key={`c${framing.key}`} makeDefault target={framing.target} maxPolarAngle={Math.PI / 2 - 0.04} />
+      <CameraRig framing={framing} />
       <group rotation={ENGINE_TO_THREE}>
         <Ground radius={framing.distance * 3} />
         <LotLines outline={outline} neighbors={props.neighborLots} front={front} />
@@ -67,6 +66,25 @@ function Label({ position, className, children }: { position: [number, number, n
     <Html position={position} center className={className} zIndexRange={[10, 0]} portal={(portal ?? undefined) as RefObject<HTMLElement> | undefined}>
       {children}
     </Html>
+  );
+}
+
+type Framing = ReturnType<typeof frame>;
+
+// Framing is tuned for a landscape canvas; narrower canvases (phones) pull the camera back.
+const REFERENCE_ASPECT = 1.3;
+
+function CameraRig({ framing }: { framing: Framing }) {
+  const aspect = useThree((state) => state.size.width / Math.max(1, state.size.height));
+  const pullBack = Math.max(1, REFERENCE_ASPECT / aspect);
+  const [tx, ty, tz] = framing.target;
+  const camera = framing.camera.map((c, i) => [tx, ty, tz][i]! + (c - [tx, ty, tz][i]!) * pullBack) as [number, number, number];
+  const key = `${framing.key}:${pullBack.toFixed(1)}`;
+  return (
+    <>
+      <PerspectiveCamera key={key} makeDefault fov={35} near={1} far={50_000} position={camera} />
+      <OrbitControls key={`c${key}`} makeDefault target={framing.target} maxPolarAngle={Math.PI / 2 - 0.04} />
+    </>
   );
 }
 

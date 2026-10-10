@@ -44,8 +44,9 @@ Libraries are added in the phase that first needs them, not all up front.
 pnpm install
 pnpm test         # vitest run, all workspace projects
 pnpm typecheck    # tsc in every package
-pnpm dev          # web app dev server
+pnpm dev          # web app dev server (open ?parcel=fixture-a or ?parcel=4025007)
 pnpm build        # web app production build
+pnpm e2e          # Playwright browser tests (DataSF replayed; LIVE=1 records new responses)
 pnpm parcel <blklot>              # facts for one SF parcel (also: --at <lon> <lat>, --json, --no-cache)
 pnpm envelope <blklot>            # run the engine on a real parcel (--front N, --setback FT, --floor FT, --off id,id, --json)
 pnpm record-fixtures [blklot...]  # re-record real parcels as engine test inputs
@@ -60,7 +61,13 @@ The monorepo lives at the repo root (SPEC.md's tree shows it under `zoning-envel
 
 ```
 SPEC.md, CLAUDE.md
-apps/web/                       # React app: map, scene, cards, controls
+apps/web/                       # React app: scene, cards, controls (map in Phase 5)
+  src/App.tsx                   # URL state -> lot -> engine -> scene + cards
+  src/state/                    # URL state (?parcel&step&front&setback), step-position model
+  src/data/                     # loadLot (fixtures or DataSF), engine hooks
+  src/scene/                    # react-three-fiber scene; palette.ts holds the only red
+  src/ui/                       # fact card, rule cards, step controls, front prompt, summary
+  e2e/                          # Playwright specs; fixtures/datasf = recorded responses
 packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve rules, build solids, measure
   src/envelope.ts               # createEngine() -> computeEnvelope(parcel, district, options)
   src/types.ts                  # ParcelInput (city-agnostic input), EnvelopeResult, Step, Solid
@@ -96,6 +103,7 @@ Base: `https://data.sf.gov/resource/<id>.json` or `.geojson` (formerly data.sfgo
 | Parcels – Active and Retired | `acdm-wktn` | blklot, mapblklot, zoning_code, zoning_district, shape, active, address fields, centroid lat/lon |
 | Zoning Districts | `3i4a-hu95` | Map overlay; cross-check blank zoning |
 | Height and Bulk Districts | `h9wh-cg3m` | `height` label, `gen_hght`, geometry in **`the_geom`** (not `shape`); parcels straddling two districts keep both and split the envelope |
+| Building Footprints | `ynuv-fyni` | Scene context only: outlines with LiDAR `hgt_median_m` (2010 survey); the app shows buildings on the lot's own block |
 
 Verified facts (details in `packages/jurisdictions/sf/DATA-NOTES.md`):
 - **R-4 (Family Zoning Plan) labels are `base//local-R-4`. `gen_hght` is the local-program height, not the base.** Never use `gen_hght` as an R-4 cap; the base exists only in the label. Unparseable labels are flagged, not guessed.
@@ -180,7 +188,15 @@ Fixtures (hand-checked):
 - [x] Phase 0 — Kickoff
 - [x] Phase 1 — Data (DataSF adapter, `pnpm parcel <blklot>`; demo parcels 4025007, 0044030, 4276045)
 - [x] Phase 2 — Engine (fixtures A–D and invariants pass; `pnpm envelope` for real lots)
-- [ ] Phase 3 — Scene (step through with Next/Back)
+- [x] Phase 3 — Scene (Next/Back through fixture A and real lots; `pnpm e2e` covers it)
 - [ ] Phase 4 — Animation (GSAP timeline, scrubber)
 - [ ] Phase 5 — Map and coverage (PMTiles, map screen, RH-1(D)/RH-1/RH-3 drafts)
 - [ ] Phase 6 — Depth (one item per session)
+
+## Web app notes
+
+- Step positions: 0 = starting block, 1…N = rule N applied (envelope + red removed piece), N+1 = finale (floors + summary).
+- The scene sits in one group rotated from the engine's z-up to three's y-up (`scene/coords.ts`).
+- drei `<Html>` labels must go through the scene's `Label` component, which pins them to a stable `portal`. Without it, labels go blank when the canvas's event target changes.
+- Playwright is pinned to 1.56.1 to match the pre-installed Chromium (build 1194). Don't upgrade it without a matching browser.
+- In this sandbox, `pkill -f "vite preview"` kills the calling shell (it matches its own command line). Use `pkill -f "[v]ite.js preview"`.
