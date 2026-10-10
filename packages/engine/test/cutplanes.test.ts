@@ -22,17 +22,17 @@ describe("cut planes for the cutting-plane sweep", async () => {
     close(p!.v, [0, 100, 0]);
   });
 
-  it("stands the rear-yard plane 70 ft back from the front, full block height", () => {
+  it("stands the rear-yard plane 70 ft back from the front, as tall as what's left (40 ft)", () => {
     const [p] = planes(a, "rear-yard");
     close(p!.origin, [-12.5, 20, 0]);
     close(p!.u, [25, 0, 0]);
-    close(p!.v, [0, 0, 80]);
+    close(p!.v, [0, 0, 40]);
   });
 
-  it("tilts the front height plane up at 45° from 30 ft on the front line", () => {
+  it("tilts the front height plane up at 45° from 30 ft on the front line to the 40 ft top", () => {
     const [p] = planes(a, "front-plane");
     close(p!.origin, [-12.5, -50, 30]);
-    close(p!.v, [0, 50, 50]);
+    close(p!.v, [0, 10, 10]);
   });
 
   it("gives rules without geometry no planes", () => {

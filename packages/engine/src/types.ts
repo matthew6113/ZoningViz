@@ -56,8 +56,8 @@ export interface Dimension {
 
 /**
  * A flat parallelogram, origin + a·u + b·v for a, b in [0, 1], in world feet:
- * where a cut's boundary passes through the starting block. The scene sweeps
- * a cutting plane across it.
+ * where a cut's boundary passes through the solid being cut (up to its top).
+ * The scene sweeps a cutting plane across it.
  */
 export interface CutPlane {
   origin: Vec3;

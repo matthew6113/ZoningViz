@@ -86,7 +86,7 @@ function computeEnvelope(
   const startHeightFt = START_HEIGHT_MULTIPLE * baseHeight;
 
   const radius = Math.max(...lot.flat(2).map(([x, y]) => Math.hypot(x, y)));
-  const cutCtx: CutContext = { wasm, frame, lot, zones, bigFt: 10 * (radius + startHeightFt), startHeightFt };
+  const cutCtx: CutContext = { wasm, frame, lot, zones, bigFt: 10 * (radius + startHeightFt), topFt: startHeightFt };
   if (zones.length > 1) {
     const gap = uncoveredArea(cutCtx);
     if (gap > EMPTY_AREA_FT2) {
@@ -158,6 +158,7 @@ function computeEnvelope(
       continue;
     }
 
+    const cutPlanes = cutPlanesFor(resolved.cut, { ...cutCtx, topFt: topOf(current) });
     const next = applyCut(current, resolved.cut, cutCtx);
     const removed = current.subtract(next);
     const removedVolume = removed.volume();
@@ -176,7 +177,7 @@ function computeEnvelope(
         : `${resolved.sentence} Already satisfied: earlier limits already keep the building inside this one.`,
       numbers: resolved.numbers,
       dimensions: dimensionsFor(resolved.cut, cutCtx, zones.map((z) => z.center)),
-      cutPlanes: cutPlanesFor(resolved.cut, cutCtx),
+      cutPlanes,
       before,
       removed: removedSolid,
       after: currentSolid,

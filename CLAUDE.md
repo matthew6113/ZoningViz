@@ -63,10 +63,11 @@ The monorepo lives at the repo root (SPEC.md's tree shows it under `zoning-envel
 SPEC.md, CLAUDE.md
 apps/web/                       # React app: scene, cards, controls (map in Phase 5)
   src/App.tsx                   # URL state -> lot -> engine -> scene + cards
-  src/state/                    # URL state (?parcel&step&front&setback), step-position model
+  src/state/                    # URL state (?parcel&step&front&setback&off)
+  src/anim/                     # schedule (beat times), GSAP timeline over a plain state object, usePlayer
   src/data/                     # loadLot (fixtures or DataSF), engine hooks
   src/scene/                    # react-three-fiber scene; palette.ts holds the only red
-  src/ui/                       # fact card, rule cards, step controls, front prompt, summary
+  src/ui/                       # fact card, rule cards (eye toggles), player controls + scrubber, HUD, summary
   e2e/                          # Playwright specs; fixtures/datasf = recorded responses
 packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve rules, build solids, measure
   src/envelope.ts               # createEngine() -> computeEnvelope(parcel, district, options)
@@ -76,7 +77,7 @@ packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve 
   src/geometry/manifold.ts      # manifold-3d loading, half-space cuts, mesh export, slicing
   src/rules/schema.ts           # zod schema for district files
   src/rules/resolve.ts          # rule params -> numbers, card sentence, cut (no geometry)
-  src/rules/regions.ts          # cut -> allowed region; dimension lines
+  src/rules/regions.ts          # cut -> allowed region; dimension lines; cut planes (for the sweep)
   test/                         # fixtures A–D, invariants, schema, front detection
   test/fixtures/parcels/        # recorded real parcels (pnpm record-fixtures)
 packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
@@ -189,13 +190,18 @@ Fixtures (hand-checked):
 - [x] Phase 1 — Data (DataSF adapter, `pnpm parcel <blklot>`; demo parcels 4025007, 0044030, 4276045)
 - [x] Phase 2 — Engine (fixtures A–D and invariants pass; `pnpm envelope` for real lots)
 - [x] Phase 3 — Scene (Next/Back through fixture A and real lots; `pnpm e2e` covers it)
-- [ ] Phase 4 — Animation (GSAP timeline, scrubber)
+- [x] Phase 4 — Animation (one GSAP timeline, scrubber, 1×/2×, per-rule toggles, reduced motion)
 - [ ] Phase 5 — Map and coverage (PMTiles, map screen, RH-1(D)/RH-1/RH-3 drafts)
 - [ ] Phase 6 — Depth (one item per session)
 
 ## Web app notes
 
 - Step positions: 0 = starting block, 1…N = rule N applied (envelope + red removed piece), N+1 = finale (floors + summary).
+- **Animation:** `anim/schedule.ts` sets the beats (arrival 1.5 s, rise 1.2 s; per rule announce 0.6 / measure 0.8 / cut 1.2 / remove 0.9; info/flag/off rules 1.5 s; "already satisfied" = announce + measure). Step *k* rests at the end of rule *k*'s cut, with the red piece showing. `anim/timeline.ts` builds one GSAP timeline that tweens a plain `AnimState`; the scene reads it in `useFrame` and the HUD/scrubber are written through refs. React re-renders only when the step changes. Keep it that way: no per-frame React state.
+- A fresh visit plays the arrival and pauses at the start; `?step=n` opens paused there; `?step` follows the playhead; `?off=` lists rules switched off (engine `disabledRuleIds`).
+- `prefers-reduced-motion` builds a shorter timeline with no camera flight, sweep or lift (crossfades). In Playwright set it with `test.use({ contextOptions: { reducedMotion: "reduce" } })`; a top-level `reducedMotion` option is silently ignored.
+- `preserveDrawingBuffer` is on only under automation (`navigator.webdriver`), for the tests' pixel checks.
+- Performance: about 1 ms of script per frame during playback. Headless Chromium here renders with SwiftShader (software), so its fps falls with canvas size (60 fps at 640×420, about 16 at 1360×820); that's rasterization, not our code.
 - The scene sits in one group rotated from the engine's z-up to three's y-up (`scene/coords.ts`).
 - drei `<Html>` labels must go through the scene's `Label` component, which pins them to a stable `portal`. Without it, labels go blank when the canvas's event target changes.
 - Playwright is pinned to 1.56.1 to match the pre-installed Chromium (build 1194). Don't upgrade it without a matching browser.

@@ -19,8 +19,8 @@ export interface CutContext {
   zones: { planar: PlanarMultiPolygon }[];
   /** Comfortably larger than anything on the lot; used for "no limit here". */
   bigFt: number;
-  /** Height of the starting block, which bounds the cut planes. */
-  startHeightFt: number;
+  /** Top of the solid about to be cut, which bounds the cut planes. */
+  topFt: number;
 }
 
 export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
@@ -125,9 +125,9 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
   }
 }
 
-/** Where each cut's boundary crosses the starting block, as flat parallelograms in world feet. */
+/** Where each cut's boundary crosses the solid being cut, as flat parallelograms in world feet. */
 export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
-  const { frame, startHeightFt: top } = ctx;
+  const { frame, topFt: top } = ctx;
   const at = (s: number, d: number, z: number): Vec3 => {
     const [x, y] = frame.toWorld(s, d);
     return [x, y, z];
