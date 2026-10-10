@@ -1,0 +1,84 @@
+{
+  "jurisdiction": "sf",
+  "district": "RH-2",
+  "name": "Residential, House, Two Family",
+  "rules": [
+    {
+      "id": "use",
+      "kind": "info",
+      "title": "Homes, up to two units",
+      "plain": "RH-2 lots are for homes, with up to two dwelling units on a lot.",
+      "params": {},
+      "citation": "SF Planning Code §209.1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-20077",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "mapped-height",
+      "kind": "height_cap",
+      "title": "Height limit",
+      "plain": "No part of a building may be taller than the height limit mapped for this lot's height and bulk district.",
+      "params": { "source": "heightDistrict" },
+      "citation": "§250",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21392",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rh-dwelling-height",
+      "kind": "height_cap",
+      "title": "RH-2 dwelling cap",
+      "plain": "In RH-2, no part of a home may be taller than 40 feet, even where the mapped limit is higher.",
+      "params": { "feet": 40 },
+      "citation": "§261(b)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rear-yard",
+      "kind": "rear_yard",
+      "title": "Rear yard",
+      "plain": "The back 30% of the lot, and never less than 15 feet, must stay open at ground level and on every floor.",
+      "params": { "pctOfLotDepth": 0.30, "minFeet": 15, "appliesAt": "grade_and_every_story" },
+      "citation": "§134(c)(1), §134(d)(1)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-setback",
+      "kind": "front_setback",
+      "title": "Front setback",
+      "plain": "The building must step back from the front lot line to line up with the neighbors' setbacks, up to 10 feet.",
+      "params": { "method": "block_average", "maxFeet": 10, "userOverride": true },
+      "citation": "§132",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18248",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-plane",
+      "kind": "sky_plane",
+      "title": "Front height plane",
+      "plain": "Above 30 feet, the front of the building must slope back at 45 degrees from the front setback line.",
+      "params": { "fromLine": "front_setback", "startHeightFeet": 30, "angleDeg": 45 },
+      "citation": "§261(c)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "slope",
+      "kind": "flag",
+      "title": "Slope can lower the limit",
+      "plain": "On sloping lots the height limit can be lower; this view assumes a flat lot and does not show that reduction.",
+      "params": {},
+      "citation": "§261(b)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    }
+  ]
+}
