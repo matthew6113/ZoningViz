@@ -54,6 +54,17 @@ export interface Dimension {
   label: string;
 }
 
+/**
+ * A flat parallelogram, origin + a·u + b·v for a, b in [0, 1], in world feet:
+ * where a cut's boundary passes through the starting block. The scene sweeps
+ * a cutting plane across it.
+ */
+export interface CutPlane {
+  origin: Vec3;
+  u: Vec3;
+  v: Vec3;
+}
+
 export type StepStatus = "cut" | "already_satisfied" | "info" | "not_modeled" | "disabled";
 
 export interface StepMeasurements {
@@ -71,6 +82,8 @@ export interface Step {
   /** The resolved numbers behind the sentence. */
   numbers: Record<string, number>;
   dimensions: Dimension[];
+  /** Where the cut runs, for the cutting-plane sweep. Empty for rules without geometry. */
+  cutPlanes: CutPlane[];
   before: Solid;
   removed: Solid | null;
   after: Solid;

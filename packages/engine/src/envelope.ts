@@ -2,7 +2,7 @@ import type { Manifold, ManifoldToplevel } from "manifold-3d";
 import { centroidOf, findStreetSides, lotFrame, toPlanar, translate } from "./geometry/lot";
 import { crossSection, loadManifold, sliceArea, sliceOutline, toSolid, topOf } from "./geometry/manifold";
 import { multiPolygonArea, type XY } from "./geometry/projection";
-import { applyCut, dimensionsFor, uncoveredArea, type CutContext } from "./rules/regions";
+import { applyCut, cutPlanesFor, dimensionsFor, uncoveredArea, type CutContext } from "./rules/regions";
 import { ft, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
 import type { DistrictFile } from "./rules/schema";
 import type {
@@ -86,7 +86,7 @@ function computeEnvelope(
   const startHeightFt = START_HEIGHT_MULTIPLE * baseHeight;
 
   const radius = Math.max(...lot.flat(2).map(([x, y]) => Math.hypot(x, y)));
-  const cutCtx: CutContext = { wasm, frame, lot, zones, bigFt: 10 * (radius + startHeightFt) };
+  const cutCtx: CutContext = { wasm, frame, lot, zones, bigFt: 10 * (radius + startHeightFt), startHeightFt };
   if (zones.length > 1) {
     const gap = uncoveredArea(cutCtx);
     if (gap > EMPTY_AREA_FT2) {
@@ -132,6 +132,7 @@ function computeEnvelope(
         sentence: `${rule.title}: turned off.`,
         numbers: {},
         dimensions: [],
+        cutPlanes: [],
         before,
         removed: null,
         after: before,
@@ -148,6 +149,7 @@ function computeEnvelope(
         sentence: resolved.sentence,
         numbers: resolved.numbers,
         dimensions: [],
+        cutPlanes: [],
         before,
         removed: null,
         after: before,
@@ -174,6 +176,7 @@ function computeEnvelope(
         : `${resolved.sentence} Already satisfied: earlier limits already keep the building inside this one.`,
       numbers: resolved.numbers,
       dimensions: dimensionsFor(resolved.cut, cutCtx, zones.map((z) => z.center)),
+      cutPlanes: cutPlanesFor(resolved.cut, cutCtx),
       before,
       removed: removedSolid,
       after: currentSolid,
