@@ -126,7 +126,10 @@ export type EnvelopeResult =
   | {
       status: "needs_front_choice";
       candidates: FrontCandidate[];
+      /** Lot and neighbor outlines in world feet, so the choice can be drawn. */
       outline: XY[][][];
+      neighbors: XY[][][][];
+      originPlanar: XY;
     }
   | {
       status: "ok";

@@ -268,9 +268,9 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
   }
 
   async function getBuildings(parcel: SfParcel, padFt = BUILDING_PAD_FT): Promise<SfBuildings> {
-    const found = await rows<{ sf16_bldgid: string; hgt_median_m?: string; shape?: MultiPolygon | Polygon; data_as_of?: string }>(
+    const found = await rows<{ sf16_bldgid: string; mblr?: string; hgt_median_m?: string; shape?: MultiPolygon | Polygon; data_as_of?: string }>(
       soqlUrl(DATASETS.buildingFootprints, {
-        select: "sf16_bldgid,hgt_median_m,shape,data_as_of",
+        select: "sf16_bldgid,mblr,hgt_median_m,shape,data_as_of",
         where: `intersects(shape,${soqlString(paddedBboxWkt(parcel, padFt))})`,
         limit: 5000,
       }),
@@ -280,7 +280,9 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
       const geometry = asMultiPolygon(row.shape);
       if (pointInGeometry(ringCentroid(geometry), parcel.geometry)) return []; // standing on the lot itself
       const meters = row.hgt_median_m === undefined ? NaN : Number(row.hgt_median_m);
-      return [{ id: row.sf16_bldgid, heightFt: Number.isFinite(meters) ? meters * FT_PER_METER : null, geometry }];
+      // mblr is "SF" + block/lot, e.g. "SF4025006A"; right-of-way records don't parse.
+      const block = /^SF(\d{4}[A-Z]?)\d{3}[A-Z]?$/.exec(row.mblr ?? "")?.[1] ?? null;
+      return [{ id: row.sf16_bldgid, block, heightFt: Number.isFinite(meters) ? meters * FT_PER_METER : null, geometry }];
     });
     const dates = found.map((row) => row.data_as_of?.slice(0, 10)).filter((d): d is string => !!d).sort();
     return { buildings, asOf: dates[dates.length - 1] ?? null };

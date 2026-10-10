@@ -61,6 +61,8 @@ export interface SfNeighbor {
 
 export interface SfBuilding {
   id: string;
+  /** Assessor block the building stands on (from `mblr`), or null for right-of-way records. */
+  block: string | null;
   /** Median LiDAR height above ground (2010 survey), in feet. Null when the dataset has none. */
   heightFt: number | null;
   geometry: MultiPolygon;

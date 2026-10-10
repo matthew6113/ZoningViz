@@ -58,7 +58,7 @@ function computeEnvelope(
   let front: FrontCandidate | undefined = candidates.length === 1 ? candidates[0] : undefined;
   if (!front) {
     front = options.frontSide === undefined ? undefined : candidates[options.frontSide];
-    if (!front) return { status: "needs_front_choice", candidates, outline: lot };
+    if (!front) return { status: "needs_front_choice", candidates, outline: lot, neighbors, originPlanar };
   }
 
   // 3. Measure the lot.
