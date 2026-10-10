@@ -9,6 +9,8 @@ export const DATASETS = {
   parcels: "acdm-wktn",
   zoningDistricts: "3i4a-hu95",
   heightBulkDistricts: "h9wh-cg3m",
+  /** Building outlines with LiDAR-derived heights (2010), for context around a lot. */
+  buildingFootprints: "ynuv-fyni",
 } as const;
 
 export type DatasetId = (typeof DATASETS)[keyof typeof DATASETS];

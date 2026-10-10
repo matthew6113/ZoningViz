@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { MultiPolygon } from "geojson";
-import { createEngine, parseDistrictFile, type DistrictFile, type Engine, type ParcelInput } from "../src";
+import { createEngine, parseDistrictFile, syntheticLot, type DistrictFile, type Engine, type ParcelInput } from "../src";
 import { loadManifold } from "../src/geometry/manifold";
 
 // Test-only: district files live with their jurisdiction; read them by path so
@@ -24,23 +23,9 @@ export function getEngine(): Promise<Engine> {
   return engine;
 }
 
-function rect(x0: number, y0: number, x1: number, y1: number): MultiPolygon {
-  return { type: "MultiPolygon", coordinates: [[[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]]] };
-}
-
-/**
- * A mid-block lot in planar feet: `width` along a street to the south (y = 0),
- * `depth` deep, with neighbors on both sides and behind.
- */
-export function rectangularLot(width: number, depth: number, heightFt = 40, label = "40-X"): ParcelInput {
-  const footprint = rect(0, 0, width, depth);
-  return {
-    id: `synthetic-${width}x${depth}`,
-    projection: null,
-    footprint,
-    neighbors: [rect(-width, 0, 0, depth), rect(width, 0, 2 * width, depth), rect(-width, depth, 2 * width, 2 * depth)],
-    heightZones: [{ label, heightFt, geometry: footprint }],
-  };
+/** SPEC.md fixtures A/B: a mid-block lot in a 40-X district (the district file supplies the rules). */
+export function rectangularLot(width: number, depth: number): ParcelInput {
+  return syntheticLot(width, depth, { label: "40-X", heightFt: 40 });
 }
 
 /** Rebuilds a WASM solid from an exported mesh, for geometric assertions in tests. */

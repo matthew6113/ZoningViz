@@ -58,3 +58,16 @@ export interface SfNeighbor {
   blklot: string;
   geometry: MultiPolygon;
 }
+
+export interface SfBuilding {
+  id: string;
+  /** Median LiDAR height above ground (2010 survey), in feet. Null when the dataset has none. */
+  heightFt: number | null;
+  geometry: MultiPolygon;
+}
+
+export interface SfBuildings {
+  buildings: SfBuilding[];
+  /** The dataset's own as-of date (the LiDAR heights themselves date from 2010). */
+  asOf: string | null;
+}

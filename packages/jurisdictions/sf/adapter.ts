@@ -14,7 +14,7 @@ import {
   type FetchJson,
 } from "./datasf";
 import { parseHeightLabel } from "./heightLabel";
-import type { SfAddress, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
+import type { SfAddress, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
 interface ParcelRow {
@@ -50,15 +50,20 @@ const MIN_DISTRICT_SHARE = 0.001;
 
 const BLKLOT_PATTERN = /^\d{4}[A-Z]?\d{3}[A-Z]?$/;
 
-// Neighbors are fetched from the lot's bounding box grown by about this much.
+// Neighbors (for front detection) and buildings (for scene context) are fetched
+// from the lot's bounding box grown by about this much.
 const NEIGHBOR_PAD_FT = 50;
+const BUILDING_PAD_FT = 150;
 const FT_PER_DEGREE_LAT = 364_000;
+const FT_PER_METER = 3.28084;
 
 export interface SfAdapter {
   getParcelByBlockLot(blklot: string): Promise<SfParcel | null>;
   getParcelAt(lon: number, lat: number): Promise<SfParcel | null>;
   /** Active land parcels within about 50 ft of the lot (condo units collapsed to their land record). */
   getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]>;
+  /** Buildings within `padFt` of the lot, minus any standing on the lot itself. */
+  getBuildings(parcel: SfParcel, padFt?: number): Promise<SfBuildings>;
 }
 
 export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdapter {
@@ -250,18 +255,7 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
   }
 
   async function getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]> {
-    const padLat = NEIGHBOR_PAD_FT / FT_PER_DEGREE_LAT;
-    const padLon = padLat / Math.cos((parcel.centroid.lat * Math.PI) / 180);
-    const points = parcel.geometry.coordinates.flat(2);
-    const xs = points.map((p) => p[0]!);
-    const ys = points.map((p) => p[1]!);
-    const box = bboxWkt({
-      type: "Polygon",
-      coordinates: [[
-        [Math.min(...xs) - padLon, Math.min(...ys) - padLat],
-        [Math.max(...xs) + padLon, Math.max(...ys) + padLat],
-      ]],
-    });
+    const box = paddedBboxWkt(parcel, NEIGHBOR_PAD_FT);
     const found = await rows<ParcelRow>(
       soqlUrl(DATASETS.parcels, {
         select: "blklot,shape",
@@ -271,6 +265,25 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
       }),
     );
     return found.flatMap((row) => (row.shape ? [{ blklot: row.blklot, geometry: asMultiPolygon(row.shape) }] : []));
+  }
+
+  async function getBuildings(parcel: SfParcel, padFt = BUILDING_PAD_FT): Promise<SfBuildings> {
+    const found = await rows<{ sf16_bldgid: string; hgt_median_m?: string; shape?: MultiPolygon | Polygon; data_as_of?: string }>(
+      soqlUrl(DATASETS.buildingFootprints, {
+        select: "sf16_bldgid,hgt_median_m,shape,data_as_of",
+        where: `intersects(shape,${soqlString(paddedBboxWkt(parcel, padFt))})`,
+        limit: 5000,
+      }),
+    );
+    const buildings = found.flatMap((row) => {
+      if (!row.shape) return [];
+      const geometry = asMultiPolygon(row.shape);
+      if (pointInGeometry(ringCentroid(geometry), parcel.geometry)) return []; // standing on the lot itself
+      const meters = row.hgt_median_m === undefined ? NaN : Number(row.hgt_median_m);
+      return [{ id: row.sf16_bldgid, heightFt: Number.isFinite(meters) ? meters * FT_PER_METER : null, geometry }];
+    });
+    const dates = found.map((row) => row.data_as_of?.slice(0, 10)).filter((d): d is string => !!d).sort();
+    return { buildings, asOf: dates[dates.length - 1] ?? null };
   }
 
   const asOfCache = new Map<string, Promise<string | null>>();
@@ -286,7 +299,48 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     return pending;
   }
 
-  return { getParcelByBlockLot, getParcelAt, getNeighbors };
+  return { getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings };
+}
+
+function paddedBboxWkt(parcel: SfParcel, padFt: number): string {
+  const padLat = padFt / FT_PER_DEGREE_LAT;
+  const padLon = padLat / Math.cos((parcel.centroid.lat * Math.PI) / 180);
+  const points = parcel.geometry.coordinates.flat(2);
+  const xs = points.map((p) => p[0]!);
+  const ys = points.map((p) => p[1]!);
+  return bboxWkt({
+    type: "Polygon",
+    coordinates: [[
+      [Math.min(...xs) - padLon, Math.min(...ys) - padLat],
+      [Math.max(...xs) + padLon, Math.max(...ys) + padLat],
+    ]],
+  });
+}
+
+/** Vertex average of the first outer ring: good enough to tell which lot a building stands on. */
+function ringCentroid(geometry: MultiPolygon): [number, number] {
+  const ring = geometry.coordinates[0]![0]!.slice(0, -1);
+  let x = 0;
+  let y = 0;
+  for (const p of ring) {
+    x += p[0]!;
+    y += p[1]!;
+  }
+  return [x / ring.length, y / ring.length];
+}
+
+function pointInGeometry([px, py]: [number, number], geometry: MultiPolygon): boolean {
+  let inside = false;
+  for (const polygon of geometry.coordinates) {
+    for (const ring of polygon) {
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i]!;
+        const [xj, yj] = ring[j]!;
+        if (yi! > py !== yj! > py && px < ((xj! - xi!) * (py - yi!)) / (yj! - yi!) + xi!) inside = !inside;
+      }
+    }
+  }
+  return inside;
 }
 
 export function normalizeBlklot(input: string): string {

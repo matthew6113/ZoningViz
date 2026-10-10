@@ -1,6 +1,8 @@
-// San Francisco jurisdiction: DataSF adapter and (from Phase 2) districts/*.json rule files.
-// Browser-safe; the Node-only disk cache lives in ./node/cache.ts.
+// San Francisco jurisdiction: DataSF adapter, engine input mapping and the
+// districts/*.json rule files. Browser-safe; Node-only code lives in ./node/.
 export { createSfAdapter, normalizeBlklot, type SfAdapter } from "./adapter";
 export { DATASETS, DataSfError, EPSG_2227, fetchJson, type FetchJson } from "./datasf";
 export { parseHeightLabel, type ParsedHeightLabel } from "./heightLabel";
 export type * from "./types";
+export { toParcelInput } from "./engineInput";
+export { availableDistricts, loadDistrict } from "./districts";
