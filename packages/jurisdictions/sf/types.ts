@@ -1,0 +1,53 @@
+import type { MultiPolygon } from "geojson";
+import type { ParsedHeightLabel } from "./heightLabel";
+
+export interface SfAddress {
+  from: string | null;
+  to: string | null;
+  street: string | null;
+  streetType: string | null;
+  /** Display form, e.g. "766–772 Francisco St". Null when the record has no street. */
+  label: string | null;
+}
+
+export interface SfZoning {
+  code: string | null;
+  name: string | null;
+  /** "parcel" when read from the parcel record; "zoning-layer" when the record was blank. */
+  source: "parcel" | "zoning-layer";
+}
+
+export interface SfHeightDistrict {
+  /** Raw `height` label, e.g. "40-X" or "40//85-R-4". */
+  label: string;
+  /** Raw `gen_hght`. For R-4 rows this is the local program height, not the base. */
+  genHeightFt: number | null;
+  parsed: ParsedHeightLabel;
+  /**
+   * Fraction of the lot inside this district (0–1). 1 when it is the only
+   * district touching the lot; null when the overlap could not be computed.
+   */
+  shareOfLot: number | null;
+}
+
+export interface SfParcel {
+  /** The land record's block/lot. For condo stacks this equals `mapblklot`. */
+  blklot: string;
+  mapblklot: string;
+  /** Other active records on the same footprint (condo units), sorted. */
+  unitBlklots: string[];
+  /** The blklot the caller asked for, when it differs from the land record. */
+  requestedBlklot: string | null;
+  active: boolean;
+  address: SfAddress;
+  zoning: SfZoning;
+  heightDistricts: SfHeightDistrict[];
+  /** WGS84 lon/lat, as served by DataSF. */
+  geometry: MultiPolygon;
+  centroid: { lon: number; lat: number };
+  /** Planar area in EPSG:2227 square feet, holes subtracted. */
+  lotAreaSqFt: number;
+  /** ISO dates the source datasets were last updated. */
+  asOf: { parcels: string | null; heightDistricts: string | null };
+  warnings: string[];
+}

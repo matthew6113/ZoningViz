@@ -9,5 +9,12 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@zoningviz/engine": "workspace:*",
+    "polygon-clipping": "^0.15.7"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16"
   }
 }

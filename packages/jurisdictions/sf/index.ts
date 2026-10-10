@@ -1,3 +1,6 @@
-// San Francisco adapter: DataSF queries and field mapping (Phase 1), plus
-// districts/*.json rule files (RH-2 in Phase 2; RH-1(D), RH-1, RH-3 in Phase 5).
-export {};
+// San Francisco jurisdiction: DataSF adapter and (from Phase 2) districts/*.json rule files.
+// Browser-safe; the Node-only disk cache lives in ./node/cache.ts.
+export { createSfAdapter, normalizeBlklot, type SfAdapter } from "./adapter";
+export { DATASETS, DataSfError, EPSG_2227, fetchJson, type FetchJson } from "./datasf";
+export { parseHeightLabel, type ParsedHeightLabel } from "./heightLabel";
+export type * from "./types";

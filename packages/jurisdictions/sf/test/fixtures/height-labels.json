@@ -1,0 +1,1082 @@
+{
+ "source": "https://data.sf.gov/resource/h9wh-cg3m.json (distinct height, gen_hght)",
+ "fetchedAt": "2026-10-10",
+ "rows": [
+  {
+   "height": "1000-S-2",
+   "gen_hght": "1000"
+  },
+  {
+   "height": "100//250-R-4",
+   "gen_hght": "250"
+  },
+  {
+   "height": "100-G",
+   "gen_hght": "100"
+  },
+  {
+   "height": "100-Mission Rock",
+   "gen_hght": "100"
+  },
+  {
+   "height": "100-X",
+   "gen_hght": "100"
+  },
+  {
+   "height": "105//105-R-4",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105//140-R-4",
+   "gen_hght": "140"
+  },
+  {
+   "height": "105/200-R",
+   "gen_hght": "200"
+  },
+  {
+   "height": "105//240-R-4",
+   "gen_hght": "240"
+  },
+  {
+   "height": "105-D",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105-E",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105-F",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105-J",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105-PM",
+   "gen_hght": "105"
+  },
+  {
+   "height": "105-X",
+   "gen_hght": "105"
+  },
+  {
+   "height": "110",
+   "gen_hght": "110"
+  },
+  {
+   "height": "110-G",
+   "gen_hght": "110"
+  },
+  {
+   "height": "110-X",
+   "gen_hght": "110"
+  },
+  {
+   "height": "115-PM",
+   "gen_hght": "115"
+  },
+  {
+   "height": "120//160-R-4",
+   "gen_hght": "160"
+  },
+  {
+   "height": "120/200-R-2",
+   "gen_hght": "200"
+  },
+  {
+   "height": "120//250-R-4",
+   "gen_hght": "250"
+  },
+  {
+   "height": "120/320-R-2",
+   "gen_hght": "320"
+  },
+  {
+   "height": "120/400//120/650-R4",
+   "gen_hght": "650"
+  },
+  {
+   "height": "120/400-R-2 / 120-R-2  //  140/590-R-2",
+   "gen_hght": "590"
+  },
+  {
+   "height": "120/400-R-2  //  140/520-R-2",
+   "gen_hght": "520"
+  },
+  {
+   "height": "120/400-R-2  //  140/590-R-2",
+   "gen_hght": "590"
+  },
+  {
+   "height": "120-F",
+   "gen_hght": "120"
+  },
+  {
+   "height": "120-Mission Rock",
+   "gen_hght": "120"
+  },
+  {
+   "height": "120-R-2",
+   "gen_hght": "120"
+  },
+  {
+   "height": "120-X",
+   "gen_hght": "120"
+  },
+  {
+   "height": "125//160-R-4",
+   "gen_hght": "160"
+  },
+  {
+   "height": "125-TI",
+   "gen_hght": "125"
+  },
+  {
+   "height": "125-X",
+   "gen_hght": "125"
+  },
+  {
+   "height": "130//130-R-4",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130/240-R-3",
+   "gen_hght": "240"
+  },
+  {
+   "height": "130//240-R-4",
+   "gen_hght": "240"
+  },
+  {
+   "height": "130//300-R-4",
+   "gen_hght": "300"
+  },
+  {
+   "height": "130/400-R-3",
+   "gen_hght": "400"
+  },
+  {
+   "height": "130-B",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-CS",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-CS-200-CS",
+   "gen_hght": "200"
+  },
+  {
+   "height": "130-CS-350-CS",
+   "gen_hght": "350"
+  },
+  {
+   "height": "130-D",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-E",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-F",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-G",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-L",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-PM",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-V",
+   "gen_hght": "130"
+  },
+  {
+   "height": "130-X-160-CS",
+   "gen_hght": "160"
+  },
+  {
+   "height": "135-X",
+   "gen_hght": "135"
+  },
+  {
+   "height": "140//350-R-4",
+   "gen_hght": "350"
+  },
+  {
+   "height": "140/400//140/450-R-4",
+   "gen_hght": "450"
+  },
+  {
+   "height": "140-H",
+   "gen_hght": "140"
+  },
+  {
+   "height": "145-E",
+   "gen_hght": "145"
+  },
+  {
+   "height": "145-PM",
+   "gen_hght": "145"
+  },
+  {
+   "height": "150-PY",
+   "gen_hght": "150"
+  },
+  {
+   "height": "150-S",
+   "gen_hght": "150"
+  },
+  {
+   "height": "150-X",
+   "gen_hght": "150"
+  },
+  {
+   "height": "160//160-R-4",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-B",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-CS",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-D",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-E",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-F",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-H",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-M",
+   "gen_hght": "160"
+  },
+  {
+   "height": "160-S",
+   "gen_hght": "160"
+  },
+  {
+   "height": "165-I",
+   "gen_hght": "165"
+  },
+  {
+   "height": "180-CS",
+   "gen_hght": "180"
+  },
+  {
+   "height": "180-S",
+   "gen_hght": "180"
+  },
+  {
+   "height": "190-Mission Rock",
+   "gen_hght": "190"
+  },
+  {
+   "height": "195//490-R-4",
+   "gen_hght": "490"
+  },
+  {
+   "height": "200//500-R-4",
+   "gen_hght": "500"
+  },
+  {
+   "height": "200-CS",
+   "gen_hght": "200"
+  },
+  {
+   "height": "200-E-2",
+   "gen_hght": "200"
+  },
+  {
+   "height": "200-I",
+   "gen_hght": "200"
+  },
+  {
+   "height": "200-L",
+   "gen_hght": "200"
+  },
+  {
+   "height": "200-S",
+   "gen_hght": "200"
+  },
+  {
+   "height": "200-X",
+   "gen_hght": "200"
+  },
+  {
+   "height": "20/160-IB",
+   "gen_hght": "160"
+  },
+  {
+   "height": "220-F",
+   "gen_hght": "220"
+  },
+  {
+   "height": "225-S",
+   "gen_hght": "225"
+  },
+  {
+   "height": "225-X",
+   "gen_hght": "225"
+  },
+  {
+   "height": "240//500-R-4",
+   "gen_hght": "500"
+  },
+  {
+   "height": "240-E",
+   "gen_hght": "240"
+  },
+  {
+   "height": "240-G",
+   "gen_hght": "240"
+  },
+  {
+   "height": "240-H",
+   "gen_hght": "240"
+  },
+  {
+   "height": "240-Mission Rock",
+   "gen_hght": "240"
+  },
+  {
+   "height": "240-S",
+   "gen_hght": "240"
+  },
+  {
+   "height": "250-CS",
+   "gen_hght": "250"
+  },
+  {
+   "height": "250-S",
+   "gen_hght": "250"
+  },
+  {
+   "height": "25-TI",
+   "gen_hght": "25"
+  },
+  {
+   "height": "25-X",
+   "gen_hght": "25"
+  },
+  {
+   "height": "260//650-R-4",
+   "gen_hght": "650"
+  },
+  {
+   "height": "26-X",
+   "gen_hght": "26"
+  },
+  {
+   "height": "270-CS",
+   "gen_hght": "270"
+  },
+  {
+   "height": "275-E",
+   "gen_hght": "275"
+  },
+  {
+   "height": "285-S",
+   "gen_hght": "285"
+  },
+  {
+   "height": "28-X",
+   "gen_hght": "28"
+  },
+  {
+   "height": "300-CS",
+   "gen_hght": "300"
+  },
+  {
+   "height": "300-E-2",
+   "gen_hght": "300"
+  },
+  {
+   "height": "300-S",
+   "gen_hght": "300"
+  },
+  {
+   "height": "300-W",
+   "gen_hght": "300"
+  },
+  {
+   "height": "30/190-ST",
+   "gen_hght": "190"
+  },
+  {
+   "height": "30-X",
+   "gen_hght": "30"
+  },
+  {
+   "height": "320-E",
+   "gen_hght": "320"
+  },
+  {
+   "height": "320-I",
+   "gen_hght": "320"
+  },
+  {
+   "height": "320-S",
+   "gen_hght": "320"
+  },
+  {
+   "height": "340-I",
+   "gen_hght": "340"
+  },
+  {
+   "height": "350-CS",
+   "gen_hght": "350"
+  },
+  {
+   "height": "350-S",
+   "gen_hght": "350"
+  },
+  {
+   "height": "35-2Y YBI",
+   "gen_hght": "35"
+  },
+  {
+   "height": "35-Low Rise YBI",
+   "gen_hght": "35"
+  },
+  {
+   "height": "360-S",
+   "gen_hght": "360"
+  },
+  {
+   "height": "365-X",
+   "gen_hght": "365"
+  },
+  {
+   "height": "400-I",
+   "gen_hght": "400"
+  },
+  {
+   "height": "400-S",
+   "gen_hght": "400"
+  },
+  {
+   "height": "400-W",
+   "gen_hght": "400"
+  },
+  {
+   "height": "400-X",
+   "gen_hght": "400"
+  },
+  {
+   "height": "40//40-R-4",
+   "gen_hght": "40"
+  },
+  {
+   "height": "40//50-R-4",
+   "gen_hght": "50"
+  },
+  {
+   "height": "40/55-X",
+   "gen_hght": "55"
+  },
+  {
+   "height": "40//65-R-4",
+   "gen_hght": "65"
+  },
+  {
+   "height": "40/65-X",
+   "gen_hght": "65"
+  },
+  {
+   "height": "40//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "40-Mission Rock",
+   "gen_hght": "40"
+  },
+  {
+   "height": "40-OS-PM",
+   "gen_hght": "40"
+  },
+  {
+   "height": "40-X",
+   "gen_hght": "40"
+  },
+  {
+   "height": "450-S",
+   "gen_hght": "450"
+  },
+  {
+   "height": "45/450-R",
+   "gen_hght": "450"
+  },
+  {
+   "height": "45//45-R-4",
+   "gen_hght": "45"
+  },
+  {
+   "height": "45/550-R",
+   "gen_hght": "550"
+  },
+  {
+   "height": "45/65-R",
+   "gen_hght": "65"
+  },
+  {
+   "height": "45-PM",
+   "gen_hght": "45"
+  },
+  {
+   "height": "45-TI",
+   "gen_hght": "45"
+  },
+  {
+   "height": "45-TI/240 Flex Zone-TI",
+   "gen_hght": "240"
+  },
+  {
+   "height": "45-TI/315 Flex Zone-TI",
+   "gen_hght": "315"
+  },
+  {
+   "height": "45-X",
+   "gen_hght": "45"
+  },
+  {
+   "height": "480-I",
+   "gen_hght": "480"
+  },
+  {
+   "height": "48-X",
+   "gen_hght": "48"
+  },
+  {
+   "height": "500-I",
+   "gen_hght": "500"
+  },
+  {
+   "height": "500-S",
+   "gen_hght": "500"
+  },
+  {
+   "height": "50/165/400-TB",
+   "gen_hght": "400"
+  },
+  {
+   "height": "50//50-R-4",
+   "gen_hght": "50"
+  },
+  {
+   "height": "50/65/80-X",
+   "gen_hght": "80"
+  },
+  {
+   "height": "50//65-R-4",
+   "gen_hght": "65"
+  },
+  {
+   "height": "50/85/165-TB",
+   "gen_hght": "165"
+  },
+  {
+   "height": "50/85/300-TB",
+   "gen_hght": "300"
+  },
+  {
+   "height": "50/85/450-TB",
+   "gen_hght": "450"
+  },
+  {
+   "height": "50/85/550-TB",
+   "gen_hght": "550"
+  },
+  {
+   "height": "50//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "50/85-TB",
+   "gen_hght": "85"
+  },
+  {
+   "height": "50-N",
+   "gen_hght": "50"
+  },
+  {
+   "height": "50-TI",
+   "gen_hght": "50"
+  },
+  {
+   "height": "50-X",
+   "gen_hght": "50"
+  },
+  {
+   "height": "550-S",
+   "gen_hght": "550"
+  },
+  {
+   "height": "55//100-R-4",
+   "gen_hght": "100"
+  },
+  {
+   "height": "55//105-R-4",
+   "gen_hght": "105"
+  },
+  {
+   "height": "55//55-R-4",
+   "gen_hght": "55"
+  },
+  {
+   "height": "555-X",
+   "gen_hght": "555"
+  },
+  {
+   "height": "55//65-R-4",
+   "gen_hght": "65"
+  },
+  {
+   "height": "55/65-X",
+   "gen_hght": "65"
+  },
+  {
+   "height": "55//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "55-X",
+   "gen_hght": "55"
+  },
+  {
+   "height": "56-X",
+   "gen_hght": "56"
+  },
+  {
+   "height": "57-X",
+   "gen_hght": "57"
+  },
+  {
+   "height": "58-X",
+   "gen_hght": "58"
+  },
+  {
+   "height": "600-S-2",
+   "gen_hght": "600"
+  },
+  {
+   "height": "60//120-R-4",
+   "gen_hght": "120"
+  },
+  {
+   "height": "60-Mission Rock",
+   "gen_hght": "60"
+  },
+  {
+   "height": "60-X",
+   "gen_hght": "60"
+  },
+  {
+   "height": "65/105-R",
+   "gen_hght": "105"
+  },
+  {
+   "height": "65//120-R-4",
+   "gen_hght": "120"
+  },
+  {
+   "height": "65/200-R",
+   "gen_hght": "200"
+  },
+  {
+   "height": "65/240-EP",
+   "gen_hght": "240"
+  },
+  {
+   "height": "65/250-R",
+   "gen_hght": "250"
+  },
+  {
+   "height": "65/400-R",
+   "gen_hght": "400"
+  },
+  {
+   "height": "65//65-R-4",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65/75-X",
+   "gen_hght": "75"
+  },
+  {
+   "height": "65-85-N",
+   "gen_hght": "85"
+  },
+  {
+   "height": "65//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "65-A",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-A-1",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-B",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-D",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-D-1",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-J",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-N",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-PM",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-PPS/240-PPS",
+   "gen_hght": "240"
+  },
+  {
+   "height": "65-TI",
+   "gen_hght": "65"
+  },
+  {
+   "height": "65-TI/240 Flex Zone-TI",
+   "gen_hght": "240"
+  },
+  {
+   "height": "65-TI/315 Flex Zone-TI",
+   "gen_hght": "315"
+  },
+  {
+   "height": "65-X",
+   "gen_hght": "65"
+  },
+  {
+   "height": "67-X",
+   "gen_hght": "67"
+  },
+  {
+   "height": "68-X",
+   "gen_hght": "68"
+  },
+  {
+   "height": "700-S-2",
+   "gen_hght": "700"
+  },
+  {
+   "height": "70//140-R-4",
+   "gen_hght": "140"
+  },
+  {
+   "height": "70-X",
+   "gen_hght": "70"
+  },
+  {
+   "height": "750-S-2",
+   "gen_hght": "750"
+  },
+  {
+   "height": "75//160-R-4",
+   "gen_hght": "160"
+  },
+  {
+   "height": "75-Mid Rise YBI",
+   "gen_hght": "75"
+  },
+  {
+   "height": "75-TI",
+   "gen_hght": "75"
+  },
+  {
+   "height": "75-TI/240 Flex Zone-TI",
+   "gen_hght": "240"
+  },
+  {
+   "height": "75-TI/315 Flex Zone-TI",
+   "gen_hght": "315"
+  },
+  {
+   "height": "75-TI/450 Flex Zone-TI",
+   "gen_hght": "450"
+  },
+  {
+   "height": "75-X",
+   "gen_hght": "75"
+  },
+  {
+   "height": "76-X",
+   "gen_hght": "76"
+  },
+  {
+   "height": "78-X",
+   "gen_hght": "78"
+  },
+  {
+   "height": "80//120-R-4",
+   "gen_hght": "120"
+  },
+  {
+   "height": "80-130-F",
+   "gen_hght": "130"
+  },
+  {
+   "height": "80-130-X",
+   "gen_hght": "130"
+  },
+  {
+   "height": "80//140-R-4",
+   "gen_hght": "140"
+  },
+  {
+   "height": "80//80-R-4",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "80-A",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80-B",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80-D",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80-E",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80-T",
+   "gen_hght": "80"
+  },
+  {
+   "height": "80-T-120-T",
+   "gen_hght": "120"
+  },
+  {
+   "height": "80-T-130-T",
+   "gen_hght": "130"
+  },
+  {
+   "height": "80-X",
+   "gen_hght": "80"
+  },
+  {
+   "height": "84-E",
+   "gen_hght": "84"
+  },
+  {
+   "height": "84-J",
+   "gen_hght": "84"
+  },
+  {
+   "height": "84-X",
+   "gen_hght": "84"
+  },
+  {
+   "height": "84-X-1",
+   "gen_hght": "84"
+  },
+  {
+   "height": "84-X-2",
+   "gen_hght": "84"
+  },
+  {
+   "height": "850-S-2",
+   "gen_hght": "850"
+  },
+  {
+   "height": "85//120-R-4",
+   "gen_hght": "120"
+  },
+  {
+   "height": "85//140-R-4",
+   "gen_hght": "140"
+  },
+  {
+   "height": "85/150-R",
+   "gen_hght": "150"
+  },
+  {
+   "height": "85//160-R-4",
+   "gen_hght": "160"
+  },
+  {
+   "height": "85//180-R-4",
+   "gen_hght": "180"
+  },
+  {
+   "height": "85/200-R",
+   "gen_hght": "200"
+  },
+  {
+   "height": "85/250-R",
+   "gen_hght": "250"
+  },
+  {
+   "height": "85/250-R-2",
+   "gen_hght": "250"
+  },
+  {
+   "height": "85/400-R",
+   "gen_hght": "400"
+  },
+  {
+   "height": "85//85-R-4",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-B",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-D",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-PM",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-R-2",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-TB",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-TI",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-TI/240 Flex Zone-TI",
+   "gen_hght": "240"
+  },
+  {
+   "height": "85-X",
+   "gen_hght": "85"
+  },
+  {
+   "height": "85-X // 120/400-R-2",
+   "gen_hght": "400"
+  },
+  {
+   "height": "85-X-160-CS",
+   "gen_hght": "160"
+  },
+  {
+   "height": "86-X",
+   "gen_hght": "86"
+  },
+  {
+   "height": "90/120-Mission Rock",
+   "gen_hght": "120"
+  },
+  {
+   "height": "90-Mission Rock",
+   "gen_hght": "90"
+  },
+  {
+   "height": "90-X",
+   "gen_hght": "90"
+  },
+  {
+   "height": "92-X",
+   "gen_hght": "92"
+  },
+  {
+   "height": "95//240-R-4",
+   "gen_hght": "240"
+  },
+  {
+   "height": "95-PM",
+   "gen_hght": "95"
+  },
+  {
+   "height": "96-X",
+   "gen_hght": "96"
+  },
+  {
+   "height": "97-X",
+   "gen_hght": "97"
+  },
+  {
+   "height": "CP",
+   "gen_hght": "5555"
+  },
+  {
+   "height": "HP",
+   "gen_hght": "6666"
+  },
+  {
+   "height": "HP-RA",
+   "gen_hght": "7777"
+  },
+  {
+   "height": "Job Corps",
+   "gen_hght": "3333"
+  },
+  {
+   "height": "MB-RA",
+   "gen_hght": "8888"
+  },
+  {
+   "height": "None Stated",
+   "gen_hght": "2222"
+  },
+  {
+   "height": "OS",
+   "gen_hght": "9999"
+  },
+  {
+   "height": "Special Height District",
+   "gen_hght": "4444"
+  },
+  {
+   "height": "USCG/Caltrans",
+   "gen_hght": "1111"
+  }
+ ]
+}

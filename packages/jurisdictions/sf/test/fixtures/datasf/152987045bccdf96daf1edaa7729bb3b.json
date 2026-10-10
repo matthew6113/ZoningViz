@@ -1,0 +1,1 @@
+{"url":"https://data.sf.gov/resource/acdm-wktn.json?%24select=mapblklot&%24where=active%3Dtrue+AND+intersects%28shape%2C%27POINT%28-122.49168705+37.73184366%29%27%29&%24group=mapblklot&%24order=mapblklot","fetchedAt":"2026-10-10T16:21:42.093Z","body":[{"mapblklot":"7261001"}]}

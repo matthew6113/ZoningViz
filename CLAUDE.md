@@ -30,7 +30,7 @@ Also:
 | Map | MapLibre GL JS; parcel outlines as one static PMTiles file built with tippecanoe |
 | 3D | Three.js via react-three-fiber + drei |
 | Booleans | manifold-3d (WASM) |
-| Projection | proj4, EPSG:2227 (CA State Plane III, US survey feet), plus turf |
+| Projection | proj4, EPSG:2227 (CA State Plane III, US survey feet); `engine/src/geometry/projection.ts` takes the proj definition from the jurisdiction |
 | Animation | One GSAP timeline |
 | Rules | JSON district files validated with zod |
 | Tests | Vitest (root `vitest.config.ts` runs every package as a project) |
@@ -46,7 +46,11 @@ pnpm test         # vitest run, all workspace projects
 pnpm typecheck    # tsc in every package
 pnpm dev          # web app dev server
 pnpm build        # web app production build
+pnpm parcel <blklot>              # facts for one SF parcel (also: --at <lon> <lat>, --json, --no-cache)
+LIVE=1 pnpm test                  # adds a smoke test against the real DataSF API
 ```
+
+Dev API responses are cached in `.cache/datasf/` (gitignored).
 
 ## Folder map
 
@@ -59,8 +63,13 @@ packages/engine/                # @zoningviz/engine — pure TS: resolve rules, 
   src/geometry/                 # projection, lot lines, cuts, slicing
   src/rules/                    # rule kind -> allowed-region builder
   test/fixtures/                # fixtures A–D with expected numbers
-packages/jurisdictions/         # @zoningviz/jurisdictions
-  sf/adapter.ts                 # DataSF queries, field mapping (Phase 1)
+packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
+  sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt
+  sf/datasf.ts                  # dataset IDs, SoQL helpers, EPSG:2227 definition
+  sf/heightLabel.ts             # "40-X" / "40//85-R-4" parser; anything else is "unparsed"
+  sf/node/cache.ts              # Node-only disk cache (CLI, test replay); never import from browser code
+  sf/cli.ts                     # `pnpm parcel`
+  sf/DATA-NOTES.md              # verified fields and query syntax, deviations from SPEC.md
   sf/districts/<CODE>.json      # one rule file per district
 scripts/build-tiles.ts          # parcels -> PMTiles (Phase 5)
 ```
@@ -75,9 +84,14 @@ Base: `https://data.sf.gov/resource/<id>.json` or `.geojson` (formerly data.sfgo
 |---|---|---|
 | Parcels – Active and Retired | `acdm-wktn` | blklot, mapblklot, zoning_code, zoning_district, shape, active, address fields, centroid lat/lon |
 | Zoning Districts | `3i4a-hu95` | Map overlay; cross-check blank zoning |
-| Height and Bulk Districts | `h9wh-cg3m` | Height cap and bulk via point-in-polygon; parcels straddling two districts keep both and split the envelope |
+| Height and Bulk Districts | `h9wh-cg3m` | `height` label, `gen_hght`, geometry in **`the_geom`** (not `shape`); parcels straddling two districts keep both and split the envelope |
 
-Condo parcels stack: group by `mapblklot` so a click picks the land, not a unit. Show each dataset's as-of date on the fact card.
+Verified facts (details in `packages/jurisdictions/sf/DATA-NOTES.md`):
+- **R-4 (Family Zoning Plan) labels are `base//local-R-4`. `gen_hght` is the local-program height, not the base.** Never use `gen_hght` as an R-4 cap; the base exists only in the label. Unparseable labels are flagged, not guessed.
+- Height districts are found by intersecting the parcel polygon (not the centroid). Overlap shares are computed on the client in EPSG:2227, and districts under 0.1% of the lot are treated as boundary contact.
+- Lot area is computed from the parcel shape; the parcel layer has no area field, and the assessor's `lot_area` is too noisy to use as ground truth.
+- Condo stacks: units repeat the parent's shape; the land record is `blklot = mapblklot`. Point lookups group by `mapblklot`.
+- Show each dataset's as-of date on the fact card (`SfParcel.asOf`).
 
 ## Rule JSON schema
 
@@ -144,8 +158,8 @@ Fixtures (hand-checked):
 
 ## Phase status
 
-- [ ] Phase 0 — Kickoff (repo and CLAUDE.md done; Phase 1 plan awaiting approval)
-- [ ] Phase 1 — Data (DataSF adapter, `pnpm parcel <blklot>`)
+- [x] Phase 0 — Kickoff
+- [x] Phase 1 — Data (DataSF adapter, `pnpm parcel <blklot>`; demo parcels 4025007, 0044030, 4276045)
 - [ ] Phase 2 — Engine (fixtures A–D, invariants)
 - [ ] Phase 3 — Scene (step through with Next/Back)
 - [ ] Phase 4 — Animation (GSAP timeline, scrubber)
