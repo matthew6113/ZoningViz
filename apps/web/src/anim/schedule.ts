@@ -105,11 +105,15 @@ export function buildSchedule(result: OkResult, mode: MotionMode): Schedule {
 
 const EPS = 1e-6;
 
-/** The step position showing at time t: the last position whose segment has begun. */
+/**
+ * The step position showing at time t: the last position whose segment has
+ * begun. A segment counts as begun only once the playhead is past its start,
+ * because a step's resting point can coincide with the next step's start.
+ */
 export function positionAt(schedule: Schedule, time: number): number {
   let position = 0;
   schedule.starts.forEach((start, p) => {
-    if (start <= time + EPS) position = p;
+    if (p > 0 && start < time - EPS) position = p;
   });
   return position;
 }

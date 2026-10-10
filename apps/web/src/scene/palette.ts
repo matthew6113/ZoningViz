@@ -15,4 +15,6 @@ export const COLORS = {
   front: "#2f5d8a",
   candidate: ["#2f5d8a", "#b07a12", "#4f7d3a", "#6b4c9a"],
   ink: "#2b2924",
+  /** The plane that sweeps along a cut's boundary (not red: red is the removed volume). */
+  cuttingPlane: "#4f7fb0",
 } as const;

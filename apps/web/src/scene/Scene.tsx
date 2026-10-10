@@ -1,12 +1,15 @@
-import { Edges, Html, Line, OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
-import { projectMultiPolygon, type Dimension, type Floor, type FrontCandidate, type Solid, type XY } from "@zoningviz/engine";
+import { Edges, Line, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { projectMultiPolygon, type FrontCandidate, type XY } from "@zoningviz/engine";
 import type { SfBuilding } from "@zoningviz/jurisdictions/sf";
-import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
-import { ExtrudeGeometry, ShapeGeometry } from "three";
-import type { StepView } from "../state/steps";
+import { useEffect, useMemo, useRef } from "react";
+import { ExtrudeGeometry } from "three";
+import type { AnimState } from "../anim/timeline";
+import type { OkResult } from "../state/steps";
+import { AnimatedDimensions, AnimatedEnvelope, AnimatedFloors, CuttingPlanes } from "./Animated";
 import { ENGINE_TO_THREE, engineToThree } from "./coords";
-import { ringsToShape, ringToPoints, solidToGeometry } from "./geometry";
+import { ringsToShape, ringToPoints } from "./geometry";
+import { Label, LabelLayer } from "./labels";
 import { COLORS } from "./palette";
 
 export interface SceneProps {
@@ -21,69 +24,93 @@ export interface SceneProps {
   front: FrontCandidate | null;
   /** Street sides to choose between (corner and through lots). */
   candidates: FrontCandidate[] | null;
-  view: StepView | null;
-  floors: Floor[];
+  /** The envelope and the timeline state that animates it. */
+  result: OkResult | null;
+  anim: AnimState | null;
   /** Height of the starting block, used to frame the camera. */
   frameHeightFt: number;
 }
 
-// drei's <Html> re-creates its React root when the canvas's event target
-// changes, which can leave labels empty. Pinning every label to one wrapper
-// element (its `portal`) keeps the target stable.
-const LabelLayer = createContext<RefObject<HTMLDivElement | null> | null>(null);
-
 export function Scene(props: SceneProps) {
-  const { outline, frameHeightFt, front } = props;
+  const { outline, frameHeightFt, front, result, anim } = props;
   const framing = useMemo(() => frame(outline, front?.outward ?? null, frameHeightFt), [outline, front, frameHeightFt]);
   const labels = useRef<HTMLDivElement>(null);
 
   return (
     <div className="scene" ref={labels}>
-    <LabelLayer.Provider value={labels}>
-    <Canvas className="scene-canvas" dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }} data-testid="scene">
-      <color attach="background" args={["#f7f6f2"]} />
-      <hemisphereLight args={["#ffffff", "#d9d3c4", 1.6]} />
-      <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
-      <CameraRig framing={framing} />
-      <group rotation={ENGINE_TO_THREE}>
-        <Ground radius={framing.distance * 3} />
-        <LotLines outline={outline} neighbors={props.neighborLots} front={front} />
-        <Buildings buildings={props.buildings} projection={props.projection} origin={props.originPlanar} />
-        {props.candidates && <FrontSides candidates={props.candidates} />}
-        {props.view && <StepSolids view={props.view} />}
-        {props.view?.kind === "rule" && <Dimensions dimensions={props.view.dimensions} />}
-        {props.view?.kind === "finale" && <Floors floors={props.floors} />}
-      </group>
-    </Canvas>
-    </LabelLayer.Provider>
+      <LabelLayer.Provider value={labels}>
+        <Canvas className="scene-canvas" dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: AUTOMATED }} data-testid="scene">
+          <color attach="background" args={["#f7f6f2"]} />
+          <hemisphereLight args={["#ffffff", "#d9d3c4", 1.6]} />
+          <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
+          <CameraRig key={framing.key} framing={framing} anim={anim} />
+          <group rotation={ENGINE_TO_THREE}>
+            <Ground radius={framing.distance * 3} />
+            <LotLines outline={outline} neighbors={props.neighborLots} front={front} />
+            <Buildings buildings={props.buildings} projection={props.projection} origin={props.originPlanar} />
+            {props.candidates && <FrontSides candidates={props.candidates} />}
+            {result && anim && (
+              <>
+                <AnimatedEnvelope result={result} anim={anim} />
+                <CuttingPlanes result={result} anim={anim} />
+                <AnimatedDimensions result={result} anim={anim} />
+                <AnimatedFloors floors={result.floors} anim={anim} />
+              </>
+            )}
+          </group>
+        </Canvas>
+      </LabelLayer.Provider>
     </div>
   );
 }
 
-function Label({ position, className, children }: { position: [number, number, number]; className: string; children: React.ReactNode }) {
-  const portal = useContext(LabelLayer);
-  return (
-    <Html position={position} center className={className} zIndexRange={[10, 0]} portal={(portal ?? undefined) as RefObject<HTMLElement> | undefined}>
-      {children}
-    </Html>
-  );
-}
+// Browser tests read the canvas pixels back, which needs the drawing buffer kept
+// between frames. That costs a copy per frame, so real visitors don't get it.
+const AUTOMATED = typeof navigator !== "undefined" && navigator.webdriver === true;
 
 type Framing = ReturnType<typeof frame>;
 
 // Framing is tuned for a landscape canvas; narrower canvases (phones) pull the camera back.
 const REFERENCE_ASPECT = 1.3;
+// The arrival flies from nearly straight overhead (a map-like view) down to the street view.
+const OVERHEAD_ELEVATION = (88 * Math.PI) / 180;
+const STREET_ELEVATION = (30 * Math.PI) / 180;
+const OVERHEAD_DISTANCE = 1.3;
 
-function CameraRig({ framing }: { framing: Framing }) {
+interface ControlsLike {
+  target: { set(x: number, y: number, z: number): void };
+  enabled: boolean;
+  update(): void;
+}
+
+function CameraRig({ framing, anim }: { framing: Framing; anim: AnimState | null }) {
   const aspect = useThree((state) => state.size.width / Math.max(1, state.size.height));
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls) as unknown as ControlsLike | null;
   const pullBack = Math.max(1, REFERENCE_ASPECT / aspect);
-  const [tx, ty, tz] = framing.target;
-  const camera = framing.camera.map((c, i) => [tx, ty, tz][i]! + (c - [tx, ty, tz][i]!) * pullBack) as [number, number, number];
-  const key = `${framing.key}:${pullBack.toFixed(1)}`;
+  const last = useRef<string | null>(null);
+
+  // During the arrival the timeline flies the camera; afterwards the viewer can orbit freely.
+  useFrame(() => {
+    const p = anim ? anim.camera : 1;
+    const key = `${p}:${pullBack}`;
+    if (key === last.current) return;
+    last.current = key;
+    const [x, y, z] = cameraAt(framing, pullBack, p);
+    camera.position.set(x, y, z);
+    if (controls) {
+      controls.target.set(...framing.target);
+      controls.enabled = p >= 1;
+      controls.update();
+    } else {
+      camera.lookAt(...framing.target);
+    }
+  });
+
   return (
     <>
-      <PerspectiveCamera key={key} makeDefault fov={35} near={1} far={50_000} position={camera} />
-      <OrbitControls key={`c${key}`} makeDefault target={framing.target} maxPolarAngle={Math.PI / 2 - 0.04} />
+      <PerspectiveCamera makeDefault fov={35} near={1} far={50_000} position={cameraAt(framing, pullBack, anim ? anim.camera : 1)} />
+      <OrbitControls makeDefault target={framing.target} maxPolarAngle={Math.PI / 2 - 0.04} />
     </>
   );
 }
@@ -93,22 +120,26 @@ function frame(outline: XY[][][], outward: XY | null, heightFt: number) {
   const radius = Math.max(10, ...outline.flat(2).map(([x, y]) => Math.hypot(x, y)));
   const [ox, oy] = outward ?? [0, -1];
   const turn = (35 * Math.PI) / 180;
-  const dx = ox * Math.cos(turn) - oy * Math.sin(turn);
-  const dy = ox * Math.sin(turn) + oy * Math.cos(turn);
-  const distance = Math.max(radius * 3.4, heightFt * 2.2, 80);
-  const elevation = (30 * Math.PI) / 180;
-  const target: [number, number, number] = [0, 0, heightFt * 0.3];
-  const camera: [number, number, number] = [
-    dx * distance * Math.cos(elevation),
-    dy * distance * Math.cos(elevation),
-    target[2] + distance * Math.sin(elevation),
-  ];
   return {
     key: `${radius.toFixed(1)}:${heightFt}:${ox.toFixed(3)}:${oy.toFixed(3)}`,
-    distance,
-    camera: engineToThree(camera),
-    target: engineToThree(target),
+    distance: Math.max(radius * 3.4, heightFt * 2.2, 80),
+    azimuth: [ox * Math.cos(turn) - oy * Math.sin(turn), ox * Math.sin(turn) + oy * Math.cos(turn)] as XY,
+    targetEngine: [0, 0, heightFt * 0.3] as [number, number, number],
+    target: engineToThree([0, 0, heightFt * 0.3]),
   };
+}
+
+/** Camera position (three.js coordinates) at arrival progress p: 0 overhead, 1 street view. */
+function cameraAt(framing: Framing, pullBack: number, p: number): [number, number, number] {
+  const elevation = OVERHEAD_ELEVATION + (STREET_ELEVATION - OVERHEAD_ELEVATION) * p;
+  const distance = framing.distance * pullBack * (OVERHEAD_DISTANCE + (1 - OVERHEAD_DISTANCE) * p);
+  const [tx, ty, tz] = framing.targetEngine;
+  const [ax, ay] = framing.azimuth;
+  return engineToThree([
+    tx + ax * distance * Math.cos(elevation),
+    ty + ay * distance * Math.cos(elevation),
+    tz + distance * Math.sin(elevation),
+  ]);
 }
 
 function Ground({ radius }: { radius: number }) {
@@ -153,9 +184,7 @@ function Buildings({ buildings, projection, origin }: { buildings: SfBuilding[];
   const geometries = useMemo(
     () =>
       shapes.map((s) =>
-        s.heightFt && s.heightFt > 0
-          ? new ExtrudeGeometry(ringsToShape(s.rings), { depth: s.heightFt, bevelEnabled: false })
-          : null,
+        s.heightFt && s.heightFt > 0 ? new ExtrudeGeometry(ringsToShape(s.rings), { depth: s.heightFt, bevelEnabled: false }) : null,
       ),
     [shapes],
   );
@@ -172,52 +201,6 @@ function Buildings({ buildings, projection, origin }: { buildings: SfBuilding[];
           </mesh>
         ) : (
           <Line key={`${s.id}-${i}`} points={ringToPoints(s.rings[0] ?? [], 0.03)} color={COLORS.buildingEdge} lineWidth={1} />
-        );
-      })}
-    </group>
-  );
-}
-
-function SolidMesh({ solid, color, edge, opacity }: { solid: Solid; color: string; edge: string; opacity: number }) {
-  const geometry = useMemo(() => solidToGeometry(solid), [solid]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  const translucent = opacity < 1;
-  return (
-    <mesh geometry={geometry}>
-      <meshStandardMaterial color={color} transparent={translucent} opacity={opacity} depthWrite={!translucent} flatShading />
-      <Edges threshold={15} color={edge} />
-    </mesh>
-  );
-}
-
-function StepSolids({ view }: { view: StepView }) {
-  switch (view.kind) {
-    case "start":
-      return <SolidMesh solid={view.envelope} color={COLORS.start} edge={COLORS.envelopeEdge} opacity={0.35} />;
-    case "rule":
-      return (
-        <>
-          <SolidMesh solid={view.envelope} color={COLORS.envelope} edge={COLORS.envelopeEdge} opacity={0.6} />
-          {view.removed && <SolidMesh solid={view.removed} color={COLORS.removed} edge={COLORS.removedEdge} opacity={0.6} />}
-        </>
-      );
-    case "finale":
-      return <SolidMesh solid={view.envelope} color={COLORS.envelope} edge={COLORS.envelopeEdge} opacity={0.82} />;
-  }
-}
-
-function Dimensions({ dimensions }: { dimensions: Dimension[] }) {
-  return (
-    <group>
-      {dimensions.map((d, i) => {
-        const mid: [number, number, number] = [(d.from[0] + d.to[0]) / 2, (d.from[1] + d.to[1]) / 2, (d.from[2] + d.to[2]) / 2];
-        return (
-          <group key={i}>
-            <Line points={[d.from, d.to]} color={COLORS.ink} lineWidth={2} />
-            <Label position={mid} className="dimension-label">
-              {d.label}
-            </Label>
-          </group>
         );
       })}
     </group>
@@ -243,28 +226,6 @@ function FrontSides({ candidates }: { candidates: FrontCandidate[] }) {
           </group>
         );
       })}
-    </group>
-  );
-}
-
-function Floors({ floors }: { floors: Floor[] }) {
-  const plates = useMemo(
-    () => floors.map((f) => ({ floor: f, geometry: new ShapeGeometry(f.outline.map((ring) => ringsToShape([ring]))) })),
-    [floors],
-  );
-  useEffect(() => () => plates.forEach((p) => p.geometry.dispose()), [plates]);
-  return (
-    <group>
-      {plates.map(({ floor, geometry }) => (
-        <group key={floor.index} position={[0, 0, floor.bottomFt + 0.15]}>
-          <mesh geometry={geometry}>
-            <meshStandardMaterial color={COLORS.floor} transparent opacity={0.5} depthWrite={false} />
-          </mesh>
-          {floor.outline.map((ring, i) => (
-            <Line key={i} points={ringToPoints(ring)} color={COLORS.envelopeEdge} lineWidth={1.5} />
-          ))}
-        </group>
-      ))}
     </group>
   );
 }

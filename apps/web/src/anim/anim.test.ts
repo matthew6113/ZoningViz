@@ -34,6 +34,8 @@ describe("schedule", () => {
 
   it("works out positions and Next/Back targets from any time", () => {
     expect(positionAt(s, 0)).toBe(0);
+    // Resting points that coincide with the next step's start still belong to their own step.
+    s.labels.forEach((time, p) => expect(positionAt(s, time)).toBe(p));
     expect(positionAt(s, s.rules[3]!.start + 0.1)).toBe(4);
     expect(positionAt(s, s.duration)).toBe(8);
     expect(nextPosition(s, s.labels[0]!)).toBe(1);

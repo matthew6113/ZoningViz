@@ -1,10 +1,12 @@
 import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions } from "@zoningviz/engine";
 import { availableDistricts } from "@zoningviz/jurisdictions/sf";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { MotionMode } from "./anim/schedule";
+import { usePlayer } from "./anim/usePlayer";
 import { useEngine, useEnvelope, useLot } from "./data/hooks";
 import type { LoadedLot } from "./data/loadLot";
 import { Scene } from "./scene/Scene";
-import { clampPosition, lastPosition, revealedCount, viewAt } from "./state/steps";
+import { lastPosition, type OkResult } from "./state/steps";
 import type { UrlState } from "./state/url";
 import { useUrlState } from "./state/useUrlState";
 import { FactCard } from "./ui/FactCard";
@@ -12,7 +14,8 @@ import { FrontPrompt } from "./ui/FrontPrompt";
 import { HonestyStrip } from "./ui/HonestyStrip";
 import { Landing } from "./ui/Landing";
 import { RuleCards } from "./ui/RuleCards";
-import { StepControls } from "./ui/StepControls";
+import { Hud } from "./ui/Hud";
+import { PlayerControls } from "./ui/PlayerControls";
 import { Summary } from "./ui/Summary";
 
 export function App() {
@@ -22,7 +25,7 @@ export function App() {
       {url.parcel ? (
         <LotView key={url.parcel} url={url} setUrl={setUrl} />
       ) : (
-        <Landing onOpen={(parcel) => setUrl({ parcel, step: 0, front: null, setback: null }, "push")} />
+        <Landing onOpen={(parcel) => setUrl({ parcel, step: null, front: null, setback: null, off: [] }, "push")} />
       )}
       <HonestyStrip />
     </div>
@@ -34,16 +37,16 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
   const engine = useEngine();
   const loaded = lot.status === "ready" ? lot.value : null;
 
-  const options = useMemo(() => envelopeOptions(loaded, url), [loaded, url.front, url.setback]); // eslint-disable-line react-hooks/exhaustive-deps
+  const offKey = url.off.join(",");
+  const options = useMemo(() => envelopeOptions(loaded, url), [loaded, url.front, url.setback, offKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const envelope = useEnvelope(engine.status === "ready" ? engine.value : null, loaded, options);
-  const setPosition = useCallback((step: number) => setUrl({ step }), [setUrl]);
 
   useEffect(() => {
     if (loaded) document.title = `${loaded.facts.title} · Zoning envelope`;
   }, [loaded]);
 
   const back = (
-    <a className="back-link" href="?" onClick={(e) => (e.preventDefault(), setUrl({ parcel: null, step: null, front: null, setback: null }, "push"))}>
+    <a className="back-link" href="?" onClick={(e) => (e.preventDefault(), setUrl({ parcel: null, step: null, front: null, setback: null, off: [] }, "push"))}>
       ← Choose another lot
     </a>
   );
@@ -82,8 +85,8 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
             buildings={value.buildings}
             front={null}
             candidates={result.candidates}
-            view={null}
-            floors={[]}
+            result={null}
+            anim={null}
             frameHeightFt={40}
           />
         }
@@ -97,40 +100,64 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
     );
   }
 
-  const position = clampPosition(url.step, result);
+  return <EnvelopeView key={value.id} lot={value} result={result} url={url} setUrl={setUrl} back={back} />;
+}
+
+function EnvelopeView({
+  lot,
+  result,
+  url,
+  setUrl,
+  back,
+}: {
+  lot: LoadedLot;
+  result: OkResult;
+  url: UrlState;
+  setUrl: (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
+  back: React.ReactNode;
+}) {
+  const onPosition = useCallback((step: number) => setUrl({ step }), [setUrl]);
+  const player = usePlayer(result, url.step, onPosition);
+  const { position } = player;
   const last = lastPosition(result);
-  const view = viewAt(position, result);
+  const current = position >= 1 && position <= result.steps.length ? result.steps[position - 1]! : null;
   const label =
-    view.kind === "start"
+    position === 0
       ? `Start: everything up to ${result.start.heightFt} ft`
-      : view.kind === "finale"
+      : position === last
         ? "Result"
-        : `Rule ${position} of ${result.steps.length}: ${view.step.rule.title}`;
-  const setbackRule = value.district.rules.find((r) => r.kind === "front_setback");
+        : `Rule ${position} of ${result.steps.length}: ${current!.rule.title}`;
+  const setbackRule = lot.district!.rules.find((r) => r.kind === "front_setback");
+  const toggle = (ruleId: string) =>
+    setUrl({ off: url.off.includes(ruleId) ? url.off.filter((id) => id !== ruleId) : [...url.off, ruleId] });
 
   return (
     <Layout
       back={back}
-      scrollToTop={view.kind === "finale"}
+      motion={player.mode}
+      scrollToTop={position === last}
       scene={
-        <Scene
-          outline={result.lot.outline}
-          neighborLots={result.lot.neighbors}
-          originPlanar={result.lot.originPlanar}
-          projection={value.input!.projection}
-          buildings={value.buildings}
-          front={result.lot.front}
-          candidates={null}
-          view={view}
-          floors={result.floors}
-          frameHeightFt={result.start.heightFt}
-        />
+        <>
+          <Scene
+            outline={result.lot.outline}
+            neighborLots={result.lot.neighbors}
+            originPlanar={result.lot.originPlanar}
+            projection={lot.input!.projection}
+            buildings={lot.buildings}
+            front={result.lot.front}
+            candidates={null}
+            result={result}
+            anim={player.anim}
+            frameHeightFt={result.start.heightFt}
+          />
+          <Hud refs={player.hud} />
+        </>
       }
-      controls={<StepControls position={position} last={last} label={label} onChange={setPosition} />}
+      controls={<PlayerControls player={player} label={label} steps={result.steps} />}
       side={
         <>
-          {view.kind === "finale" && <Summary totals={result.totals} floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT} />}
-          <FactCard facts={value.facts} lot={result.lot} notes={result.notes} />
+          {position === last && <Summary totals={result.totals} floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT} />}
+          <FactCard facts={lot.facts} lot={result.lot} notes={result.notes} />
           {result.lot.frontCandidates.length > 1 && (
             <p className="muted front-note">
               Front: side {String.fromCharCode(65 + result.lot.front.index)}.{" "}
@@ -139,17 +166,19 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
               </button>
             </p>
           )}
-          {view.kind === "start" && (
+          {position === 0 && (
             <p className="card intro">
               The pale block is the lot extruded to {result.start.heightFt} ft, twice the mapped height: all the space you
-              might imagine using. Press Next to apply each rule in turn.
+              might imagine using. Press Play to watch each rule carve it, or Next to go one rule at a time.
             </p>
           )}
           <RuleCards
             steps={result.steps}
-            revealed={revealedCount(position, result)}
-            current={view.kind === "rule" ? position - 1 : null}
+            current={current ? position - 1 : null}
             onSetback={(feet) => setbackRule && setUrl({ setback: feet })}
+            off={url.off}
+            onToggle={toggle}
+            registerCard={player.registerCard}
           />
         </>
       }
@@ -163,6 +192,7 @@ function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions 
   const setbackRule = lot?.district?.rules.find((r) => r.kind === "front_setback");
   const setback = url.setback ?? lot?.defaultSetbackFt ?? null;
   if (setbackRule && setback !== null) options.overrides = { [setbackRule.id]: { feet: setback } };
+  if (url.off.length) options.disabledRuleIds = url.off;
   return options;
 }
 
@@ -172,7 +202,9 @@ function Layout({
   controls,
   side,
   scrollToTop = false,
+  motion,
 }: {
+  motion?: MotionMode;
   back: React.ReactNode;
   scene: React.ReactNode;
   controls?: React.ReactNode;
@@ -185,7 +217,7 @@ function Layout({
     if (scrollToTop) sideRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [scrollToTop]);
   return (
-    <main className="lot-view">
+    <main className="lot-view" data-motion={motion}>
       <div className="stage">
         <div className="stage-top">{back}</div>
         <div className="scene-wrap">{scene}</div>

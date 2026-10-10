@@ -15,13 +15,17 @@ const STATUS_LABEL: Record<Step["status"], string> = {
 
 export interface RuleCardsProps {
   steps: Step[];
-  revealed: number;
   /** Index of the current step's card, or null at the start and the finale. */
   current: number | null;
   onSetback: (feet: number) => void;
+  /** Rule ids switched off. */
+  off: string[];
+  onToggle: (ruleId: string) => void;
+  /** The timeline reveals each card as it plays; every card stays mounted. */
+  registerCard: (index: number, element: HTMLElement | null) => void;
 }
 
-export function RuleCards({ steps, revealed, current, onSetback }: RuleCardsProps) {
+export function RuleCards({ steps, current, onSetback, off, onToggle, registerCard }: RuleCardsProps) {
   const currentRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     // Only where the card column scrolls on its own (desktop). On phones it
@@ -34,10 +38,13 @@ export function RuleCards({ steps, revealed, current, onSetback }: RuleCardsProp
   return (
     <section aria-label="Rules" className="rules">
       <ol className="rule-list">
-        {steps.slice(0, revealed).map((step, i) => (
+        {steps.map((step, i) => (
           <li
             key={step.rule.id}
-            ref={i === current ? currentRef : undefined}
+            ref={(element) => {
+              registerCard(i, element);
+              if (i === current) currentRef.current = element;
+            }}
             className={`card rule-card status-${step.status}${i === current ? " current" : ""}`}
             aria-current={i === current ? "step" : undefined}
             data-rule={step.rule.id}
@@ -46,6 +53,18 @@ export function RuleCards({ steps, revealed, current, onSetback }: RuleCardsProp
               <span className="rule-number">{i + 1}</span>
               <h3>{step.rule.title}</h3>
               <span className="chip">{STATUS_LABEL[step.status]}</span>
+              {step.rule.kind !== "info" && step.rule.kind !== "flag" && (
+                <button
+                  type="button"
+                  className="eye"
+                  aria-pressed={!off.includes(step.rule.id)}
+                  aria-label={`${off.includes(step.rule.id) ? "Turn on" : "Turn off"} ${step.rule.title}`}
+                  title={off.includes(step.rule.id) ? "Turn this rule back on" : "Turn this rule off to see what it costs"}
+                  onClick={() => onToggle(step.rule.id)}
+                >
+                  <EyeIcon open={!off.includes(step.rule.id)} />
+                </button>
+              )}
             </header>
             <p className="sentence">{step.sentence}</p>
             {step.measurements.removedVolume > 0 && (
@@ -77,11 +96,16 @@ export function RuleCards({ steps, revealed, current, onSetback }: RuleCardsProp
           </li>
         ))}
       </ol>
-      {revealed < steps.length && (
-        <p className="muted upcoming">
-          {steps.length - revealed} more rule{steps.length - revealed === 1 ? "" : "s"} to go
-        </p>
-      )}
     </section>
+  );
+}
+
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+      <circle cx="12" cy="12" r="3" />
+      {!open && <line x1="3" y1="3" x2="21" y2="21" />}
+    </svg>
   );
 }
