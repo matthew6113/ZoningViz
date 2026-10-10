@@ -17,6 +17,7 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 
 - Point in parcel: `$where=active=true AND intersects(shape,'POINT(<lon> <lat>)')`
 - Polygon against height districts: `$where=intersects(the_geom,'MULTIPOLYGON(((...)))')`
+- Neighbors: `$where=active=true AND blklot=mapblklot AND mapblklot!='<self>' AND intersects(shape,'POLYGON(<lot bbox + ~50 ft>)')`. Column-to-column comparison (`blklot=mapblklot`) works in SoQL and collapses condo stacks to their land record.
 - `.json` and `.geojson` both work, and `.json` returns `shape` as a GeoJSON object.
 - CORS is `Access-Control-Allow-Origin: *`, so the browser can query DataSF directly.
 - SoQL has `num_points()` and `simplify()`, but **no `intersection()`**. Overlap areas have to be computed on the client.
@@ -24,7 +25,7 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 
 ## Differences from SPEC.md
 
-1. **Height lookup uses the parcel polygon, not the centroid.** A centroid can't detect a second district. The adapter intersects the parcel polygon. When more than one label matches, it downloads those districts and measures each overlap in EPSG:2227 with `polygon-clipping`. Anything under 0.1% of the lot is treated as boundary contact, since district lines usually follow lot lines. That threshold is a data-cleaning tolerance, not a zoning value.
+1. **Height lookup uses the parcel polygon, not the centroid.** Each district also returns its piece of the lot (lot ∩ district, clipped in lon/lat) so the engine can cut each part to its own height. A centroid can't detect a second district. The adapter intersects the parcel polygon. When more than one label matches, it downloads those districts and measures each overlap in EPSG:2227 with `polygon-clipping`. Anything under 0.1% of the lot is treated as boundary contact, since district lines usually follow lot lines. That threshold is a data-cleaning tolerance, not a zoning value.
 2. **R-4 (Family Zoning Plan) labels carry both heights, but only in the label text.** The format is `base//local-R-4`, e.g. `40//85-R-4`. **`gen_hght` is the local-program height**: it equals the second number for every simple R-4 label (asserted in `test/heightLabel.test.ts`). The base height appears only in the label, so `gen_hght` must never be used as the R-4 cap. Compound labels like `140/400//140/450-R-4` and `120/400//120/650-R4` (note the missing hyphen) are left unparsed and flagged.
 3. **Many RH lots are in R-4 districts now.** 4501 Ocean Ave (RH-1(D)) is `40//40-R-4`, and 766–772 Francisco St (RH-2) is `40//50-R-4`. Plain `40-X` districts still exist.
 4. **Coverage count:** there are 124,824 *active* RH records (RH-1 60,596; RH-2 37,167; RH-3 14,115; RH-1(D) 12,946). SPEC.md's "about 129,000" probably includes retired records. A new code, `RTO-C` (11,855 active records), is outside v1.

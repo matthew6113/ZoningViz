@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { MultiPolygon } from "geojson";
 import { createEngine, parseDistrictFile, type DistrictFile, type Engine, type ParcelInput } from "../src";
+import { loadManifold } from "../src/geometry/manifold";
 
 // Test-only: district files live with their jurisdiction; read them by path so
 // the engine package never depends on a jurisdiction package.
@@ -40,4 +41,10 @@ export function rectangularLot(width: number, depth: number, heightFt = 40, labe
     neighbors: [rect(-width, 0, 0, depth), rect(width, 0, 2 * width, depth), rect(-width, depth, 2 * width, 2 * depth)],
     heightZones: [{ label, heightFt, geometry: footprint }],
   };
+}
+
+/** Rebuilds a WASM solid from an exported mesh, for geometric assertions in tests. */
+export async function toManifold(solid: { positions: Float32Array; indices: Uint32Array }) {
+  const wasm = await loadManifold();
+  return new wasm.Manifold(new wasm.Mesh({ numProp: 3, vertProperties: solid.positions, triVerts: solid.indices }));
 }

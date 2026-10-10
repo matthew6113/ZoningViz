@@ -42,6 +42,7 @@ describe("getParcelByBlockLot", () => {
         genHeightFt: 50,
         parsed: { kind: "r4", baseHeightFt: 40, localProgramHeightFt: 50 },
         shareOfLot: 1,
+        geometry: p.geometry,
       },
     ]);
     expect(p.asOf).toEqual({ parcels: "2026-10-01", heightDistricts: "2026-10-10" });
@@ -63,6 +64,11 @@ describe("getParcelByBlockLot", () => {
     expect(p.heightDistricts[1]!.shareOfLot).toBeCloseTo(0.329369, 4);
     expect(p.warnings).toContain("Ignored height district OS: it only touches the lot boundary.");
     expect(p.warnings.some((w) => w.startsWith("Lot spans 2 height districts"))).toBe(true);
+    // Each district carries its own piece of the lot for the engine to cut separately.
+    for (const d of p.heightDistricts) {
+      expect(d.geometry!.type).toBe("MultiPolygon");
+      expect(d.geometry).not.toEqual(p.geometry);
+    }
   });
 });
 

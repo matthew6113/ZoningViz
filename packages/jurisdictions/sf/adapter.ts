@@ -1,6 +1,6 @@
 import type { MultiPolygon, Polygon } from "geojson";
-import { multiPolygonArea, projectMultiPolygon, type PlanarMultiPolygon } from "@zoningviz/engine";
-import polygonClipping from "polygon-clipping";
+import { multiPolygonArea, projectMultiPolygon } from "@zoningviz/engine";
+import polygonClipping, { type MultiPolygon as ClipMultiPolygon } from "polygon-clipping";
 import {
   bboxWkt,
   DATASETS,
@@ -14,7 +14,7 @@ import {
   type FetchJson,
 } from "./datasf";
 import { parseHeightLabel } from "./heightLabel";
-import type { SfAddress, SfHeightDistrict, SfParcel, SfZoning } from "./types";
+import type { SfAddress, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
 interface ParcelRow {
@@ -50,9 +50,15 @@ const MIN_DISTRICT_SHARE = 0.001;
 
 const BLKLOT_PATTERN = /^\d{4}[A-Z]?\d{3}[A-Z]?$/;
 
+// Neighbors are fetched from the lot's bounding box grown by about this much.
+const NEIGHBOR_PAD_FT = 50;
+const FT_PER_DEGREE_LAT = 364_000;
+
 export interface SfAdapter {
   getParcelByBlockLot(blklot: string): Promise<SfParcel | null>;
   getParcelAt(lon: number, lat: number): Promise<SfParcel | null>;
+  /** Active land parcels within about 50 ft of the lot (condo units collapsed to their land record). */
+  getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]>;
 }
 
 export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdapter {
@@ -119,7 +125,7 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     const [unitBlklots, zoning, heights, heightAsOf] = await Promise.all([
       unitsOf(land),
       zoningOf(land, centroid, warnings),
-      heightDistrictsOf(geometry, planar, lotAreaSqFt),
+      heightDistrictsOf(geometry, lotAreaSqFt),
       datasetAsOf(DATASETS.heightBulkDistricts),
     ]);
     warnings.push(...heights.warnings);
@@ -178,7 +184,6 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
 
   async function heightDistrictsOf(
     geometry: MultiPolygon,
-    planar: PlanarMultiPolygon,
     lotAreaSqFt: number,
   ): Promise<{ districts: SfHeightDistrict[]; warnings: string[] }> {
     const warnings: string[] = [];
@@ -196,40 +201,42 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     }
     if (distinct.size === 1 && !usedBbox) {
       const [row] = distinct.values();
-      const district = toDistrict(row!, 1);
+      const district = toDistrict(row!, 1, geometry);
       return { districts: [district], warnings: labelWarnings([district]) };
     }
 
-    // More than one candidate: download the district shapes and measure the overlap.
+    // More than one candidate: download the district shapes and clip each to the lot.
     const shaped = await rows<HeightRow>(
       soqlUrl(DATASETS.heightBulkDistricts, { select: "height,gen_hght,the_geom", where }),
     );
-    const areaByLabel = new Map<string, { row: HeightRow; area: number | null }>();
+    const piecesByLabel = new Map<string, { row: HeightRow; pieces: ClipMultiPolygon[]; failed: boolean }>();
     for (const row of shaped) {
       if (!row.the_geom) continue;
-      let area: number | null;
+      const entry = piecesByLabel.get(row.height) ?? { row, pieces: [], failed: false };
       try {
-        const district = projectMultiPolygon(row.the_geom, EPSG_2227);
-        area = multiPolygonArea(polygonClipping.intersection(planar, district));
+        entry.pieces.push(polygonClipping.intersection(clipCoords(geometry), clipCoords(row.the_geom)));
       } catch {
-        area = null;
+        entry.failed = true;
       }
-      const entry = areaByLabel.get(row.height) ?? { row, area: 0 };
-      entry.area = entry.area === null || area === null ? null : entry.area + area;
-      areaByLabel.set(row.height, entry);
+      piecesByLabel.set(row.height, entry);
     }
 
     const districts: SfHeightDistrict[] = [];
-    for (const [label, { row, area }] of areaByLabel) {
-      const share = area === null ? null : area / lotAreaSqFt;
+    for (const [label, { row, pieces, failed }] of piecesByLabel) {
+      const [first, ...rest] = pieces;
+      const piece: MultiPolygon | null =
+        failed || !first ? null : { type: "MultiPolygon", coordinates: rest.length ? polygonClipping.union(first, ...rest) : first };
+      const share = piece ? multiPolygonArea(projectMultiPolygon(piece, EPSG_2227)) / lotAreaSqFt : null;
       if (share !== null && share < MIN_DISTRICT_SHARE) {
         warnings.push(`Ignored height district ${label}: it only touches the lot boundary.`);
         continue;
       }
       if (share === null) warnings.push(`Could not measure how much of the lot lies in height district ${label}.`);
-      districts.push(toDistrict(row, share));
+      districts.push(toDistrict(row, share, piece));
     }
     districts.sort((a, b) => (b.shareOfLot ?? 0) - (a.shareOfLot ?? 0));
+    // A lone survivor (the others only touched the boundary) governs the whole lot.
+    if (districts.length === 1) districts[0]!.geometry = geometry;
 
     if (districts.length > 1) {
       const parts = districts.map((d) => `${d.label} (${formatShare(d.shareOfLot)})`).join(", ");
@@ -240,6 +247,30 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
       warnings.push(`Only ${formatShare(covered)} of the lot lies inside a mapped height district.`);
     }
     return { districts, warnings: [...warnings, ...labelWarnings(districts)] };
+  }
+
+  async function getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]> {
+    const padLat = NEIGHBOR_PAD_FT / FT_PER_DEGREE_LAT;
+    const padLon = padLat / Math.cos((parcel.centroid.lat * Math.PI) / 180);
+    const points = parcel.geometry.coordinates.flat(2);
+    const xs = points.map((p) => p[0]!);
+    const ys = points.map((p) => p[1]!);
+    const box = bboxWkt({
+      type: "Polygon",
+      coordinates: [[
+        [Math.min(...xs) - padLon, Math.min(...ys) - padLat],
+        [Math.max(...xs) + padLon, Math.max(...ys) + padLat],
+      ]],
+    });
+    const found = await rows<ParcelRow>(
+      soqlUrl(DATASETS.parcels, {
+        select: "blklot,shape",
+        where: `active=true AND blklot=mapblklot AND mapblklot!=${soqlString(parcel.mapblklot)} AND intersects(shape,${soqlString(box)})`,
+        order: "blklot",
+        limit: 2000,
+      }),
+    );
+    return found.flatMap((row) => (row.shape ? [{ blklot: row.blklot, geometry: asMultiPolygon(row.shape) }] : []));
   }
 
   const asOfCache = new Map<string, Promise<string | null>>();
@@ -255,7 +286,7 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     return pending;
   }
 
-  return { getParcelByBlockLot, getParcelAt };
+  return { getParcelByBlockLot, getParcelAt, getNeighbors };
 }
 
 export function normalizeBlklot(input: string): string {
@@ -270,17 +301,22 @@ function preferActive(records: ParcelRow[]): ParcelRow | undefined {
   return records.find((r) => r.active) ?? records[0];
 }
 
+function clipCoords(shape: MultiPolygon | Polygon): ClipMultiPolygon {
+  return asMultiPolygon(shape).coordinates as unknown as ClipMultiPolygon;
+}
+
 function asMultiPolygon(shape: MultiPolygon | Polygon): MultiPolygon {
   return shape.type === "MultiPolygon" ? shape : { type: "MultiPolygon", coordinates: [shape.coordinates] };
 }
 
-function toDistrict(row: HeightRow, shareOfLot: number | null): SfHeightDistrict {
+function toDistrict(row: HeightRow, shareOfLot: number | null, geometry: MultiPolygon | null): SfHeightDistrict {
   const gen = row.gen_hght === undefined ? null : Number(row.gen_hght);
   return {
     label: row.height,
     genHeightFt: gen !== null && Number.isFinite(gen) ? gen : null,
     parsed: parseHeightLabel(row.height),
     shareOfLot,
+    geometry,
   };
 }
 

@@ -47,6 +47,8 @@ pnpm typecheck    # tsc in every package
 pnpm dev          # web app dev server
 pnpm build        # web app production build
 pnpm parcel <blklot>              # facts for one SF parcel (also: --at <lon> <lat>, --json, --no-cache)
+pnpm envelope <blklot>            # run the engine on a real parcel (--front N, --setback FT, --floor FT, --off id,id, --json)
+pnpm record-fixtures [blklot...]  # re-record real parcels as engine test inputs
 LIVE=1 pnpm test                  # adds a smoke test against the real DataSF API
 ```
 
@@ -59,18 +61,27 @@ The monorepo lives at the repo root (SPEC.md's tree shows it under `zoning-envel
 ```
 SPEC.md, CLAUDE.md
 apps/web/                       # React app: map, scene, cards, controls
-packages/engine/                # @zoningviz/engine — pure TS: resolve rules, build solids, measure
-  src/geometry/                 # projection, lot lines, cuts, slicing
-  src/rules/                    # rule kind -> allowed-region builder
-  test/fixtures/                # fixtures A–D with expected numbers
+packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve rules, build solids, measure
+  src/envelope.ts               # createEngine() -> computeEnvelope(parcel, district, options)
+  src/types.ts                  # ParcelInput (city-agnostic input), EnvelopeResult, Step, Solid
+  src/geometry/projection.ts    # proj4 projection, planar areas
+  src/geometry/lot.ts           # planar prep, street-side (front) detection, lot frame, width/depth
+  src/geometry/manifold.ts      # manifold-3d loading, half-space cuts, mesh export, slicing
+  src/rules/schema.ts           # zod schema for district files
+  src/rules/resolve.ts          # rule params -> numbers, card sentence, cut (no geometry)
+  src/rules/regions.ts          # cut -> allowed region; dimension lines
+  test/                         # fixtures A–D, invariants, schema, front detection
+  test/fixtures/parcels/        # recorded real parcels (pnpm record-fixtures)
 packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
   sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt
   sf/datasf.ts                  # dataset IDs, SoQL helpers, EPSG:2227 definition
   sf/heightLabel.ts             # "40-X" / "40//85-R-4" parser; anything else is "unparsed"
   sf/node/cache.ts              # Node-only disk cache (CLI, test replay); never import from browser code
-  sf/cli.ts                     # `pnpm parcel`
+  sf/engineInput.ts             # toParcelInput(parcel, neighbors) -> engine ParcelInput
+  sf/cli.ts, sf/envelope-cli.ts # `pnpm parcel`, `pnpm envelope`
   sf/DATA-NOTES.md              # verified fields and query syntax, deviations from SPEC.md
-  sf/districts/<CODE>.json      # one rule file per district
+  sf/districts/<CODE>.json      # one rule file per district; register it in sf/districts/index.ts
+scripts/record-engine-fixtures.mts  # real parcels -> engine test inputs
 scripts/build-tiles.ts          # parcels -> PMTiles (Phase 5)
 ```
 
@@ -114,9 +125,11 @@ type Rule = {
   citation: string;              // "§134(c)(1), §134(d)(1)"
   url: string;                   // link to the code section
   verified: boolean;             // true only after a human checks the code text
-  effectiveDate: string;         // ISO date the cited text took effect
+  effectiveDate: string | null;  // ISO date the cited text took effect; null only while verified is false
 };
 ```
+
+Decided with the user: missing fields in SPEC.md's RH-2 example are filled as unverified drafts. `effectiveDate` stays `null` until the verification pass because no amendment history could be read (amlegal blocks automated access), and the schema refuses `verified: true` without a date. The `url`s point at amlegal section pages found by search and haven't been opened.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|
@@ -124,21 +137,27 @@ type Rule = {
 | `height_cap` | horizontal cut | `{ source: "heightDistrict" }` or `{ feet }` |
 | `rear_yard` | vertical cut parallel to rear line | `{ pctOfLotDepth, minFeet, appliesAt }` |
 | `front_setback` | vertical cut parallel to front line | `{ method: "block_average", maxFeet, userOverride }` |
-| `side_yard` | vertical cuts along side lines (RH-1(D)) | Phase 5 |
-| `sky_plane` | angled cut rising from a line | `{ fromLine, startHeightFeet, angleDeg }` |
-| `bulk` | caps plan dimensions above a height | Phase 6 |
-| `far` | volume budget, shown as a gauge | Phase 6 |
-| `flag` | not modeled; card says what's missing and why | — |
+| `side_yard` | vertical cuts along side lines (RH-1(D)) | Phase 5 (not in the schema yet) |
+| `sky_plane` | angled cut rising from a line | `{ fromLine: "front_setback" \| "front_lot_line", startHeightFeet, angleDeg }` |
+| `bulk` | caps plan dimensions above a height | Phase 6 (not in the schema yet) |
+| `far` | volume budget, shown as a gauge | Phase 6 (not in the schema yet) |
+| `flag` | not modeled; card says what's missing and why | `{}` |
+
+The schema rejects kinds the engine can't build yet; add the kind to `rules/schema.ts`, `resolve.ts` and `regions.ts` together.
 
 The engine resolves params against the parcel into numbers and a sentence before any geometry runs ("Rear yard: 30% of 100 ft = 30 ft"). When two height caps apply, the lower cuts and the higher shows "already satisfied."
 
-**Open item for Phase 2:** SPEC.md's RH-2 example omits `plain`, `url`, `effectiveDate` (and `params` on info/flag rules), which the schema requires. Ask the user how to fill these rather than inventing them.
-
 ## Geometry engine (summary)
 
-Project parcel to EPSG:2227 feet, recentered on centroid → find front lot line (edges bordering no parcel and facing a street; corner/through lots prompt the user) → measure depth (front line to farthest point along inward normal) and width (front line length) → starting block = footprint extruded to 2x mapped height → resolve rules → for each geometric rule, `next = prev ∩ allowed`, `removed = prev − next` (manifold-3d) → measure each step → slice floors at 10 ft floor-to-floor (adjustable), plate area at mid-story.
+Project parcel to EPSG:2227 feet, recentered on centroid → find front lot line → measure depth (front line to farthest point along inward normal) and width (front line's chord) → starting block = footprint extruded to **2× the mapped height** (decided; the tallest zone on split lots) → resolve rules → for each geometric rule, `next = prev ∩ allowed`, `removed = prev − next` (manifold-3d) → measure each step → slice floors at 10 ft floor-to-floor (adjustable), plate area at mid-story.
 
-Output: ordered steps, each with solid before, removed solid, solid after, measurements and the resolved card sentence. All solids are computed up front; the animation only replays them.
+- **Front detection:** an edge is street frontage when short probes stepped outward from it land in no neighbor parcel. One street side → it's the front; several (corner, through lots) → `status: "needs_front_choice"` with candidates, and the caller passes `options.frontSide`. Street centerlines aren't used yet, so a lot beside unparcelled land can get an extra prompt.
+- **Rear yard** is cut parallel to the front line; irregular lots get the "approximate geometry" note.
+- **Front setback:** `options.overrides[ruleId].feet` (clamped to the rule's max) when the rule allows it; otherwise the rule's maximum (neighbors' setbacks aren't in city data).
+- **Heights:** each zone is cut to its own height (R-4 uses the base). A zone with no readable height is not cut and its card says it isn't modeled.
+- `options.disabledRuleIds` skips rules (Phase 4's toggles).
+
+Output (`EnvelopeResult`): ordered steps, each with the rule, status (`cut | already_satisfied | info | not_modeled | disabled`), resolved sentence and numbers, dimension lines, solids before/removed/after (plain `{ volume, positions, indices }` in world feet), and measurements; plus lot info, floors, totals and notes. All solids are computed up front; the animation only replays them.
 
 ## Test invariants (every parcel)
 
@@ -160,7 +179,7 @@ Fixtures (hand-checked):
 
 - [x] Phase 0 — Kickoff
 - [x] Phase 1 — Data (DataSF adapter, `pnpm parcel <blklot>`; demo parcels 4025007, 0044030, 4276045)
-- [ ] Phase 2 — Engine (fixtures A–D, invariants)
+- [x] Phase 2 — Engine (fixtures A–D and invariants pass; `pnpm envelope` for real lots)
 - [ ] Phase 3 — Scene (step through with Next/Back)
 - [ ] Phase 4 — Animation (GSAP timeline, scrubber)
 - [ ] Phase 5 — Map and coverage (PMTiles, map screen, RH-1(D)/RH-1/RH-3 drafts)

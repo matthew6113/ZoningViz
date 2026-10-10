@@ -3,26 +3,22 @@
 // Prints the facts for one San Francisco parcel. Responses are cached under
 // .cache/datasf (override with ZONINGVIZ_CACHE_DIR; disable with --no-cache
 // or ZONINGVIZ_NO_CACHE=1).
-import { join } from "node:path";
 import { createSfAdapter } from "./adapter";
-import { fetchJson } from "./datasf";
-import { withDiskCache } from "./node/cache";
+import { parseCliArgs } from "./node/args";
+import { devFetchJson } from "./node/cache";
 import type { SfHeightDistrict, SfParcel } from "./types";
 
 const USAGE = "Usage: pnpm parcel <blklot> | pnpm parcel --at <lon> <lat>   [--json] [--no-cache]";
-const FLAGS = ["--at", "--json", "--no-cache", "--help", "-h"];
 
 async function main(): Promise<number> {
-  // Hand-rolled because node:util parseArgs treats negative longitudes as flags.
-  const args = process.argv.slice(2);
-  const isFlag = (arg: string) => /^--?[a-z]/i.test(arg);
-  const flags = new Set(args.filter(isFlag));
-  const positionals = args.filter((arg) => !isFlag(arg));
-  const unknown = [...flags].filter((flag) => !FLAGS.includes(flag));
-  if (unknown.length) {
-    console.error(`Unknown option ${unknown.join(", ")}\n${USAGE}`);
+  let args;
+  try {
+    args = parseCliArgs(process.argv.slice(2), ["--at", "--json", "--no-cache", "--help", "-h"]);
+  } catch (error) {
+    console.error(`${(error as Error).message}\n${USAGE}`);
     return 1;
   }
+  const { flags, positionals } = args;
   const values = { at: flags.has("--at"), json: flags.has("--json"), noCache: flags.has("--no-cache") };
   const wantsHelp = flags.has("--help") || flags.has("-h");
   if (wantsHelp || positionals.length === 0) {
@@ -30,9 +26,7 @@ async function main(): Promise<number> {
     return wantsHelp ? 0 : 1;
   }
 
-  const useCache = !values.noCache && process.env.ZONINGVIZ_NO_CACHE !== "1";
-  const cacheDir = process.env.ZONINGVIZ_CACHE_DIR ?? join(import.meta.dirname, "..", "..", "..", ".cache", "datasf");
-  const adapter = createSfAdapter({ fetchJson: useCache ? withDiskCache(fetchJson, cacheDir) : fetchJson });
+  const adapter = createSfAdapter({ fetchJson: devFetchJson({ noCache: values.noCache }) });
 
   let parcel: SfParcel | null;
   let query: string;

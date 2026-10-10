@@ -28,6 +28,8 @@ export interface SfHeightDistrict {
    * district touching the lot; null when the overlap could not be computed.
    */
   shareOfLot: number | null;
+  /** The part of the lot inside this district (lon/lat); the whole lot when it is the only district. */
+  geometry: MultiPolygon | null;
 }
 
 export interface SfParcel {
@@ -50,4 +52,9 @@ export interface SfParcel {
   /** ISO dates the source datasets were last updated. */
   asOf: { parcels: string | null; heightDistricts: string | null };
   warnings: string[];
+}
+
+export interface SfNeighbor {
+  blklot: string;
+  geometry: MultiPolygon;
 }

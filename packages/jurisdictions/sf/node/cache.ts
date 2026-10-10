@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { FetchJson } from "../datasf";
+import { fetchJson, type FetchJson } from "../datasf";
 
 interface CacheEntry {
   url: string;
@@ -31,4 +31,14 @@ export function withDiskCache(fetchJson: FetchJson, dir: string): FetchJson {
     await writeFile(file, JSON.stringify(entry));
     return body;
   };
+}
+
+/**
+ * The fetcher the CLIs use: cached under .cache/datasf at the repo root
+ * (ZONINGVIZ_CACHE_DIR overrides), or uncached with `noCache` / ZONINGVIZ_NO_CACHE=1.
+ */
+export function devFetchJson(options: { noCache?: boolean } = {}): FetchJson {
+  if (options.noCache || process.env.ZONINGVIZ_NO_CACHE === "1") return fetchJson;
+  const dir = process.env.ZONINGVIZ_CACHE_DIR ?? join(import.meta.dirname, "..", "..", "..", "..", ".cache", "datasf");
+  return withDiskCache(fetchJson, dir);
 }
