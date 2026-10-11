@@ -50,7 +50,10 @@ const MAX_WKT_CHARS = 6000;
 // contact (shared edges, digitizing slivers). A data-cleaning tolerance, not a zoning value.
 const MIN_DISTRICT_SHARE = 0.001;
 
-const BLKLOT_PATTERN = /^\d{4}[A-Z]?\d{3}[A-Z]?$/;
+// Most ids are block + lot ("4025007", "0792T001A"), but about 140 land records
+// use other ids: common areas ("5335ACOMH"), open space ("4991OS1"), vacated
+// streets ("VACST22S"). Letters, digits and "*" only, so a value is always safe in SoQL.
+const BLKLOT_PATTERN = /^[0-9A-Z*]{4,12}$/;
 
 // Neighbors (for front detection) and buildings (for scene context) are fetched
 // from the lot's bounding box grown by about this much.

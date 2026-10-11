@@ -16,6 +16,7 @@
     "envelope": "tsx packages/jurisdictions/sf/envelope-cli.ts",
     "record-fixtures": "tsx scripts/record-engine-fixtures.mts",
     "build-tiles": "tsx scripts/build-tiles.ts",
+    "sweep": "tsx scripts/sweep.mts",
     "e2e": "pnpm --filter @zoningviz/web e2e"
   },
   "devDependencies": {

@@ -16,6 +16,8 @@
     "@zoningviz/engine": "workspace:*",
     "@zoningviz/jurisdictions": "workspace:*",
     "gsap": "3.15.0",
+    "maplibre-gl": "6.13.0",
+    "pmtiles": "4.5.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.186.1"

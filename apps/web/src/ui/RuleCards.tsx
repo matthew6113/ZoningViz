@@ -67,6 +67,7 @@ export function RuleCards({ steps, current, onSetback, off, onToggle, registerCa
               )}
             </header>
             <p className="sentence">{step.sentence}</p>
+            {step.rule.kind !== "info" && step.rule.kind !== "flag" && <p className="plain">{step.rule.plain}</p>}
             {step.measurements.removedVolume > 0 && (
               <p className="removed-line">
                 <span className="removed-swatch" aria-hidden /> {num(step.measurements.removedVolume)} cu ft removed ·{" "}

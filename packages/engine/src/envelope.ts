@@ -188,6 +188,9 @@ function computeEnvelope(
   // 8. Slice floors.
   const floors = sliceFloors(current, options.floorToFloorFeet ?? DEFAULT_FLOOR_TO_FLOOR_FT);
   const finalVolume = current.volume();
+  if (finalVolume <= EMPTY_VOLUME_FT3) {
+    notes.push("Nothing is left: together these limits cover the whole lot. On a corner lot, measuring from the other front may leave room.");
+  }
   const footprintSqFt = sliceArea(current, GRADE_SLICE_FT);
   current.delete();
 

@@ -33,6 +33,14 @@ describe("findStreetSides", () => {
   it("offers every side when there are no neighbors", () => {
     expect(findStreetSides(lot, [])).toHaveLength(4);
   });
+
+  it("still offers the longest side of a sliver too small for any side to count (2716042 is 5 sq ft)", () => {
+    const sliver = planar(rect(0, 0, 4, 1.25));
+    // Neighbors left, right and behind: only the 4 ft bottom edge faces the street, under the 5 ft minimum.
+    const sides = findStreetSides(sliver, [rect(-10, 0, 0, 1.25), rect(4, 0, 14, 1.25), rect(-10, 1.25, 14, 10)].map(planar));
+    expect(sides).toHaveLength(1);
+    expect(sides[0]!.lengthFt).toBeCloseTo(4, 6);
+  });
 });
 
 describe("front detection on real lots", async () => {

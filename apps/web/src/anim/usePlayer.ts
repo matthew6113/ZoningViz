@@ -36,7 +36,7 @@ export interface Player {
 const SCRUBBER_STEPS = 1000;
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
-function useReducedMotion(): boolean {
+export function useReducedMotion(): boolean {
   return useSyncExternalStore(
     (onChange) => {
       const query = window.matchMedia(REDUCED_MOTION);

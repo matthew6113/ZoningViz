@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { replayDataSf } from "./datasf";
+import { serveMap } from "./map";
 
 const SHOTS = "e2e/screenshots";
 
@@ -11,6 +12,7 @@ test.beforeEach(async ({ page }) => {
   page.on("console", (m) => m.type() === "error" && problems.push(`console: ${m.text()}`));
   page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
   missing = await replayDataSf(page);
+  await serveMap(page);
 });
 test.afterEach(() => {
   expect(missing, "DataSF requests without a recording").toEqual([]);
@@ -124,10 +126,10 @@ test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) 
 
 test("the setback slider recomputes the envelope", async ({ page }) => {
   await page.goto("/?parcel=4025007&step=5");
-  await expect(currentSentence(page)).toContainText("Showing the 10 ft maximum.");
+  await expect(currentSentence(page)).toContainText("this shows the 10 ft maximum.");
   await page.locator(".setback-slider input").fill("4");
   await expect(page).toHaveURL(/setback=4/);
-  await expect(currentSentence(page)).toHaveText("Front setback: 4 ft, your setting. The rule follows the neighbors' setbacks, up to 10 ft.");
+  await expect(currentSentence(page)).toHaveText("Front setback: 4 ft, your setting. The rule matches the shallower neighbor's setback, up to 10 ft.");
   await expect(page.locator("[aria-current=step] .removed-line")).toContainText("4,000 cu ft removed");
 });
 
@@ -147,7 +149,7 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 
 test("a lot outside the covered districts says so", async ({ page }) => {
   await page.goto("/?parcel=0119012");
-  await expect(page.locator(".notice")).toContainText("Rule files exist for RH-2 only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned RM-2. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3 only so far");
   await expect(page.locator(".fact-card")).toContainText("RM-2");
 });
 
@@ -245,4 +247,16 @@ test("playback costs little JavaScript per frame", async ({ page }) => {
   test.info().annotations.push({ type: "perf", description: `${fps.toFixed(1)} fps, ${msPerFrame.toFixed(2)} ms script per frame (640×420, SwiftShader)` });
   console.log(`perf: ${fps.toFixed(1)} fps, ${msPerFrame.toFixed(2)} ms script per frame`);
   expect(msPerFrame).toBeLessThan(5);
+});
+
+test("a front choice that leaves nothing still reaches the result and says why", async ({ page }) => {
+  // 1042 Persia Ave (RH-1) measured from its 100 ft side is 25 ft deep: 15 ft rear yard + 10 ft setback.
+  await page.goto("/?parcel=6094001&front=0&step=99");
+  await expect(label(page)).toHaveText("Result");
+  await expect(page.getByTestId("summary")).toContainText("0 cu ft");
+  await expect(page.locator(".fact-card")).toContainText("Nothing is left: together these limits cover the whole lot.");
+  await page.locator(".front-note").getByRole("button", { name: "Change" }).click();
+  await page.getByRole("region", { name: "Choose the front" }).getByRole("button", { name: /Side B/ }).click();
+  await expect(page).toHaveURL(/front=1/);
+  await expect(page.locator(".fact-card")).not.toContainText("Nothing is left");
 });

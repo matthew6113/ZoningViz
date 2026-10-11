@@ -34,15 +34,44 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .muted { color: var(--muted); }
 
 .app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.app > main { flex: 1; min-height: 0; overflow-y: auto; }
+.app-main { position: relative; flex: 1; min-height: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* Landing and status pages */
-.landing, .status { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
-.lede { font-size: 1.1rem; color: var(--muted); }
-.lookup { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 24px 0; }
-.lookup label { width: 100%; font-weight: 600; }
-.lookup input { font: inherit; padding: 0.45em 0.7em; border: 1px solid var(--line); border-radius: 8px; min-width: 200px; }
-.examples { padding-left: 1.1em; line-height: 1.9; }
+/* Map screen: full-bleed map with a floating panel */
+.map-screen { position: absolute; inset: 0; }
+.map-screen[data-hidden] { visibility: hidden; }
+.map { position: absolute; inset: 0; }
+.map-panel { position: absolute; top: 12px; left: 12px; width: min(360px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); display: flex; flex-direction: column; gap: 10px; }
+.map-panel h1 { font-size: 1.15rem; margin: 0; }
+.map-panel p { margin: 0; font-size: 0.92rem; }
+.search { position: relative; }
+.search input { font: inherit; width: 100%; padding: 0.5em 0.7em; border: 1px solid var(--line); border-radius: 8px; }
+.search-results { list-style: none; margin: 4px 0 0; padding: 4px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.search-results li { padding: 6px 10px; cursor: pointer; font-size: 0.92rem; }
+.search-results li[aria-selected="true"] { background: #eef3f8; }
+.search-results li.muted { cursor: default; }
+.map-tools button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.legend { list-style: none; margin: 0; padding: 0; font-size: 0.82rem; display: grid; gap: 3px; }
+.legend .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; opacity: 0.75; }
+.examples summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.examples ul { padding-left: 1.1em; margin: 6px 0 0; line-height: 1.7; font-size: 0.9rem; }
+.map-tooltip { position: absolute; left: 0; top: 0; pointer-events: none; max-width: 300px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); display: grid; gap: 2px; z-index: 2; }
+.map-tooltip[hidden] { display: none; }
+.map-tooltip em { color: var(--muted); }
+.map-popup { position: absolute; transform: translate(-50%, 12px); max-width: 280px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); z-index: 3; }
+.map-popup p { margin: 4px 0 6px; }
+
+/* A lot opens over the map */
+.lot-layer { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 5; pointer-events: none; }
+.lot-layer > * { pointer-events: auto; }
+.lot-layer > main { flex: 1; min-height: 0; overflow-y: auto; background: var(--bg); animation: lot-in 450ms ease-out; }
+.loading-card { align-self: center; margin-top: 16px; display: flex; gap: 12px; align-items: baseline; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); }
+.loading-card .back-link { margin: 0; }
+@keyframes lot-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lot-layer > main { animation-duration: 200ms; } }
+
+/* Status pages */
+.status { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
 .notice { background: var(--amber-bg); border-left: 4px solid var(--amber); padding: 10px 14px; border-radius: 6px; }
 .back-link { display: inline-block; margin-bottom: 8px; font-size: 0.9rem; }
 
@@ -100,6 +129,7 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .rule-card.status-not_modeled { border-style: dashed; }
 .rule-card.status-already_satisfied .sentence, .rule-card.status-disabled .sentence { color: var(--muted); }
 .sentence { margin: 6px 0; }
+.rule-card .plain { margin: 0 0 6px; font-size: 0.86rem; color: var(--muted); }
 .chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; background: #efece4; color: var(--muted); white-space: nowrap; }
 .removed-line { margin: 4px 0; font-size: 0.88rem; color: var(--muted); }
 .removed-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--removed); vertical-align: -1px; }

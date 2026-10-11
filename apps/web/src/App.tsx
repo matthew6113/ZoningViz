@@ -1,38 +1,81 @@
 import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions } from "@zoningviz/engine";
-import { availableDistricts } from "@zoningviz/jurisdictions/sf";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { coverageNote, zoningCoverage } from "@zoningviz/jurisdictions/sf";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MotionMode } from "./anim/schedule";
-import { usePlayer } from "./anim/usePlayer";
+import { usePlayer, useReducedMotion } from "./anim/usePlayer";
 import { useEngine, useEnvelope, useLot } from "./data/hooks";
 import type { LoadedLot } from "./data/loadLot";
-import { Scene } from "./scene/Scene";
+import { MapScreen } from "./map/MapScreen";
+import { Scene, type Handoff } from "./scene/Scene";
 import { lastPosition, type OkResult } from "./state/steps";
-import type { UrlState } from "./state/url";
+import { CLOSE_LOT, type MapView, type UrlState } from "./state/url";
 import { useUrlState } from "./state/useUrlState";
 import { FactCard } from "./ui/FactCard";
 import { FrontPrompt } from "./ui/FrontPrompt";
 import { HonestyStrip } from "./ui/HonestyStrip";
-import { Landing } from "./ui/Landing";
 import { RuleCards } from "./ui/RuleCards";
 import { Hud } from "./ui/Hud";
 import { PlayerControls } from "./ui/PlayerControls";
 import { Summary } from "./ui/Summary";
 
+type SetUrl = (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
+
+/** Lots open over the map, which stays mounted underneath so going back is instant. */
 export function App() {
   const [url, setUrl] = useUrlState();
+  const reducedMotion = useReducedMotion();
+  // A deep link to a lot doesn't load the map until the viewer goes back to it.
+  const [mapWanted, setMapWanted] = useState(url.parcel === null);
+  const [handoff, setHandoff] = useState<Handoff | null>(null);
+  useEffect(() => {
+    if (url.parcel === null) setMapWanted(true);
+  }, [url.parcel]);
+
+  const onMove = useCallback((at: MapView) => setUrl({ at }), [setUrl]);
+  const openLot = useCallback(
+    (parcel: string, from: Handoff | null) => {
+      setHandoff(from);
+      setUrl({ ...CLOSE_LOT, parcel }, "push");
+    },
+    [setUrl],
+  );
+  const backToMap = (center: { lon: number; lat: number } | null) => {
+    setHandoff(null);
+    // Opened from a link with no map view: show the map around this lot.
+    const at = url.at ?? (center ? { ...center, zoom: LOT_ON_MAP_ZOOM } : null);
+    setUrl({ ...CLOSE_LOT, at }, "push");
+  };
+
   return (
     <div className="app">
-      {url.parcel ? (
-        <LotView key={url.parcel} url={url} setUrl={setUrl} />
-      ) : (
-        <Landing onOpen={(parcel) => setUrl({ parcel, step: null, front: null, setback: null, off: [] }, "push")} />
-      )}
+      <div className="app-main">
+        {mapWanted && (
+          <MapScreen hidden={url.parcel !== null} view={url.at} reducedMotion={reducedMotion} onMove={onMove} onOpen={openLot} />
+        )}
+        {url.parcel && (
+          <div className="lot-layer" key={url.parcel}>
+            <LotView url={url} setUrl={setUrl} handoff={handoff} onBack={backToMap} />
+          </div>
+        )}
+      </div>
       <HonestyStrip />
     </div>
   );
 }
 
-function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlState>, mode?: "replace" | "push") => void }) {
+const LOT_ON_MAP_ZOOM = 17.5;
+
+function LotView({
+  url,
+  setUrl,
+  handoff,
+  onBack,
+}: {
+  url: UrlState;
+  setUrl: SetUrl;
+  handoff: Handoff | null;
+  onBack: (center: { lon: number; lat: number } | null) => void;
+}) {
   const lot = useLot(url.parcel!);
   const engine = useEngine();
   const loaded = lot.status === "ready" ? lot.value : null;
@@ -46,12 +89,12 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
   }, [loaded]);
 
   const back = (
-    <a className="back-link" href="?" onClick={(e) => (e.preventDefault(), setUrl({ parcel: null, step: null, front: null, setback: null, off: [] }, "push"))}>
-      ← Choose another lot
+    <a className="back-link" href="?" onClick={(e) => (e.preventDefault(), onBack(loaded?.center ?? null))}>
+      ← Map
     </a>
   );
 
-  if (lot.status === "loading") return <Status>{back}Loading parcel {url.parcel}…</Status>;
+  if (lot.status === "loading") return <Loading back={back}>Loading lot {url.parcel}…</Loading>;
   if (lot.status === "error") return <Status>{back}<p className="notice">{lot.message}</p></Status>;
   const value = lot.value;
 
@@ -60,15 +103,12 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
       <Status>
         {back}
         <FactCard facts={value.facts} lot={null} notes={[]} />
-        <p className="notice">
-          This lot is zoned {value.facts.zoningCode ?? "unknown"}. Rule files exist for {availableDistricts().join(", ")} only
-          so far, so its envelope isn't shown.
-        </p>
+        <p className="notice">{coverageNote(zoningCoverage(value.facts.zoningCode))}</p>
       </Status>
     );
   }
   if (engine.status === "error") return <Status>{back}<p className="notice">{engine.message}</p></Status>;
-  if (!envelope) return <Status>{back}Loading the geometry engine…</Status>;
+  if (!envelope) return <Loading back={back}>Loading the geometry engine…</Loading>;
   if (envelope.status === "error") return <Status>{back}<p className="notice">{envelope.message}</p></Status>;
   const result = envelope.value;
 
@@ -100,7 +140,7 @@ function LotView({ url, setUrl }: { url: UrlState; setUrl: (patch: Partial<UrlSt
     );
   }
 
-  return <EnvelopeView key={value.id} lot={value} result={result} url={url} setUrl={setUrl} back={back} />;
+  return <EnvelopeView key={value.id} lot={value} result={result} url={url} setUrl={setUrl} back={back} handoff={handoff} />;
 }
 
 function EnvelopeView({
@@ -109,12 +149,14 @@ function EnvelopeView({
   url,
   setUrl,
   back,
+  handoff,
 }: {
   lot: LoadedLot;
   result: OkResult;
   url: UrlState;
-  setUrl: (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
+  setUrl: SetUrl;
   back: React.ReactNode;
+  handoff: Handoff | null;
 }) {
   const onPosition = useCallback((step: number) => setUrl({ step }), [setUrl]);
   const player = usePlayer(result, url.step, onPosition);
@@ -149,6 +191,7 @@ function EnvelopeView({
             result={result}
             anim={player.anim}
             frameHeightFt={result.start.heightFt}
+            handoff={handoff}
           />
           <Hud refs={player.hud} />
         </>
@@ -232,4 +275,14 @@ function Layout({
 
 function Status({ children }: { children: React.ReactNode }) {
   return <main className="status">{children}</main>;
+}
+
+/** While a lot loads, the map (or a plain page) stays in view behind a small card. */
+function Loading({ back, children }: { back: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="loading-card card" role="status">
+      {back}
+      <span>{children}</span>
+    </div>
+  );
 }

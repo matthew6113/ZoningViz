@@ -129,11 +129,11 @@ export function findStreetSides(lot: PlanarMultiPolygon, neighbors: PlanarMultiP
     if (current) runs.push(current);
   }
 
-  const sides = runs.flatMap(splitIntoSides).map(simplifyCollinear);
-  const longest = Math.max(...sides.map(chordLength));
-  return sides
-    .filter((side) => chordLength(side) >= Math.max(MIN_SIDE_FT, MIN_SIDE_FRACTION * longest))
-    .sort((a, b) => chordLength(b) - chordLength(a))
+  const sides = runs.flatMap(splitIntoSides).map(simplifyCollinear).sort((a, b) => chordLength(b) - chordLength(a));
+  const longest = chordLength(sides[0]!);
+  const kept = sides.filter((side) => chordLength(side) >= Math.max(MIN_SIDE_FT, MIN_SIDE_FRACTION * longest));
+  // A sliver parcel can have no side long enough to count; its longest side is still a front.
+  return (kept.length ? kept : sides.slice(0, 1))
     .map((side, index) => {
       const from = side[0]!;
       const to = side[side.length - 1]!;

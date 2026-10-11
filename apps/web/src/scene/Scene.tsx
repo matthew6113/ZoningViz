@@ -29,6 +29,14 @@ export interface SceneProps {
   anim: AnimState | null;
   /** Height of the starting block, used to frame the camera. */
   frameHeightFt: number;
+  /** Set when the lot was opened from the map: the arrival starts at the map's scale, north up. */
+  handoff?: Handoff | null;
+}
+
+/** The map's view at the moment it hands over to the scene. */
+export interface Handoff {
+  /** Ground feet per screen pixel at the end of the map's flight. */
+  ftPerPx: number;
 }
 
 export function Scene(props: SceneProps) {
@@ -43,7 +51,7 @@ export function Scene(props: SceneProps) {
           <color attach="background" args={["#f7f6f2"]} />
           <hemisphereLight args={["#ffffff", "#d9d3c4", 1.6]} />
           <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
-          <CameraRig key={framing.key} framing={framing} anim={anim} />
+          <CameraRig key={framing.key} framing={framing} anim={anim} handoff={props.handoff ?? null} />
           <group rotation={ENGINE_TO_THREE}>
             <Ground radius={framing.distance * 3} />
             <LotLines outline={outline} neighbors={props.neighborLots} front={front} />
@@ -76,6 +84,7 @@ const REFERENCE_ASPECT = 1.3;
 const OVERHEAD_ELEVATION = (88 * Math.PI) / 180;
 const STREET_ELEVATION = (30 * Math.PI) / 180;
 const OVERHEAD_DISTANCE = 1.3;
+const FOV_DEG = 35;
 
 interface ControlsLike {
   target: { set(x: number, y: number, z: number): void };
@@ -83,20 +92,26 @@ interface ControlsLike {
   update(): void;
 }
 
-function CameraRig({ framing, anim }: { framing: Framing; anim: AnimState | null }) {
-  const aspect = useThree((state) => state.size.width / Math.max(1, state.size.height));
+function CameraRig({ framing, anim, handoff }: { framing: Framing; anim: AnimState | null; handoff: Handoff | null }) {
+  const width = useThree((state) => state.size.width);
+  const height = useThree((state) => Math.max(1, state.size.height));
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as unknown as ControlsLike | null;
-  const pullBack = Math.max(1, REFERENCE_ASPECT / aspect);
+  const pullBack = Math.max(1, REFERENCE_ASPECT / (width / height));
   const last = useRef<string | null>(null);
+  // Coming from the map: start where the camera shows the ground at the map's scale.
+  // Camera height above the ground = ft/px × canvas height / (2 tan(fov/2)).
+  const start = handoff
+    ? { distance: Math.max(handoff.ftPerPx * height / (2 * Math.tan((FOV_DEG * Math.PI) / 360)) - framing.targetEngine[2], 10) }
+    : null;
 
   // During the arrival the timeline flies the camera; afterwards the viewer can orbit freely.
   useFrame(() => {
     const p = anim ? anim.camera : 1;
-    const key = `${p}:${pullBack}`;
+    const key = `${p}:${pullBack}:${start?.distance}`;
     if (key === last.current) return;
     last.current = key;
-    const [x, y, z] = cameraAt(framing, pullBack, p);
+    const [x, y, z] = cameraAt(framing, pullBack, p, start);
     camera.position.set(x, y, z);
     if (controls) {
       controls.target.set(...framing.target);
@@ -109,7 +124,7 @@ function CameraRig({ framing, anim }: { framing: Framing; anim: AnimState | null
 
   return (
     <>
-      <PerspectiveCamera makeDefault fov={35} near={1} far={50_000} position={cameraAt(framing, pullBack, anim ? anim.camera : 1)} />
+      <PerspectiveCamera makeDefault fov={FOV_DEG} near={1} far={50_000} position={cameraAt(framing, pullBack, anim ? anim.camera : 1, start)} />
       <OrbitControls makeDefault target={framing.target} maxPolarAngle={Math.PI / 2 - 0.04} />
     </>
   );
@@ -129,12 +144,22 @@ function frame(outline: XY[][][], outward: XY | null, heightFt: number) {
   };
 }
 
-/** Camera position (three.js coordinates) at arrival progress p: 0 overhead, 1 street view. */
-function cameraAt(framing: Framing, pullBack: number, p: number): [number, number, number] {
+/**
+ * Camera position (three.js coordinates) at arrival progress p: 0 overhead, 1 street view.
+ * With a map handoff the overhead view starts north up (camera due south of the lot)
+ * at the map's distance, and turns toward the street side as it descends.
+ */
+function cameraAt(framing: Framing, pullBack: number, p: number, handoff: { distance: number } | null): [number, number, number] {
   const elevation = OVERHEAD_ELEVATION + (STREET_ELEVATION - OVERHEAD_ELEVATION) * p;
-  const distance = framing.distance * pullBack * (OVERHEAD_DISTANCE + (1 - OVERHEAD_DISTANCE) * p);
+  const street = framing.distance * pullBack;
+  const overhead = handoff ? handoff.distance : street * OVERHEAD_DISTANCE;
+  const distance = overhead + (street - overhead) * p;
   const [tx, ty, tz] = framing.targetEngine;
-  const [ax, ay] = framing.azimuth;
+  const streetAngle = Math.atan2(framing.azimuth[1], framing.azimuth[0]);
+  const startAngle = handoff ? -Math.PI / 2 : streetAngle;
+  const turn = Math.atan2(Math.sin(streetAngle - startAngle), Math.cos(streetAngle - startAngle)); // shortest way round
+  const angle = startAngle + turn * p;
+  const [ax, ay] = [Math.cos(angle), Math.sin(angle)];
   return engineToThree([
     tx + ax * distance * Math.cos(elevation),
     ty + ay * distance * Math.cos(elevation),

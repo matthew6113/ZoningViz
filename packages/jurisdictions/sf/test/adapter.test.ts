@@ -88,7 +88,9 @@ describe("getParcelAt", () => {
 describe("normalizeBlklot", () => {
   it("accepts block/lot forms and rejects anything else", () => {
     expect(normalizeBlklot(" 0792t001a ")).toBe("0792T001A");
+    expect(normalizeBlklot("5335acomh")).toBe("5335ACOMH"); // a common-area land record
     expect(() => normalizeBlklot("12")).toThrow(/not a block\/lot/);
+    expect(() => normalizeBlklot("4025 007")).toThrow(/not a block\/lot/);
     expect(() => normalizeBlklot("0044030' OR 1=1")).toThrow();
   });
 });

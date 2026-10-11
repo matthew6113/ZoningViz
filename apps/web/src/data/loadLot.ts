@@ -32,6 +32,8 @@ export interface LoadedLot {
   buildings: SfBuilding[];
   /** Front setback to use when the URL doesn't set one (fixtures follow SPEC.md: none). */
   defaultSetbackFt: number | null;
+  /** Where the lot is, for returning to it on the map. Null for synthetic fixtures. */
+  center: { lon: number; lat: number } | null;
 }
 
 export class LotNotFoundError extends Error {}
@@ -52,15 +54,37 @@ export function blockOf(blklot: string): string | null {
 }
 
 let sharedAdapter: SfAdapter | null = null;
-const adapter = () => (sharedAdapter ??= createSfAdapter());
+/** The one DataSF adapter the app uses (lot loading and address search). */
+export const sfAdapter = () => (sharedAdapter ??= createSfAdapter());
+const adapter = sfAdapter;
 
-export async function loadLot(id: string): Promise<LoadedLot> {
+// One load per lot per visit: the map starts loading while it flies in, and the
+// lot view picks up the same promise. Failures are forgotten so a retry refetches.
+const loads = new Map<string, Promise<LoadedLot>>();
+
+export function loadLot(id: string): Promise<LoadedLot> {
+  let pending = loads.get(id);
+  if (!pending) {
+    pending = fetchLot(id);
+    pending.catch(() => loads.delete(id));
+    loads.set(id, pending);
+  }
+  return pending;
+}
+
+/** Starts loading a lot without waiting for it (errors surface when the lot view asks). */
+export function prefetchLot(id: string): void {
+  loadLot(id).catch(() => {});
+}
+
+async function fetchLot(id: string): Promise<LoadedLot> {
   const fixture = FIXTURES[id];
   if (fixture) return loadFixture(id, fixture);
 
   const parcel = await adapter().getParcelByBlockLot(id);
   if (!parcel) throw new LotNotFoundError(`No San Francisco parcel has block/lot ${id}.`);
-  const district = parcel.zoning.code ? loadDistrict(parcel.zoning.code) : null;
+  // Split-zoned lots ("RH-1|RH-2") get no district: they aren't modeled yet.
+  const district = parcel.zoning.codes.length === 1 ? loadDistrict(parcel.zoning.codes[0]!) : null;
   const [neighbors, buildings] = await Promise.all([
     district ? adapter().getNeighbors(parcel) : Promise.resolve([]),
     adapter().getBuildings(parcel),
@@ -74,6 +98,7 @@ export async function loadLot(id: string): Promise<LoadedLot> {
     // stand between the street-side camera and the lot.
     buildings: buildings.buildings.filter((b) => b.block !== null && b.block === blockOf(parcel.blklot)),
     defaultSetbackFt: null,
+    center: parcel.centroid,
   };
 }
 
@@ -97,6 +122,7 @@ function loadFixture(id: string, fixture: { title: string; width: number; depth:
     input: syntheticLot(fixture.width, fixture.depth, FIXTURE_HEIGHT_DISTRICT),
     buildings: [],
     defaultSetbackFt: 0,
+    center: null,
   };
 }
 
