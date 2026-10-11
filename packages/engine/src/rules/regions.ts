@@ -1,4 +1,4 @@
-import type { Manifold, ManifoldToplevel } from "manifold-3d";
+import type { CrossSection, Manifold, ManifoldToplevel } from "manifold-3d";
 import type { LotFrame } from "../geometry/lot";
 import { crossSection, keepHalfSpace } from "../geometry/manifold";
 import type { PlanarMultiPolygon, XY } from "../geometry/projection";
@@ -11,6 +11,9 @@ import { ft, type Cut } from "./resolve";
 // Zone pieces are grown by this much before they are unioned, so hairline gaps
 // between adjacent pieces (floating-point noise) don't become cuts.
 const ZONE_GROWTH_FT = 0.01;
+// Side-yard bands start as a sliver this thin along each side line before they are grown to the yard width.
+const SLIVER_FT = 0.002;
+const BAND_SEGMENTS = 64; // round joins sit within 0.01 ft of the true yard line for yards up to ~10 ft
 
 export interface CutContext {
   wasm: ManifoldToplevel;
@@ -47,7 +50,101 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);
       return keepHalfSpace(prev, [t * n[0], t * n[1], -1], at(0, cut.fromDepthFt, cut.startHeightFt));
     }
+    case "side_strips":
+      return keepOutsideSideYards(prev, cut, ctx);
   }
+}
+
+// Lot edges that run more front-to-back than across count as side lot lines.
+// Each one is assigned to the left or right side (seen from the street) by
+// where its midpoint falls across the lot.
+interface SideEdge {
+  a: XY;
+  b: XY;
+  /** Unit normal pointing into the lot. */
+  inward: XY;
+  length: number;
+}
+
+export function sideEdges(ctx: Pick<CutContext, "frame" | "lot">): { left: SideEdge[]; right: SideEdge[] } {
+  const { frame } = ctx;
+  const { s0, s1 } = lotSpan(ctx);
+  const middle = (s0 + s1) / 2;
+  const left: SideEdge[] = [];
+  const right: SideEdge[] = [];
+  for (const polygon of ctx.lot) {
+    const ring = polygon[0]!; // outer rings are counter-clockwise (toPlanar), so the lot is on the left
+    for (let i = 0; i < ring.length; i++) {
+      const a = ring[i]!;
+      const b = ring[(i + 1) % ring.length]!; // rings may be open or closed; a closing repeat has zero length
+      if (a === b) continue;
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const length = Math.hypot(dx, dy);
+      if (length < 1e-6) continue;
+      const along = Math.abs(dx * frame.u[0] + dy * frame.u[1]);
+      const deep = Math.abs(dx * frame.n[0] + dy * frame.n[1]);
+      if (deep <= along) continue;
+      const edge = { a, b, inward: [-dy / length, dx / length] as XY, length };
+      const mid = frame.toFrame([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2])[0];
+      (mid < middle ? left : right).push(edge);
+    }
+  }
+  return { left, right };
+}
+
+/** Removes everything within `leftFt` of the left side lot lines and `rightFt` of the right ones. */
+function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_strips" }>, ctx: CutContext): Manifold {
+  const { wasm } = ctx;
+  const edges = sideEdges(ctx);
+  const bands: CrossSection[] = [];
+  for (const [list, width] of [
+    [edges.left, cut.leftFt],
+    [edges.right, cut.rightFt],
+  ] as const) {
+    if (width <= 0) continue;
+    for (const e of list) {
+      // A hairline sliver along the edge, grown by the yard width: every point within `width` of the line.
+      const t = SLIVER_FT / 2;
+      const [mx, my] = [e.inward[0] * t, e.inward[1] * t];
+      const sliver = new wasm.CrossSection(
+        [
+          [
+            [e.a[0] - mx, e.a[1] - my],
+            [e.b[0] - mx, e.b[1] - my],
+            [e.b[0] + mx, e.b[1] + my],
+            [e.a[0] + mx, e.a[1] + my],
+          ],
+        ],
+        "NonZero", // either winding
+      );
+      bands.push(sliver.offset(width - t, "Round", 2, BAND_SEGMENTS));
+      sliver.delete();
+    }
+  }
+  if (bands.length === 0) return prev.translate([0, 0, 0]); // the caller deletes `prev`
+  const band = wasm.CrossSection.union(bands);
+  const lotSection = crossSection(wasm, ctx.lot);
+  const allowedSection = lotSection.subtract(band);
+  const allowed = allowedSection.extrude(ctx.bigFt);
+  const next = prev.intersect(allowed);
+  [...bands, band, lotSection, allowedSection, allowed].forEach((o) => o.delete());
+  return next;
+}
+
+/** The longest edge on each side, for dimension lines and cut planes. */
+function longestSideEdges(ctx: Pick<CutContext, "frame" | "lot">) {
+  const { left, right } = sideEdges(ctx);
+  const longest = (list: SideEdge[]) => list.reduce<SideEdge | null>((best, e) => (!best || e.length > best.length ? e : best), null);
+  return { left: longest(left), right: longest(right) };
+}
+
+/** The lot's extent in the lot frame: s along the front, d into the lot. */
+function lotSpan(ctx: Pick<CutContext, "frame" | "lot">) {
+  const local = ctx.lot.flat(2).map((p) => ctx.frame.toFrame(p));
+  const ss = local.map((p) => p[0]);
+  const ds = local.map((p) => p[1]);
+  return { s0: Math.min(...ss), s1: Math.max(...ss), d0: Math.min(...ds), d1: Math.max(...ds) };
 }
 
 function intersectWithZones(prev: Manifold, heights: (number | null)[], ctx: CutContext): Manifold {
@@ -122,6 +219,20 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
           label: `${ft(cut.startHeightFt)}, then ${cut.angleDeg}°`,
         },
       ];
+    case "side_strips": {
+      // Across each yard from the middle of its longest side line.
+      const sides = longestSideEdges(ctx);
+      const lines: Dimension[] = [];
+      for (const [edge, width] of [
+        [sides.left, cut.leftFt],
+        [sides.right, cut.rightFt],
+      ] as const) {
+        if (!edge || width <= 0) continue;
+        const mid: XY = [(edge.a[0] + edge.b[0]) / 2, (edge.a[1] + edge.b[1]) / 2];
+        lines.push({ from: [mid[0], mid[1], 0], to: [mid[0] + edge.inward[0] * width, mid[1] + edge.inward[1] * width, 0], label: ft(width) });
+      }
+      return lines;
+    }
   }
 }
 
@@ -139,7 +250,7 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
     const ds = local.map((p) => p[1]);
     return { s0: Math.min(...ss), s1: Math.max(...ss), d0: Math.min(...ds), d1: Math.max(...ds) };
   };
-  const lot = span(ctx.lot.flat(2));
+  const lot = lotSpan(ctx);
   const width = lot.s1 - lot.s0;
   const horizontal = (b: ReturnType<typeof span>, z: number): CutPlane => ({
     origin: at(b.s0, b.d0, z),
@@ -161,6 +272,23 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
     case "max_depth":
     case "min_depth":
       return [vertical(cut.depthFt)];
+    case "side_strips": {
+      // A plane along each side's longest lot line, set in by the yard width.
+      const sides = longestSideEdges(ctx);
+      const planes: CutPlane[] = [];
+      for (const [edge, width] of [
+        [sides.left, cut.leftFt],
+        [sides.right, cut.rightFt],
+      ] as const) {
+        if (!edge || width <= 0) continue;
+        planes.push({
+          origin: [edge.a[0] + edge.inward[0] * width, edge.a[1] + edge.inward[1] * width, 0],
+          u: [edge.b[0] - edge.a[0], edge.b[1] - edge.a[1], 0],
+          v: [0, 0, top],
+        });
+      }
+      return planes;
+    }
     case "plane": {
       // From the start line up to the top of the block, or to the back of the lot if that comes first.
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);

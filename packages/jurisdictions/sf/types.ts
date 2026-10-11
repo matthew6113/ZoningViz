@@ -11,7 +11,10 @@ export interface SfAddress {
 }
 
 export interface SfZoning {
+  /** The district code; a "|"-joined list when the lot is split between districts. */
   code: string | null;
+  /** The distinct district codes on the lot (repeats such as "RH-2|RH-2" collapse to one). */
+  codes: string[];
   name: string | null;
   /** "parcel" when read from the parcel record; "zoning-layer" when the record was blank. */
   source: "parcel" | "zoning-layer";

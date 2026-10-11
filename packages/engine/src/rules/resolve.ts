@@ -30,7 +30,9 @@ export type Cut =
   /** Keep only what lies at least `depthFt` behind the front line (front setback). */
   | { type: "min_depth"; depthFt: number }
   /** Keep what lies under a plane rising at `angleDeg` from `startHeightFt`, `fromDepthFt` behind the front line. */
-  | { type: "plane"; fromDepthFt: number; startHeightFt: number; angleDeg: number };
+  | { type: "plane"; fromDepthFt: number; startHeightFt: number; angleDeg: number }
+  /** Keep what lies at least `leftFt` from the left side of the lot and `rightFt` from the right (seen from the street). */
+  | { type: "side_strips"; leftFt: number; rightFt: number };
 
 export interface Resolved {
   status: "cut" | "info" | "not_modeled";
@@ -96,8 +98,8 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
       const { maxFeet } = rule.params;
       const overridden = rule.params.userOverride && options.overrides?.[rule.id]?.feet !== undefined;
       const sentence = overridden
-        ? `${rule.title}: ${ft(setbackFt)}, your setting. The rule follows the neighbors' setbacks, up to ${ft(maxFeet)}.`
-        : `${rule.title}: up to ${ft(maxFeet)}, set by the neighbors' setbacks, which city data doesn't include. Showing the ${ft(maxFeet)} maximum.`;
+        ? `${rule.title}: ${ft(setbackFt)}, your setting. The rule matches the shallower neighbor's setback, up to ${ft(maxFeet)}.`
+        : `${rule.title}: as deep as the shallower neighbor's setback, up to ${ft(maxFeet)}. City data doesn't include neighbors' setbacks, so this shows the ${ft(maxFeet)} maximum.`;
       return {
         status: "cut",
         sentence,
@@ -105,6 +107,9 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
         cut: { type: "min_depth", depthFt: setbackFt },
       };
     }
+
+    case "side_yard":
+      return resolveSideYard(rule, ctx);
 
     case "sky_plane": {
       const { fromLine, startHeightFeet, angleDeg } = rule.params;
@@ -123,6 +128,49 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
       };
     }
   }
+}
+
+function resolveSideYard(rule: Extract<Rule, { kind: "side_yard" }>, ctx: ResolveContext): Resolved {
+  const rows = rule.params.byLotWidth;
+  let index = 0;
+  while (index + 1 < rows.length && rows[index + 1]!.minWidthFeet <= ctx.widthFt) index++;
+  const row = rows[index]!;
+  const next = rows[index + 1];
+  const range =
+    row.minWidthFeet === 0
+      ? next
+        ? `under ${ft(next.minWidthFeet)}`
+        : "any width"
+      : next
+        ? `${ft(row.minWidthFeet)} to under ${ft(next.minWidthFeet)}`
+        : `${ft(row.minWidthFeet)} or more`;
+  const lot = `this lot is ${ft(ctx.widthFt)} wide (${range})`;
+
+  if ("layout" in row) {
+    const yardFt = Math.max(ctx.widthFt - row.totalLotWidthMinusFeet, 0);
+    return {
+      status: "cut",
+      sentence:
+        `${rule.title}: ${lot}, so one yard of ${ft(ctx.widthFt)} − ${ft(row.totalLotWidthMinusFeet)} = ${ft(yardFt)}. ` +
+        "It's drawn on the left; the owner may put it on either side or split it in two.",
+      numbers: { lotWidthFt: ctx.widthFt, leftFt: yardFt, rightFt: 0 },
+      cut: { type: "side_strips", leftFt: yardFt, rightFt: 0 },
+    };
+  }
+  if (row.eachSideFeet === 0) {
+    return {
+      status: "info",
+      sentence: `${rule.title}: none required, because ${lot}.`,
+      numbers: { lotWidthFt: ctx.widthFt, leftFt: 0, rightFt: 0 },
+      cut: { type: "none" },
+    };
+  }
+  return {
+    status: "cut",
+    sentence: `${rule.title}: ${lot}, so ${ft(row.eachSideFeet)} on each side.`,
+    numbers: { lotWidthFt: ctx.widthFt, leftFt: row.eachSideFeet, rightFt: row.eachSideFeet },
+    cut: { type: "side_strips", leftFt: row.eachSideFeet, rightFt: row.eachSideFeet },
+  };
 }
 
 function resolveMappedHeight(rule: Rule, ctx: ResolveContext): Resolved {

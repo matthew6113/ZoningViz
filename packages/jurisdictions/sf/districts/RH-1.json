@@ -1,0 +1,111 @@
+{
+  "jurisdiction": "sf",
+  "district": "RH-1",
+  "name": "Residential, House, One Family",
+  "rules": [
+    {
+      "id": "use",
+      "kind": "info",
+      "title": "Homes, one per lot",
+      "plain": "RH-1 lots are for single-family homes: one unit per lot (or one per 3,000 sq ft of lot area), with up to four units (six on a corner lot) under the density exception, plus accessory units.",
+      "params": {},
+      "citation": "§209.1, §207(c)(8)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-20077",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "mapped-height",
+      "kind": "height_cap",
+      "title": "Height limit",
+      "plain": "No part of a building may be taller than the height limit mapped for this lot's height and bulk district.",
+      "params": {
+        "source": "heightDistrict"
+      },
+      "citation": "§250",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21392",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rh-dwelling-height",
+      "kind": "height_cap",
+      "title": "RH-1 dwelling cap",
+      "plain": "In RH-1, no part of a home may be taller than 35 feet, even where the mapped limit is higher.",
+      "params": {
+        "feet": 35
+      },
+      "citation": "§261(b)(1)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rear-yard",
+      "kind": "rear_yard",
+      "title": "Rear yard",
+      "plain": "The back 30% of the lot, and never less than 15 feet, must stay open at ground level and on every floor.",
+      "params": {
+        "pctOfLotDepth": 0.3,
+        "minFeet": 15,
+        "appliesAt": "grade_and_every_story"
+      },
+      "citation": "§134(c)(1), §134(d)(1)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-setback",
+      "kind": "front_setback",
+      "title": "Front setback",
+      "plain": "The building must step back from the front lot line as far as the neighboring building with the shallower setback, up to 10 feet (15 feet on some block faces, not shown).",
+      "params": {
+        "method": "shallowest_adjacent",
+        "maxFeet": 10,
+        "userOverride": true
+      },
+      "citation": "§132(a), (c), (d)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18248",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-plane",
+      "kind": "sky_plane",
+      "title": "Front height plane",
+      "plain": "Above 30 feet, the front of the building must slope back at 45 degrees from the front setback line. Next to taller neighbors the plane can start higher; that isn't shown.",
+      "params": {
+        "fromLine": "front_setback",
+        "startHeightFeet": 30,
+        "angleDeg": 45
+      },
+      "citation": "§261(c)(1), (c)(2)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "narrow-street",
+      "kind": "flag",
+      "title": "Narrow streets",
+      "plain": "On a street 40 feet wide or narrower, upper stories may have to step back from the front; street widths aren't in this app's data, so that isn't shown.",
+      "params": {},
+      "citation": "§261.1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21519",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "slope",
+      "kind": "flag",
+      "title": "Slope changes the limit",
+      "plain": "On lots that rise or fall 20 feet or more from front to back the cap changes (40 feet uphill, 30 or 25 feet downhill); this view assumes a flat lot.",
+      "params": {},
+      "citation": "§261(b)(1)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "verified": false,
+      "effectiveDate": null
+    }
+  ]
+}

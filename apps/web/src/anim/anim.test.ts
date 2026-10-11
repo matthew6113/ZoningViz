@@ -15,10 +15,10 @@ describe("schedule", () => {
   const s = buildSchedule(result, "full");
 
   it("gives each kind of rule its beats", () => {
-    // use, height, RH-2 cap, rear yard, setback (0 ft), front plane, slope
-    expect(s.rules.map((r) => r.kind)).toEqual(["card", "cut", "satisfied", "cut", "satisfied", "cut", "card"]);
+    // use, height, RH-2 cap, rear yard, setback (0 ft), front plane, narrow streets, slope
+    expect(s.rules.map((r) => r.kind)).toEqual(["card", "cut", "satisfied", "cut", "satisfied", "cut", "card", "card"]);
     const lengths = s.rules.map((r) => Number((r.end - r.start).toFixed(3)));
-    expect(lengths).toEqual([1.5, 3.5, 1.8, 3.5, 1.8, 3.5, 1.5]);
+    expect(lengths).toEqual([1.5, 3.5, 1.8, 3.5, 1.8, 3.5, 1.5, 1.5]);
   });
 
   it("rests each cutting step after its cut, before the red piece lifts", () => {
@@ -27,8 +27,8 @@ describe("schedule", () => {
   });
 
   it("totals the opening, every rule and the finale with its 4 floors", () => {
-    expect(s.duration).toBeCloseTo(2.7 + 17.1 + 0.8 + 4 * 0.35 + 0.6, 6);
-    expect(s.labels).toHaveLength(9);
+    expect(s.duration).toBeCloseTo(2.7 + 18.6 + 0.8 + 4 * 0.35 + 0.6, 6);
+    expect(s.labels).toHaveLength(10);
     expect([...s.labels].sort((a, b) => a - b)).toEqual(s.labels);
   });
 
@@ -37,7 +37,7 @@ describe("schedule", () => {
     // Resting points that coincide with the next step's start still belong to their own step.
     s.labels.forEach((time, p) => expect(positionAt(s, time)).toBe(p));
     expect(positionAt(s, s.rules[3]!.start + 0.1)).toBe(4);
-    expect(positionAt(s, s.duration)).toBe(8);
+    expect(positionAt(s, s.duration)).toBe(9);
     expect(nextPosition(s, s.labels[0]!)).toBe(1);
     expect(nextPosition(s, s.rules[3]!.start + 0.1)).toBe(4); // finish the step in progress
     expect(previousPosition(s, s.labels[4]!)).toBe(3);

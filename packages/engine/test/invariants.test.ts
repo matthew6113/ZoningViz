@@ -5,30 +5,35 @@ import { getEngine, loadDistrict, loadParcel, rectangularLot, toManifold } from 
 
 // SPEC.md invariants, checked on every fixture and recorded real lot, with the
 // default front setback, no setback, and one rule switched off.
-const RH2 = loadDistrict("RH-2");
 const NO_SETBACK = { overrides: { "front-setback": { feet: 0 } } };
 
-const parcels: [string, ParcelInput, EnvelopeOptions][] = [
-  ["A 25x100", rectangularLot(25, 100), {}],
-  ["B 25x40", rectangularLot(25, 40), {}],
-  ["667 Hampshire (4025007)", loadParcel("4025007"), {}],
-  ["Francisco condo (0044030)", loadParcel("0044030"), {}],
-  ["corner, front 0 (4025006)", loadParcel("4025006"), { frontSide: 0 }],
-  ["corner, front 1 (4025006)", loadParcel("4025006"), { frontSide: 1 }],
-  ["two height districts (4276045)", loadParcel("4276045"), {}],
+const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
+  ["A 25x100", rectangularLot(25, 100), "RH-2", {}],
+  ["B 25x40", rectangularLot(25, 40), "RH-2", {}],
+  ["E 35x100", rectangularLot(35, 100), "RH-1(D)", {}],
+  ["30x100 one side yard", rectangularLot(30, 100), "RH-1(D)", {}],
+  ["667 Hampshire (4025007)", loadParcel("4025007"), "RH-2", {}],
+  ["Francisco condo (0044030)", loadParcel("0044030"), "RH-2", {}],
+  ["corner, front 0 (4025006)", loadParcel("4025006"), "RH-2", { frontSide: 0 }],
+  ["corner, front 1 (4025006)", loadParcel("4025006"), "RH-2", { frontSide: 1 }],
+  ["two height districts (4276045)", loadParcel("4276045"), "RH-2", {}],
+  ["124 Clarendon Ave (2687029)", loadParcel("2687029"), "RH-1(D)", {}],
+  ["752 4th Ave (1646023)", loadParcel("1646023"), "RH-1", {}],
+  ["752 4th Ave as RH-1(S) (1646023)", loadParcel("1646023"), "RH-1(S)", {}],
+  ["2120 Lyon St (0982019)", loadParcel("0982019"), "RH-3", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
   ["no setback", NO_SETBACK],
   ["rear yard off", { disabledRuleIds: ["rear-yard"] }],
 ];
-const cases = parcels.flatMap(([name, parcel, base]) =>
-  variants.map(([variant, opts]) => [`${name}, ${variant}`, parcel, { ...base, ...opts }] as const),
+const cases = parcels.flatMap(([name, parcel, district, base]) =>
+  variants.map(([variant, opts]) => [`${name} ${district}, ${variant}`, parcel, district, { ...base, ...opts }] as const),
 );
 
-describe.each(cases)("%s", async (_, parcel, options) => {
+describe.each(cases)("%s", async (_, parcel, district, options) => {
   const engine = await getEngine();
-  const result: EnvelopeResult = engine.computeEnvelope(parcel, RH2, options);
+  const result: EnvelopeResult = engine.computeEnvelope(parcel, loadDistrict(district), options);
   if (result.status !== "ok") throw new Error(`expected an envelope, got ${result.status}`);
   const { start, steps, totals, lot } = result;
 

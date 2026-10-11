@@ -26,6 +26,7 @@ describe("district schema", () => {
       "rear-yard",
       "front-setback",
       "front-plane",
+      "narrow-street",
       "slope",
     ]);
     expect(rh2.rules.every((r) => r.verified === false)).toBe(true);
@@ -34,6 +35,24 @@ describe("district schema", () => {
       minFeet: 15,
       appliesAt: "grade_and_every_story",
     });
+  });
+
+  it.each(["RH-1(D)", "RH-1", "RH-1(S)", "RH-2", "RH-3"])("accepts the %s draft, every rule unverified and cited", (code) => {
+    const district = loadDistrict(code);
+    expect(district.district).toBe(code);
+    for (const r of district.rules) {
+      expect(r.verified).toBe(false);
+      expect(r.effectiveDate).toBeNull();
+      expect(r.citation).toMatch(/§/);
+    }
+  });
+
+  it("gives only RH-1(D) side yards, and RH-3 no dwelling cap or front plane", () => {
+    const kinds = (code: string) => loadDistrict(code).rules.map((r) => r.id);
+    expect(kinds("RH-1(D)")).toContain("side-yards");
+    for (const code of ["RH-1", "RH-1(S)", "RH-2", "RH-3"]) expect(kinds(code)).not.toContain("side-yards");
+    expect(kinds("RH-3")).not.toContain("rh-dwelling-height");
+    expect(kinds("RH-3")).not.toContain("front-plane");
   });
 
   it("accepts a verified rule with an effective date", () => {
@@ -48,6 +67,13 @@ describe("district schema", () => {
     ["a missing plain sentence", [rule({ plain: "" })], /plain/],
     ["unexpected params", [rule({ params: { feet: 40 } })], /params/],
     ["an out-of-range sky plane angle", [rule({ kind: "sky_plane", params: { fromLine: "front_setback", startHeightFeet: 30, angleDeg: 90 } })], /angleDeg/],
+    ["the old block_average setback method", [rule({ kind: "front_setback", params: { method: "block_average", maxFeet: 10, userOverride: true } })], /method/],
+    ["a side-yard table that doesn't start at 0", [rule({ kind: "side_yard", params: { byLotWidth: [{ minWidthFeet: 28, eachSideFeet: 3 }] } })], /start at 0/],
+    [
+      "a side-yard table out of order",
+      [rule({ kind: "side_yard", params: { byLotWidth: [{ minWidthFeet: 0, eachSideFeet: 0 }, { minWidthFeet: 40, eachSideFeet: 4 }, { minWidthFeet: 31, eachSideFeet: 3 }] } })],
+      /narrow to wide/,
+    ],
   ])("rejects %s", (_, rules, message) => {
     expect(() => parseDistrictFile(file(rules))).toThrow(message);
   });

@@ -35,6 +35,16 @@ describe("cut planes for the cutting-plane sweep", async () => {
     close(p!.v, [0, 10, 10]);
   });
 
+  it("stands a side-yard plane along each side line of a 35 ft RH-1(D) lot, 3 ft in", async () => {
+    const e = engine.computeEnvelope(rectangularLot(35, 100), loadDistrict("RH-1(D)"), { overrides: { "front-setback": { feet: 0 } } });
+    const [left, right] = planes(e, "side-yards");
+    close(left!.origin, [-14.5, 50, 0]);
+    close(left!.u, [0, -100, 0]);
+    close(right!.origin, [14.5, -50, 0]);
+    close(right!.u, [0, 100, 0]);
+    close(left!.v, [0, 0, 35]);
+  });
+
   it("gives rules without geometry no planes", () => {
     expect(planes(a, "use")).toEqual([]);
     expect(planes(a, "slope")).toEqual([]);

@@ -17,7 +17,7 @@ describe("getParcelByBlockLot", () => {
   it("describes an ordinary RH-2 lot in a 40-X district", async () => {
     const p = (await adapter.getParcelByBlockLot("4025007"))!;
     expect(p.address.label).toBe("667 Hampshire St");
-    expect(p.zoning).toEqual({ code: "RH-2", name: "RESIDENTIAL- HOUSE, TWO FAMILY", source: "parcel" });
+    expect(p.zoning).toEqual({ code: "RH-2", codes: ["RH-2"], name: "RESIDENTIAL- HOUSE, TWO FAMILY", source: "parcel" });
     expect(p.lotAreaSqFt).toBeCloseTo(2500.02, 1);
     expect(p.unitBlklots).toEqual([]);
     expect(p.heightDistricts).toHaveLength(1);

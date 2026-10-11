@@ -15,6 +15,7 @@ import {
 } from "./datasf";
 import { parseHeightLabel } from "./heightLabel";
 import type { SfAddress, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
+import { zoningCodes } from "./zoning";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
 interface ParcelRow {
@@ -170,7 +171,8 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     warnings: string[],
   ): Promise<SfZoning> {
     if (land.zoning_code?.trim()) {
-      return { code: land.zoning_code.trim(), name: land.zoning_district?.trim() || null, source: "parcel" };
+      const codes = zoningCodes(land.zoning_code);
+      return { code: codes.join("|"), codes, name: land.zoning_district?.trim() || null, source: "parcel" };
     }
     const hits = await rows<{ zoning?: string; districtna?: string }>(
       soqlUrl(DATASETS.zoningDistricts, {
@@ -184,7 +186,8 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
         ? "Parcel record has no zoning code; zoning taken from the Zoning Districts layer at the lot centroid."
         : "Parcel record has no zoning code and the Zoning Districts layer has none at the lot centroid.",
     );
-    return { code: hit?.zoning?.trim() || null, name: hit?.districtna?.trim() || null, source: "zoning-layer" };
+    const codes = zoningCodes(hit?.zoning);
+    return { code: codes.join("|") || null, codes, name: hit?.districtna?.trim() || null, source: "zoning-layer" };
   }
 
   async function heightDistrictsOf(

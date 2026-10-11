@@ -34,7 +34,8 @@ export const RearYardParams = z
 
 export const FrontSetbackParams = z
   .object({
-    method: z.literal("block_average"),
+    /** As deep as the adjacent building with the shallowest setback (neighbors' setbacks aren't in city data). */
+    method: z.literal("shallowest_adjacent"),
     maxFeet: z.number().min(0),
     userOverride: z.boolean(),
   })
@@ -48,6 +49,34 @@ export const SkyPlaneParams = z
   })
   .strict();
 
+/** One row of a side-yard table: applies to lots at least `minWidthFeet` wide, up to the next row. */
+export const SideYardBracket = z.union([
+  z.object({ minWidthFeet: z.number().min(0), eachSideFeet: z.number().min(0) }).strict(),
+  z
+    .object({
+      minWidthFeet: z.number().min(0),
+      /** One yard, as wide as the lot width minus this. */
+      totalLotWidthMinusFeet: z.number().min(0),
+      layout: z.literal("one_side"),
+    })
+    .strict(),
+]);
+
+export const SideYardParams = z
+  .object({ byLotWidth: z.array(SideYardBracket).min(1) })
+  .strict()
+  .superRefine((params, ctx) => {
+    const rows = params.byLotWidth;
+    if (rows[0]!.minWidthFeet !== 0) {
+      ctx.addIssue({ code: "custom", path: ["byLotWidth", 0, "minWidthFeet"], message: "the first row must start at 0 ft" });
+    }
+    rows.forEach((row, i) => {
+      if (i > 0 && row.minWidthFeet <= rows[i - 1]!.minWidthFeet) {
+        ctx.addIssue({ code: "custom", path: ["byLotWidth", i, "minWidthFeet"], message: "rows must go from narrow to wide" });
+      }
+    });
+  });
+
 export const RuleSchema = z
   .discriminatedUnion("kind", [
     z.object({ ...common, kind: z.literal("info"), params: noParams }).strict(),
@@ -56,6 +85,7 @@ export const RuleSchema = z
     z.object({ ...common, kind: z.literal("rear_yard"), params: RearYardParams }).strict(),
     z.object({ ...common, kind: z.literal("front_setback"), params: FrontSetbackParams }).strict(),
     z.object({ ...common, kind: z.literal("sky_plane"), params: SkyPlaneParams }).strict(),
+    z.object({ ...common, kind: z.literal("side_yard"), params: SideYardParams }).strict(),
   ])
   .superRefine((rule, ctx) => {
     if (rule.verified && rule.effectiveDate === null) {

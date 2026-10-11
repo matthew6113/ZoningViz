@@ -49,13 +49,14 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await fast(page);
 
   const expected: [string, string | RegExp][] = [
-    ["Rule 1 of 7: Homes, up to two units", "RH-2 lots are for homes, with up to two dwelling units on a lot."],
-    ["Rule 2 of 7: Height limit", "Height limit: 40 ft (40-X)."],
-    ["Rule 3 of 7: RH-2 dwelling cap", /Already satisfied/],
-    ["Rule 4 of 7: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
-    ["Rule 5 of 7: Front setback", /0 ft, your setting.*Already satisfied/],
-    ["Rule 6 of 7: Front height plane", /above 30 ft, the building steps back at 45°/],
-    ["Rule 7 of 7: Slope can lower the limit", /^Not modeled:/],
+    ["Rule 1 of 8: Homes, up to two units", /^RH-2 lots are for homes: two units per lot/],
+    ["Rule 2 of 8: Height limit", "Height limit: 40 ft (40-X)."],
+    ["Rule 3 of 8: RH-2 dwelling cap", /Already satisfied/],
+    ["Rule 4 of 8: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
+    ["Rule 5 of 8: Front setback", /0 ft, your setting.*Already satisfied/],
+    ["Rule 6 of 8: Front height plane", /above 30 ft, the building steps back at 45°/],
+    ["Rule 7 of 8: Narrow streets", /^Not modeled:/],
+    ["Rule 8 of 8: Slope changes the limit", /^Not modeled:/],
   ];
   for (const [i, [stepLabel, sentence]] of expected.entries()) {
     await next(page).click();
@@ -78,20 +79,20 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await expect(summary).toContainText("4 stories");
   await expect(summary).toContainText("6,875 sq ft");
   await expect(summary).toContainText("34.4% of the block survived.");
-  await expect(page.locator(".rule-card")).toHaveCount(7);
-  await expect(page.locator(".tag-unverified")).toHaveCount(7);
+  await expect(page.locator(".rule-card")).toHaveCount(8);
+  await expect(page.locator(".tag-unverified")).toHaveCount(8);
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/fixture-a-result.png` });
 });
 
 test("Back, arrow keys and deep links move between steps", async ({ page }) => {
   await page.goto("/?parcel=fixture-a&step=4");
-  await expect(label(page)).toHaveText("Rule 4 of 7: Rear yard");
+  await expect(label(page)).toHaveText("Rule 4 of 8: Rear yard");
   await page.getByRole("button", { name: "← Back" }).click();
-  await expect(label(page)).toHaveText("Rule 3 of 7: RH-2 dwelling cap");
+  await expect(label(page)).toHaveText("Rule 3 of 8: RH-2 dwelling cap");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
-  await expect(label(page)).toHaveText("Rule 5 of 7: Front setback");
+  await expect(label(page)).toHaveText("Rule 5 of 8: Front setback");
   await page.goto("/?parcel=fixture-a&step=99");
   await expect(label(page)).toHaveText("Result");
 });
@@ -105,14 +106,14 @@ test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) 
   await expectSceneDrawn(page);
 
   const sentences: string[] = [];
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     await next(page).click();
-    await expect(label(page)).toContainText(`Rule ${i} of 7`);
+    await expect(label(page)).toContainText(`Rule ${i} of 8`);
     sentences.push((await currentSentence(page).textContent()) ?? "");
     if (i === 5) await page.screenshot({ path: `${SHOTS}/hampshire-front-setback.png` });
   }
   expect(sentences[3]).toBe("Rear yard: 30% of 100 ft lot depth = 30 ft.");
-  expect(sentences[4]).toContain("Showing the 10 ft maximum.");
+  expect(sentences[4]).toContain("this shows the 10 ft maximum.");
 
   await next(page).click();
   await expect(label(page)).toHaveText("Result");
@@ -163,7 +164,7 @@ test("Play runs the whole sequence to the result", async ({ page }) => {
   await fast(page);
   await page.getByRole("button", { name: "Play" }).click();
   await expect(label(page)).toHaveText("Result", { timeout: 30_000 });
-  await expect(page).toHaveURL(/step=8/);
+  await expect(page).toHaveURL(/step=9/);
   await expect(page.getByTestId("summary")).toContainText("68,750 cu ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("68,750 cu ft");
   await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
@@ -173,7 +174,7 @@ test("Play runs the whole sequence to the result", async ({ page }) => {
 test("the scrubber jumps to a rule's tick and drags both ways", async ({ page }) => {
   await page.goto("/?parcel=fixture-a&step=0");
   await page.getByRole("button", { name: "Go to rule 4: Rear yard" }).click();
-  await expect(label(page)).toHaveText("Rule 4 of 7: Rear yard");
+  await expect(label(page)).toHaveText("Rule 4 of 8: Rear yard");
   await expect(page).toHaveURL(/step=4/);
   const scrubber = page.getByRole("slider", { name: "Timeline" });
   await scrubber.fill("1000");
@@ -183,7 +184,7 @@ test("the scrubber jumps to a rule's tick and drags both ways", async ({ page })
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("200,000 cu ft");
   await scrubber.fill("520");
-  await expect(label(page)).toHaveText(/^Rule \d of 7/);
+  await expect(label(page)).toHaveText(/^Rule \d of 8/);
   await page.screenshot({ path: `${SHOTS}/fixture-a-scrubbed.png` });
 });
 
@@ -191,7 +192,7 @@ test("switching a rule off recomputes the envelope and keeps the step", async ({
   await page.goto("/?parcel=fixture-a&step=4");
   await page.getByRole("button", { name: "Turn off Rear yard" }).click();
   await expect(page).toHaveURL(/off=rear-yard/);
-  await expect(label(page)).toHaveText("Rule 4 of 7: Rear yard");
+  await expect(label(page)).toHaveText("Rule 4 of 8: Rear yard");
   await expect(page.locator("[aria-current=step] .chip")).toHaveText("Off");
   await page.getByRole("slider", { name: "Timeline" }).fill("1000");
   // 40 ft over the whole 2,500 sq ft lot, less the 1,250 cu ft front plane.

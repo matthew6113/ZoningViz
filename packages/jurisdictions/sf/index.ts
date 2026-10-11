@@ -6,3 +6,4 @@ export { parseHeightLabel, type ParsedHeightLabel } from "./heightLabel";
 export type * from "./types";
 export { toParcelInput } from "./engineInput";
 export { availableDistricts, loadDistrict } from "./districts";
+export { coverageNote, zoningCodes, zoningCoverage, type ZoningCoverage } from "./zoning";

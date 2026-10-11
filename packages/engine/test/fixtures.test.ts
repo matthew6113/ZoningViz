@@ -127,3 +127,113 @@ describe("fixture D: real lot across two height districts (1391 Hampshire St, 42
     expect(cap.measurements.removedVolume).toBeCloseTo(15 * piece55, -1);
   });
 });
+
+describe("fixture E: 35 x 100 ft RH-1(D) lot, 40-X, no front setback", async () => {
+  const engine = await getEngine();
+  const RH1D = loadDistrict("RH-1(D)");
+  const r = ok(engine.computeEnvelope(rectangularLot(35, 100), RH1D, NO_SETBACK));
+
+  it("cuts the 40 ft mapped height, then the 35 ft RH-1(D) cap", () => {
+    expect(step(r, "mapped-height").measurements.volume).toBeCloseTo(35 * 100 * 40, 3);
+    expect(step(r, "rh-dwelling-height").status).toBe("cut");
+    expect(step(r, "rh-dwelling-height").measurements.volume).toBeCloseTo(35 * 100 * 35, 3);
+  });
+
+  it("takes 3 ft side yards on a 35 ft lot, leaving a 29 x 70 ft = 2,030 sq ft footprint", () => {
+    const sides = step(r, "side-yards");
+    expect(sides.status).toBe("cut");
+    expect(sides.sentence).toBe("Side yards: this lot is 35 ft wide (31 ft to under 40 ft), so 3 ft on each side.");
+    expect(sides.numbers).toMatchObject({ lotWidthFt: 35, leftFt: 3, rightFt: 3 });
+    expect(sides.measurements.removedVolume).toBeCloseTo(2 * 3 * 70 * 35, 3);
+    expect(sides.measurements.footprintSqFt).toBeCloseTo(2030, 3);
+    expect(sides.dimensions.map((d) => d.label)).toEqual(["3 ft", "3 ft"]);
+  });
+
+  it("removes 362.5 cu ft with the front plane (30 ft, then 45° up to the 35 ft cap)", () => {
+    expect(step(r, "front-plane").measurements.removedVolume).toBeCloseTo(0.5 * 5 * 5 * 29, 3);
+  });
+
+  it("ends at 70,687.5 cu ft, 3 stories and 6,090 sq ft of floor area", () => {
+    expect(r.totals.volume).toBeCloseTo(70_687.5, 3);
+    expect(r.totals.footprintSqFt).toBeCloseTo(2030, 3);
+    expect(r.totals.stories).toBe(3);
+    expect(r.totals.grossFloorAreaSqFt).toBeCloseTo(6090, 3);
+  });
+
+  it("flags narrow streets and slope without cutting", () => {
+    expect(step(r, "narrow-street").status).toBe("not_modeled");
+    expect(step(r, "slope").status).toBe("not_modeled");
+  });
+});
+
+describe("RH-1(D) side yards by lot width", async () => {
+  const engine = await getEngine();
+  const RH1D = loadDistrict("RH-1(D)");
+  const sideYards = (width: number) =>
+    step(ok(engine.computeEnvelope(rectangularLot(width, 100), RH1D, NO_SETBACK)), "side-yards");
+
+  it("needs none on a lot under 28 ft wide", () => {
+    const s = sideYards(25);
+    expect(s.status).toBe("info");
+    expect(s.sentence).toBe("Side yards: none required, because this lot is 25 ft wide (under 28 ft).");
+    expect(s.measurements.removedVolume).toBe(0);
+  });
+
+  it("takes one yard of width − 25 ft on a lot 28 to under 31 ft wide", () => {
+    const s = sideYards(30);
+    expect(s.numbers).toMatchObject({ leftFt: 5, rightFt: 0 });
+    expect(s.sentence).toMatch(/^Side yards: this lot is 30 ft wide \(28 ft to under 31 ft\), so one yard of 30 ft − 25 ft = 5 ft\./);
+    expect(s.measurements.footprintSqFt).toBeCloseTo(25 * 70, 3);
+  });
+
+  it.each([
+    [40, 4],
+    [50, 5],
+    [80, 5],
+  ])("takes the table's yards on a %i ft lot (%i ft each)", (width, each) => {
+    const s = sideYards(width);
+    expect(s.numbers).toMatchObject({ leftFt: each, rightFt: each });
+    expect(s.measurements.footprintSqFt).toBeCloseTo((width - 2 * each) * 70, 3);
+  });
+});
+
+describe("side yards on an irregular real lot (124 Clarendon Ave, 2687029, RH-1(D))", async () => {
+  const engine = await getEngine();
+  const r = ok(engine.computeEnvelope(loadParcel("2687029"), loadDistrict("RH-1(D)")));
+  const sides = step(r, "side-yards");
+
+  it("is flagged as approximate geometry and takes 5 ft yards on a 50.6 ft wide lot", () => {
+    expect(r.lot.approximate).toBe(true);
+    expect(r.lot.widthFt).toBeCloseTo(50.6, 1);
+    expect(sides.numbers).toMatchObject({ leftFt: 5, rightFt: 5 });
+  });
+
+  it("keeps every corner of the result at least 5 ft from the side lot lines it follows", () => {
+    // Rebuild the side lines the way the engine classifies them: edges running more front-to-back than across.
+    const { from, to } = r.lot.front;
+    const len = Math.hypot(to[0] - from[0], to[1] - from[1]);
+    const [ux, uy] = [(to[0] - from[0]) / len, (to[1] - from[1]) / len];
+    const ring = r.lot.outline[0]![0]!;
+    const segments = ring
+      .map((a, i) => [a, ring[(i + 1) % ring.length]!] as const)
+      .filter(([a, b]) => {
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        return Math.hypot(dx, dy) > 1e-6 && Math.abs(dx * -uy + dy * ux) > Math.abs(dx * ux + dy * uy);
+      });
+    expect(segments.length).toBeGreaterThanOrEqual(2);
+    const distance = (p: number[], [a, b]: readonly [number[], number[]]) => {
+      const [dx, dy] = [b[0]! - a[0]!, b[1]! - a[1]!];
+      const t = Math.max(0, Math.min(1, ((p[0]! - a[0]!) * dx + (p[1]! - a[1]!) * dy) / (dx * dx + dy * dy)));
+      return Math.hypot(p[0]! - (a[0]! + t * dx), p[1]! - (a[1]! + t * dy));
+    };
+    const positions = sides.after.positions;
+    let nearest = Infinity;
+    for (let i = 0; i < positions.length; i += 3) {
+      const p = [positions[i]!, positions[i + 1]!];
+      for (const segment of segments) nearest = Math.min(nearest, distance(p, segment));
+    }
+    expect(nearest).toBeGreaterThan(5 - 0.01);
+    expect(sides.measurements.removedVolume).toBeGreaterThan(10_000);
+  });
+});
