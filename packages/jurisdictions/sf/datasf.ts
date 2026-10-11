@@ -11,6 +11,8 @@ export const DATASETS = {
   heightBulkDistricts: "h9wh-cg3m",
   /** Building outlines with LiDAR-derived heights (2010), for context around a lot. */
   buildingFootprints: "ynuv-fyni",
+  /** The city's address list (Enterprise Addressing System), for address search. */
+  addresses: "ramy-di5m",
 } as const;
 
 export type DatasetId = (typeof DATASETS)[keyof typeof DATASETS];

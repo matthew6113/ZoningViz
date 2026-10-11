@@ -11,10 +11,11 @@
     "build": "pnpm --filter @zoningviz/web build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.scripts.json",
     "parcel": "tsx packages/jurisdictions/sf/cli.ts",
     "envelope": "tsx packages/jurisdictions/sf/envelope-cli.ts",
     "record-fixtures": "tsx scripts/record-engine-fixtures.mts",
+    "build-tiles": "tsx scripts/build-tiles.ts",
     "e2e": "pnpm --filter @zoningviz/web e2e"
   },
   "devDependencies": {

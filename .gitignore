@@ -7,8 +7,10 @@ coverage/
 # Dev-only API response cache (Phase 1)
 .cache/
 
-# Generated parcel tiles (Phase 5) — build with scripts/build-tiles.ts
+# Generated parcel tiles (Phase 5) — build with `pnpm build-tiles`. Only the
+# small fixture for the browser tests is committed.
 *.pmtiles
+!apps/web/e2e/fixtures/tiles/*.pmtiles
 
 .DS_Store
 .env

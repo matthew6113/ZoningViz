@@ -76,3 +76,13 @@ export interface SfBuildings {
   /** The dataset's own as-of date (the LiDAR heights themselves date from 2010). */
   asOf: string | null;
 }
+
+/** One hit from address search. */
+export interface SfAddressMatch {
+  /** Display form, e.g. "667 Hampshire St". */
+  label: string;
+  /** The block/lot the address is assigned to (may be a condo unit's; the adapter resolves it to the land parcel). */
+  blklot: string | null;
+  lon: number;
+  lat: number;
+}

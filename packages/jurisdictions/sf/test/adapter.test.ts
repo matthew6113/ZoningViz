@@ -92,3 +92,23 @@ describe("normalizeBlklot", () => {
     expect(() => normalizeBlklot("0044030' OR 1=1")).toThrow();
   });
 });
+
+describe("searchAddresses", () => {
+  it("finds an address from its first few characters", async () => {
+    expect(await adapter.searchAddresses("667 hamp")).toEqual([
+      { label: "667 Hampshire St", blklot: "4025007", lon: expect.closeTo(-122.40779, 5), lat: expect.closeTo(37.76102, 5) },
+    ]);
+  });
+
+  it("understands spelled-out street types and unpadded numbered streets", async () => {
+    const [hit] = await adapter.searchAddresses("752 4th avenue");
+    expect(hit).toMatchObject({ label: "752 4th Ave", blklot: "1646023" });
+    const [corner] = await adapter.searchAddresses("2550 19th street");
+    expect(corner).toMatchObject({ label: "2550 19th St", blklot: "4025006" });
+  });
+
+  it("doesn't query for text without a house number", async () => {
+    expect(await adapter.searchAddresses("Hampshire")).toEqual([]);
+    expect(await adapter.searchAddresses("66")).toEqual([]);
+  });
+});

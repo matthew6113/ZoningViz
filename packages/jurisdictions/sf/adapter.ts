@@ -14,7 +14,8 @@ import {
   type FetchJson,
 } from "./datasf";
 import { parseHeightLabel } from "./heightLabel";
-import type { SfAddress, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
+import type { SfAddressMatch, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
+import { addressOf, displayAddress, normalizeAddressQuery } from "./address";
 import { zoningCodes } from "./zoning";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
@@ -65,6 +66,8 @@ export interface SfAdapter {
   getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]>;
   /** Buildings within `padFt` of the lot, minus any standing on the lot itself. */
   getBuildings(parcel: SfParcel, padFt?: number): Promise<SfBuildings>;
+  /** Street addresses starting with what was typed (house number first), from the city's address list. */
+  searchAddresses(text: string, limit?: number): Promise<SfAddressMatch[]>;
 }
 
 export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdapter {
@@ -304,7 +307,34 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     return pending;
   }
 
-  return { getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings };
+  async function searchAddresses(text: string, limit = 8): Promise<SfAddressMatch[]> {
+    const query = normalizeAddressQuery(text);
+    if (query.length < 3 || !/^\d/.test(query)) return [];
+    const hits = await rows<{ address?: string; parcel_number?: string; longitude?: string; latitude?: string }>(
+      soqlUrl(DATASETS.addresses, {
+        select: "address,parcel_number,longitude,latitude",
+        // Unit rows ("227 BAY ST #208") repeat their building's address.
+        where: `starts_with(address,${soqlString(query)}) AND unit_number IS NULL`,
+        order: "address",
+        limit: limit * 2,
+      }),
+    );
+    const seen = new Set<string>();
+    const matches: SfAddressMatch[] = [];
+    for (const hit of hits) {
+      const lon = Number(hit.longitude);
+      const lat = Number(hit.latitude);
+      if (!hit.address || !Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+      const blklot = hit.parcel_number?.trim() || null;
+      const key = `${hit.address}|${blklot}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push({ label: displayAddress(hit.address), blklot, lon, lat });
+    }
+    return matches.slice(0, limit);
+  }
+
+  return { getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses };
 }
 
 function paddedBboxWkt(parcel: SfParcel, padFt: number): string {
@@ -396,29 +426,6 @@ function labelWarnings(districts: SfHeightDistrict[]): string[] {
   });
 }
 
-function addressOf(row: ParcelRow): SfAddress {
-  const from = cleanNumber(row.from_address_num);
-  const to = cleanNumber(row.to_address_num);
-  // About 1,400 active records carry the literal street name "UNKNOWN".
-  const rawStreet = row.street_name?.trim();
-  const street = rawStreet && rawStreet.toUpperCase() !== "UNKNOWN" ? rawStreet : null;
-  const streetType = row.street_type?.trim() || null;
-  let label: string | null = null;
-  if (street) {
-    const numbers = from && to && from !== to ? `${from}–${to}` : (from ?? to);
-    label = [numbers, titleCase(street), streetType && titleCase(streetType)].filter(Boolean).join(" ");
-  }
-  return { from, to, street, streetType, label };
-}
-
-function cleanNumber(value: string | undefined): string | null {
-  const text = value?.trim();
-  return text && text !== "0" ? text : null;
-}
-
-function titleCase(text: string): string {
-  return text.toLowerCase().replace(/(^|[\s\-'])([a-z])/g, (_, sep: string, ch: string) => sep + ch.toUpperCase());
-}
 
 function formatShare(share: number | null): string {
   return share === null ? "unknown share" : `${(share * 100).toFixed(1)}%`;
