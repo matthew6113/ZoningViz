@@ -304,9 +304,8 @@ function resolveBulk(rule: Extract<Rule, { kind: "bulk" }>, ctx: ResolveContext)
     const letter = zone.bulk;
     const limit = letter === null ? undefined : letters[letter];
     const height = zone.heightFt;
-    if (letter === null || height === null) {
-      return { cut: null, text: `${zone.label} can't be read, so its bulk limits aren't modeled`, status: "not_modeled" };
-    }
+    if (height === null) return { cut: null, text: `${zone.label} can't be read, so its bulk limits aren't modeled`, status: "not_modeled" };
+    if (letter === null) return { cut: null, text: `${zone.label}: no bulk district is given, so bulk limits aren't modeled`, status: "not_modeled" };
     if (limit) {
       if (height <= limit.aboveFeet) {
         return { cut: null, text: `${zone.label}: its limits start above ${ft(limit.aboveFeet)}, but the height limit here is ${ft(height)}`, status: "not_applicable" };

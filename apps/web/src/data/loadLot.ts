@@ -47,7 +47,7 @@ const FIXTURES: Record<string, { title: string; width: number; depth: number }> 
 };
 // SPEC.md's fixtures A and B: RH-2 in a 40-X height district, no front setback.
 const FIXTURE_ZONING = "RH-2";
-const FIXTURE_HEIGHT_DISTRICT = { label: "40-X", heightFt: 40 };
+const FIXTURE_HEIGHT_DISTRICT = { label: "40-X", heightFt: 40, bulk: "X" };
 
 export const isFixture = (id: string) => id in FIXTURES;
 

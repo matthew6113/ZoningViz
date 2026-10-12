@@ -14,7 +14,7 @@ function rect(x0: number, y0: number, x1: number, y1: number): MultiPolygon {
 export function syntheticLot(
   width: number,
   depth: number,
-  heightDistrict: { label: string; heightFt: number },
+  heightDistrict: { label: string; heightFt: number; bulk?: string | null },
 ): ParcelInput {
   const footprint = rect(0, 0, width, depth);
   return {

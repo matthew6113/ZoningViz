@@ -90,6 +90,13 @@ describe("bulk outcomes by letter", async () => {
     expect(s.measurements.removedVolume).toBe(0);
   });
 
+  it("is already satisfied on a lot exactly as wide as the length limit", () => {
+    // 110 x 40 ft, RM-3: 110 ft wide and 25 ft deep above 40 ft.
+    const s = bulkStep(lot(110, 40, "65-A", 65, "A"), "RM-3");
+    expect(s.status).toBe("already_satisfied");
+    expect(s.measurements.removedVolume).toBe(0);
+  });
+
   it("doesn't apply in bulk district X", () => {
     const s = bulkStep(lot(25, 100, "40-X", 40, "X"), "RH-2");
     expect(s.status).toBe("not_applicable");

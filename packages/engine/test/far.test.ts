@@ -57,10 +57,11 @@ describe("fixture H: 25 x 100 ft NC-2 lot, 40-X", async () => {
     expect(far.removed).toBeNull();
   });
 
-  it("flags the sidewalk setback, the ground-floor bonus and bulk", () => {
-    for (const id of ["front-setback", "ground-floor-bonus", "bulk", "narrow-street", "cross-slope"]) {
+  it("flags the sidewalk setback and the ground-floor bonus; bulk doesn't apply in 40-X", () => {
+    for (const id of ["front-setback", "ground-floor-bonus", "narrow-street", "cross-slope"]) {
       expect(step(r, id).status).toBe("not_modeled");
     }
+    expect(step(r, "bulk").status).toBe("not_applicable");
   });
 });
 

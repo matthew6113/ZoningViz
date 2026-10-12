@@ -113,8 +113,9 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): [Manifold, 
   }
 }
 
-// A bulk limit counts as met within this much (floating-point noise).
-const BULK_TOLERANCE_FT = 1e-6;
+// A bulk limit counts as met within this much (about an eighth of an inch): plan
+// outlines carry floating-point noise, and a lot exactly at the limit must not be cut.
+const BULK_TOLERANCE_FT = 0.01;
 
 /** A zone's plan section grown slightly (see ZONE_GROWTH_FT), as a prism from far below to far above. */
 function zonePrism(ctx: CutContext, index: number): Manifold {

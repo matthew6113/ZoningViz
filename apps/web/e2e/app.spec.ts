@@ -83,8 +83,8 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await expect(summary).toContainText("4 stories");
   await expect(summary).toContainText("6,875 sq ft");
   await expect(summary).toContainText("34.4% of the block survived.");
-  await expect(page.locator(".rule-card")).toHaveCount(9);
-  await expect(page.locator(".tag-unverified")).toHaveCount(9);
+  await expect(page.locator(".rule-card")).toHaveCount(10);
+  await expect(page.locator(".tag-unverified")).toHaveCount(10);
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/fixture-a-result.png` });
 });
@@ -172,7 +172,7 @@ test("Play runs the whole sequence to the result", async ({ page }) => {
   await fast(page);
   await page.getByRole("button", { name: "Play" }).click();
   await expect(label(page)).toHaveText("Result", { timeout: 30_000 });
-  await expect(page).toHaveURL(/step=10/);
+  await expect(page).toHaveURL(/step=11/);
   await expect(page.getByTestId("summary")).toContainText("68,750 cu ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("68,750 cu ft");
   await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
@@ -338,4 +338,18 @@ test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard star
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toContainText("4 stories at 10 ft floor-to-floor, 14 ft ground floor");
   await expect(page.getByTestId("far-cap")).toContainText("(FAR 2.5; homes aren't limited)");
+});
+
+test("bulk limits: 800 Powell St (RM-4, 65-A) is trimmed to a 110 ft box above 40 ft", async ({ page }) => {
+  await page.goto("/?parcel=0243017&front=0&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("800 Powell St");
+  await expect(label(page)).toHaveText("Rule 6 of 9: Bulk limits");
+  await expect(currentSentence(page)).toHaveText(
+    /^Bulk limits: 65-A: above 40 ft, no floor may be longer than 110 ft or measure more than 125 ft corner to corner\. Above 40 ft the envelope is 116\.\d ft wide .* so the upper floors are drawn as a 110 ft × \d+(\.\d)? ft box at the front; they could sit anywhere on the lot within those dimensions\.$/,
+  );
+  await expect(page.locator("[aria-current=step] .removed-line")).toContainText("cu ft removed");
+  await expect(page.locator(".dimension-label").filter({ hasText: /^110 ft$/ })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Turn off Bulk limits" })).toBeVisible();
+  await expectSceneDrawn(page);
+  await page.screenshot({ path: `${SHOTS}/powell-bulk.png` });
 });

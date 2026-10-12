@@ -30,7 +30,7 @@ export function withHeightDistrict(input: ParcelInput, label: string, heightFt: 
 
 /** SPEC.md fixtures A/B: a mid-block lot in a 40-X district (the district file supplies the rules). */
 export function rectangularLot(width: number, depth: number): ParcelInput {
-  return syntheticLot(width, depth, { label: "40-X", heightFt: 40 });
+  return syntheticLot(width, depth, { label: "40-X", heightFt: 40, bulk: "X" });
 }
 
 /**

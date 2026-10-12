@@ -7,7 +7,7 @@ import { buildTimeline, ENVELOPE_OPACITY, initialState, LIFT_FT, stepLabel } fro
 
 // Fixture A from SPEC.md, computed by the real engine.
 const engine = await createEngine();
-const result = engine.computeEnvelope(syntheticLot(25, 100, { label: "40-X", heightFt: 40 }), loadDistrict("RH-2")!, {
+const result = engine.computeEnvelope(syntheticLot(25, 100, { label: "40-X", heightFt: 40, bulk: "X" }), loadDistrict("RH-2")!, {
   overrides: { "front-setback": { feet: 0 } },
 }) as OkResult;
 
