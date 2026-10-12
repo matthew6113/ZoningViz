@@ -41,7 +41,7 @@ if (!existsSync(CITY_TILES)) {
 }
 
 // 1. The app, with relative asset paths and the demo switches on.
-execFileSync("pnpm", ["exec", "vite", "build", "--base", "./", "--outDir", "dist-demo", "--emptyOutDir"], {
+execFileSync("pnpm", ["exec", "vite", "build", "--outDir", "dist-demo", "--emptyOutDir"], {
   cwd: WEB,
   stdio: "inherit",
   env: { ...process.env, VITE_DEMO: "1", VITE_SF_TILES: TILES_PATH, VITE_BASEMAP_STYLE: "demo/basemap.json" },
