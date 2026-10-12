@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDistrictFile, syntheticLot, type EnvelopeResult, type Step } from "../src";
+import { parseDistrictFile, syntheticLot, UnreadableHeightError, type EnvelopeResult, type Step } from "../src";
 import { getEngine, loadDistrict, rectangularLot } from "./helpers";
 
 // RM and NC districts: floor-area-ratio budgets, commercial ground floors and
@@ -128,6 +128,13 @@ describe("other RM and NC lots", async () => {
     expect(step(envelope("RM-3"), "rear-yard").numbers.rearYardFt).toBe(25);
     expect(step(envelope("RM-3"), "far").numbers.ratio).toBe(3.6);
     expect(step(envelope("RM-4"), "far").numbers.budgetSqFt).toBeCloseTo(4.8 * 2500, 6);
+  });
+
+  it("says so, rather than guessing, when the height label can't be read", () => {
+    const lot = syntheticLot(25, 100, { label: "20/160-IB", heightFt: 0 });
+    lot.heightZones[0]!.heightFt = null;
+    expect(() => engine.computeEnvelope(lot, loadDistrict("NC-2"))).toThrow(UnreadableHeightError);
+    expect(() => engine.computeEnvelope(lot, loadDistrict("NC-2"))).toThrow("This lot's height district (20/160-IB) can't be read");
   });
 
   it("drops the budget when the FAR rule is switched off", () => {

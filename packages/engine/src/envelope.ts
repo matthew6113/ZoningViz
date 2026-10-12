@@ -54,6 +54,9 @@ const EMPTY_AREA_FT2 = 0.5;
 // The lot prism starts this far below the lowest ground, so the ground cut is never flush with it.
 const BELOW_GROUND_FT = 10;
 
+/** The lot's height district can't be read and the district sets no cap of its own, so there is nothing to start from. */
+export class UnreadableHeightError extends Error {}
+
 export interface Engine {
   computeEnvelope(parcel: ParcelInput, district: DistrictFile, options?: EnvelopeOptions): EnvelopeResult;
 }
@@ -118,7 +121,12 @@ function computeEnvelope(
     const caps = district.rules.flatMap((r) =>
       r.kind === "height_cap" && "feet" in r.params ? [r.params.feet] : r.kind === "height_by_slope" ? [r.params.baseFeet] : [],
     );
-    if (!caps.length) throw new Error(`No readable height limit for parcel ${parcel.id}`);
+    if (!caps.length) {
+      const labels = zones.map((z) => z.label).join(", ") || "none found";
+      throw new UnreadableHeightError(
+        `This lot's height district (${labels}) can't be read, so there's no height limit to start from and its envelope isn't shown. Check the limit with SF Planning.`,
+      );
+    }
     baseHeight = Math.max(...caps);
     notes.push(`The mapped height can't be read, so the starting block uses ${START_HEIGHT_MULTIPLE}× the district's ${ft(baseHeight)} cap.`);
   }

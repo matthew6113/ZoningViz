@@ -5,7 +5,7 @@
 //   pnpm sweep [--per-district 50] [--seed 1] [--split 10] [--no-cache]
 //
 // Prints a table per district and every failure with its block/lot.
-import { createEngine, type EnvelopeResult } from "../packages/engine/src";
+import { createEngine, UnreadableHeightError, type EnvelopeResult } from "../packages/engine/src";
 import { createSfAdapter } from "../packages/jurisdictions/sf/adapter";
 import { DATASETS, soqlString, soqlUrl } from "../packages/jurisdictions/sf/datasf";
 import { availableDistricts, loadDistrict } from "../packages/jurisdictions/sf/districts";
@@ -103,6 +103,8 @@ async function run(blklot: string): Promise<Outcome> {
     }
     return { kind: "ok", frontChoice: first.status === "needs_front_choice", emptyFronts, rise };
   } catch (error) {
+    // An unreadable height label is flagged to the viewer, not guessed.
+    if (error instanceof UnreadableHeightError) return { kind: "not_modeled", note: error.message };
     return { kind: "error", message: error instanceof Error ? error.message : String(error) };
   }
 }
