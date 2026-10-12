@@ -383,7 +383,7 @@ function resolveLocalProgram(rule: Extract<Rule, { kind: "local_program" }>, ctx
     if (base === height) return `${on ? "stays" : "would stay"} ${ft(height)}${where}`;
     return `${on ? "is" : "would be"} ${ft(height)}${where} instead of ${base === null ? "an unreadable base height" : ft(base)}`;
   });
-  const why = [program.cornerLot && minHeight.onCornerLot ? "a corner lot" : null, program.largeLot ? `larger than ${sqft(minHeight.lotAreaOverSqFt)}` : null].filter(
+  const why = [program.cornerLot && minHeight.onCornerLot ? "a corner lot (two of its street sides meet at an angle on the parcel map)" : null, program.largeLot ? `larger than ${sqft(minHeight.lotAreaOverSqFt)}` : null].filter(
     (w): w is string => w !== null,
   );
   const floor = program.minHeightApplies ? ` (at least ${ft(minHeight.feet)}, because this lot is ${why.join(" and ")})` : "";

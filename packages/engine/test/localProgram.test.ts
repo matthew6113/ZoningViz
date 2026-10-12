@@ -147,7 +147,7 @@ describe("fixture T: corner and through lots, 25 x 100 ft RH-2, 40//40-R-4", () 
   it("raises a corner lot to 65 ft: 113,750 cu ft", () => {
     const lot = r4Lot(25, 100, 40, 40, "front_and_left");
     const on = envelope(lot, "RH-2", { ...ON, frontSide: frontOn(lot, 25) });
-    expect(step(on, "local-program").sentence).toMatch(/\(at least 65 ft, because this lot is a corner lot\)/);
+    expect(step(on, "local-program").sentence).toMatch(/\(at least 65 ft, because this lot is a corner lot \(two of its street sides meet at an angle on the parcel map\)\)/);
     expect(on.totals.volume).toBeCloseTo(25 * 70 * 65, 3);
   });
 
