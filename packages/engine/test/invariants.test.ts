@@ -25,6 +25,18 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["752 4th Ave (1646023)", loadParcel("1646023"), "RH-1", {}],
   ["752 4th Ave as RH-1(S) (1646023)", loadParcel("1646023"), "RH-1(S)", {}],
   ["2120 Lyon St (0982019)", loadParcel("0982019"), "RH-3", {}],
+  ["H 25x100", rectangularLot(25, 100), "NC-2", {}],
+  ["NC-2 rising 20 ft", slopedLot(25, 100, 20), "NC-2", {}],
+  ["RM-1 falling 25 ft", slopedLot(25, 100, -25), "RM-1", {}],
+  ["969 Lombard St (0072050)", loadParcel("0072050"), "RM-1", {}],
+  ["619 Chestnut St (0065024)", loadParcel("0065024"), "RM-2", {}],
+  ["963 Jackson St (0191023)", loadParcel("0191023"), "RM-3", {}],
+  ["937 Clay St, front 0 (0224032)", loadParcel("0224032"), "RM-4", { frontSide: 0 }],
+  ["1345 Clement St (1446048)", loadParcel("1446048"), "NC-1", {}],
+  ["3625 Wawona St, rising (2516021)", loadParcel("2516021"), "NC-2", {}],
+  ["2385 Folsom St (3593008)", loadParcel("3593008"), "NC-2", {}],
+  ["1618 Lombard St (0496004)", loadParcel("0496004"), "NC-3", {}],
+  ["3580 California St, front 1 (1018019)", loadParcel("1018019"), "NC-S", { frontSide: 1 }],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

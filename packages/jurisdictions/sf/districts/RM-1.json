@@ -1,0 +1,133 @@
+{
+  "jurisdiction": "sf",
+  "district": "RM-1",
+  "name": "Residential, Mixed, Low Density",
+  "rules": [
+    {
+      "id": "use",
+      "kind": "info",
+      "title": "Homes, one per 800 sq ft of lot",
+      "plain": "RM-1 lots are for homes of any building type, up to one unit per 800 square feet of lot area, plus accessory units. Each unit needs 100 square feet of private or 133 square feet of shared open space.",
+      "params": {},
+      "citation": "§209.2 (Table 209.2), §207, Table 135A",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-209.-description-and-purpose-of-residential-and-residential-commercial-districts/sec.-209.2.-rm-residential-mixed-districts",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "height-reference",
+      "kind": "height_reference",
+      "title": "Where height is measured from",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet.",
+      "params": {
+        "downslopeCurbDepthFeet": 100,
+        "upslopeCurbWithinFeet": 10
+      },
+      "citation": "§260(a)(1)(A)–(C), §261(a)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "mapped-height",
+      "kind": "height_cap",
+      "title": "Height limit",
+      "plain": "No part of a building may be taller than the height limit mapped for this lot's height and bulk district.",
+      "params": {
+        "source": "heightDistrict"
+      },
+      "citation": "§250",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21392",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rear-yard",
+      "kind": "rear_yard",
+      "title": "Rear yard",
+      "plain": "The back 30% of the lot, and never less than 15 feet, must stay open at ground level and on every floor.",
+      "params": {
+        "pctOfLotDepth": 0.3,
+        "minFeet": 15,
+        "appliesAt": "grade_and_every_story"
+      },
+      "citation": "§134(c)(1), §134(d)(1)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-setback",
+      "kind": "front_setback",
+      "title": "Front setback",
+      "plain": "The building must step back from the front lot line as far as the neighboring building with the shallower setback, up to 10 feet (15 feet on some block faces, not shown).",
+      "params": {
+        "method": "shallowest_adjacent",
+        "maxFeet": 10,
+        "userOverride": true
+      },
+      "citation": "§132(a), (c), (d)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18248",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "far",
+      "kind": "far",
+      "title": "Floor area for non-residential uses",
+      "plain": "Shops, offices and other non-residential uses may have floor area up to 1.8 times the lot area; homes don't count toward this limit.",
+      "params": {
+        "ratio": 1.8,
+        "appliesTo": "non_residential"
+      },
+      "citation": "§124(a)–(b), Table 124; Table 209.2",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-124.-basic-floor-area-ratio",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "narrow-street",
+      "kind": "flag",
+      "title": "Narrow streets",
+      "plain": "On a street 40 feet wide or narrower, upper stories may have to step back from the front; street widths aren't in this app's data, so that isn't shown.",
+      "params": {},
+      "citation": "§261.1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21519",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "cross-slope",
+      "kind": "flag",
+      "title": "Cross-slope",
+      "plain": "Where the street or the ground slopes across the lot by more than 5%, a wide building is measured from several points, each covering a limited width (65 feet or less, narrower on steeper slopes); this view measures from one point.",
+      "params": {},
+      "citation": "§260(a)(3), Table 260-1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "bulk",
+      "kind": "flag",
+      "title": "Bulk limits",
+      "plain": "Where the lot's height and bulk district has a letter other than X (such as 65-A), upper floors are limited in length and diagonal; those limits aren't applied here yet.",
+      "params": {},
+      "citation": "§270, Table 270",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts/sec.-270.-bulk-limits-measurement",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-modulation",
+      "kind": "flag",
+      "title": "Stepped building fronts",
+      "plain": "On lots wider than 35 feet, the street front must step at least 2 feet in height or depth at least every 35 feet (or have an entrance every 25 feet); the envelope shows the largest allowed shape, not the steps.",
+      "params": {},
+      "citation": "§144.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-144.-street-frontages-in-rh-rto-and-rm-districts/sec.-144.1.-moderation-of-building-fronts-in-rm-1-and-rm-2-districts",
+      "verified": false,
+      "effectiveDate": null
+    }
+  ]
+}

@@ -18,5 +18,7 @@ export const EXAMPLES: Example[] = [
   { id: "2820020", label: "118 Dellbrook Ave", note: "RH-1(D) rising 37 ft: 40 ft cap, no front plane", at: [-122.45381, 37.74876] },
   { id: "1646023", label: "752 4th Ave", note: "RH-1", at: [-122.46134, 37.77465] },
   { id: "0982019", label: "2120 Lyon St", note: "RH-3: no front height plane", at: [-122.44576, 37.79064] },
+  { id: "0065024", label: "619–621 Chestnut St", note: "RM-2: 30% rear yard; floor-area limit for shops only", at: [-122.41359, 37.80349] },
+  { id: "3593008", label: "2385–2389 Folsom St", note: "NC-2: shops below, rear yard from the second story up", at: [-122.41441, 37.7592] },
   { id: "fixture-a", label: "Fixture A", note: "synthetic 25 × 100 ft RH-2 lot (SPEC.md)" },
 ];

@@ -94,7 +94,7 @@ function format(parcel: SfParcel, result: EnvelopeResult): string {
   });
   lines.push(
     "",
-    `Floors       ${floors.length} at ${n(floors[1] ? floors[1].bottomFt : 10)} ft floor-to-floor: ${floors.map((f) => n(f.plateSqFt)).join(" · ")} sq ft`,
+    `Floors       ${floors.length}: ${floors.map((f) => `${n(f.plateSqFt)} (${n(f.bottomFt)}–${n(f.topFt)} ft)`).join(" · ")} sq ft`,
     `Result       ${n(totals.volume)} cu ft · footprint ${n(totals.footprintSqFt)} sq ft · ${totals.stories} stories · ${n(totals.grossFloorAreaSqFt)} sq ft floor area · ${n(totals.percentSurvived, 1)}% of the block survived`,
   );
   if (notes.length || parcel.warnings.length) {

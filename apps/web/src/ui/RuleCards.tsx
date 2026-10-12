@@ -14,8 +14,13 @@ const STATUS_LABEL: Record<Step["status"], string> = {
   disabled: "Off",
 };
 
+/** Rules that cut the volume; only these can be switched off to see what they cost. */
+const TOGGLEABLE: ReadonlySet<Step["rule"]["kind"]> = new Set(["height_cap", "height_by_slope", "rear_yard", "front_setback", "side_yard", "sky_plane"]);
+
 export interface RuleCardsProps {
   steps: Step[];
+  /** The final envelope's floor area, for the floor-area-ratio gauge. */
+  floorAreaSqFt: number;
   /** Index of the current step's card, or null at the start and the finale. */
   current: number | null;
   onSetback: (feet: number) => void;
@@ -26,7 +31,7 @@ export interface RuleCardsProps {
   registerCard: (index: number, element: HTMLElement | null) => void;
 }
 
-export function RuleCards({ steps, current, onSetback, off, onToggle, registerCard }: RuleCardsProps) {
+export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onToggle, registerCard }: RuleCardsProps) {
   const currentRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     // Only where the card column scrolls on its own (desktop). On phones it
@@ -54,7 +59,7 @@ export function RuleCards({ steps, current, onSetback, off, onToggle, registerCa
               <span className="rule-number">{i + 1}</span>
               <h3>{step.rule.title}</h3>
               <span className="chip">{STATUS_LABEL[step.status]}</span>
-              {step.rule.kind !== "info" && step.rule.kind !== "flag" && (
+              {TOGGLEABLE.has(step.rule.kind) && (
                 <button
                   type="button"
                   className="eye"
@@ -74,6 +79,9 @@ export function RuleCards({ steps, current, onSetback, off, onToggle, registerCa
                 <span className="removed-swatch" aria-hidden /> {num(step.measurements.removedVolume)} cu ft removed ·{" "}
                 {num(step.measurements.percentOfStart)}% of the block left
               </p>
+            )}
+            {step.rule.kind === "far" && step.status !== "disabled" && (
+              <FarGauge budgetSqFt={step.numbers.budgetSqFt ?? 0} floorAreaSqFt={floorAreaSqFt} />
             )}
             {step.rule.kind === "front_setback" && step.rule.params.userOverride && step.status !== "disabled" && (
               <label className="setback-slider">
@@ -99,6 +107,26 @@ export function RuleCards({ steps, current, onSetback, off, onToggle, registerCa
         ))}
       </ol>
     </section>
+  );
+}
+
+/** The non-residential floor-area budget against the envelope's whole floor area. */
+function FarGauge({ budgetSqFt, floorAreaSqFt }: { budgetSqFt: number; floorAreaSqFt: number }) {
+  const span = Math.max(budgetSqFt, floorAreaSqFt, 1);
+  const usable = Math.min(budgetSqFt, floorAreaSqFt);
+  const text =
+    budgetSqFt >= floorAreaSqFt
+      ? `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area, all within the ${num(budgetSqFt)} sq ft non-residential budget.`
+      : `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area; up to ${num(budgetSqFt)} sq ft (${num((budgetSqFt / floorAreaSqFt) * 100)}%) ` +
+        "could be non-residential, and homes may use any of it.";
+  return (
+    <div className="far-gauge" data-testid="far-gauge">
+      <div className="far-bar" aria-hidden>
+        <span className="far-fill" style={{ width: `${(usable / span) * 100}%` }} />
+        {floorAreaSqFt < span && <span className="far-room" style={{ left: `${(floorAreaSqFt / span) * 100}%` }} />}
+      </div>
+      <p className="far-text">{text}</p>
+    </div>
   );
 }
 

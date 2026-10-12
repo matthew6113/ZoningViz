@@ -15,6 +15,7 @@ export interface ZoneContext {
 export interface ResolveContext {
   widthFt: number;
   depthFt: number;
+  lotAreaSqFt: number;
   zones: ZoneContext[];
   /** The front setback in force, for planes measured from the setback line. Null if the district has none. */
   frontSetbackFt: number | null;
@@ -22,6 +23,16 @@ export interface ResolveContext {
   ground: { curbFt: number; frontAverageFt: number; rearAverageFt: number } | null;
   /** How heights are measured on this lot (from the height_reference rule and the ground). */
   reference: "flat" | "curb" | "upslope";
+  /** The first story's height from the district's ground_story rule, or null if it has none. */
+  firstStory: FirstStory | null;
+}
+
+export interface FirstStory {
+  feet: number;
+  /** The mapped height that chose it (the zone covering most of the lot), or null if none is readable. */
+  heightDistrictFt: number | null;
+  /** True when a height-district exception applied. */
+  exception: boolean;
 }
 
 export type Cut =
@@ -29,8 +40,8 @@ export type Cut =
   | { type: "uniform_height"; heightFt: number }
   /** One height per zone (same order as the context); null leaves that zone uncut. */
   | { type: "zone_heights"; heights: (number | null)[] }
-  /** Keep only what lies within `depthFt` of the front line (rear yard). */
-  | { type: "max_depth"; depthFt: number }
+  /** Keep only what lies within `depthFt` of the front line (rear yard); with `aboveFt`, only above that height (the first story may fill the yard). */
+  | { type: "max_depth"; depthFt: number; aboveFt?: number }
   /** Keep only what lies at least `depthFt` behind the front line (front setback). */
   | { type: "min_depth"; depthFt: number }
   /** Keep what lies under a plane rising at `angleDeg` from `startHeightFt`, `fromDepthFt` behind the front line. */
@@ -49,6 +60,16 @@ export function resolveFrontSetback(district: DistrictFile, options: EnvelopeOpt
   const rule = district.rules.find((r) => r.kind === "front_setback");
   if (!rule) return null;
   return frontSetbackFeet(rule, options);
+}
+
+/** The first story's height for this lot, from the district's ground_story rule (null if it has none). */
+export function resolveFirstStory(district: DistrictFile, zones: ZoneContext[]): FirstStory | null {
+  const rule = district.rules.find((r) => r.kind === "ground_story");
+  if (!rule) return null;
+  const readable = zones.filter((z) => z.heightFt !== null).sort((a, b) => b.share - a.share);
+  const heightDistrictFt = readable[0]?.heightFt ?? null;
+  const exception = heightDistrictFt === null ? undefined : rule.params.exceptions.find((e) => e.heightDistrictFeet.includes(heightDistrictFt));
+  return { feet: exception?.minFloorToFloorFeet ?? rule.params.minFloorToFloorFeet, heightDistrictFt, exception: exception !== undefined };
 }
 
 function frontSetbackFeet(rule: Extract<Rule, { kind: "front_setback" }>, options: EnvelopeOptions): number {
@@ -81,7 +102,7 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
     }
 
     case "rear_yard": {
-      const { pctOfLotDepth, minFeet } = rule.params;
+      const { pctOfLotDepth, minFeet, appliesAt } = rule.params;
       const fromPct = pctOfLotDepth * ctx.depthFt;
       const rearYardFt = Math.max(fromPct, minFeet);
       const base = `${rule.title}: ${pct(pctOfLotDepth)} of ${ft(ctx.depthFt)} lot depth = ${ft(fromPct)}`;
@@ -89,12 +110,21 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
         fromPct >= minFeet
           ? `${base}.`
           : `${base}, below the ${ft(minFeet)} minimum, so ${ft(rearYardFt)}.`;
-      return {
-        status: "cut",
-        sentence,
-        numbers: { lotDepthFt: ctx.depthFt, pctOfLotDepth, minFeet, rearYardFt },
-        cut: { type: "max_depth", depthFt: Math.max(ctx.depthFt - rearYardFt, 0) },
-      };
+      const depthFt = Math.max(ctx.depthFt - rearYardFt, 0);
+      const numbers = { lotDepthFt: ctx.depthFt, pctOfLotDepth, minFeet, rearYardFt };
+      if (appliesAt === "above_first_story") {
+        // The schema requires a ground_story rule first, so the first story is known.
+        const aboveFt = ctx.firstStory!.feet;
+        return {
+          status: "cut",
+          sentence:
+            `${sentence} It starts above the ${ft(aboveFt)} first story, assuming a shop or other non-residential use there; ` +
+            "a first story with homes would need the yard at ground level too.",
+          numbers: { ...numbers, aboveFt },
+          cut: { type: "max_depth", depthFt, aboveFt },
+        };
+      }
+      return { status: "cut", sentence, numbers, cut: { type: "max_depth", depthFt } };
     }
 
     case "front_setback": {
@@ -120,6 +150,37 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
 
     case "height_by_slope":
       return resolveHeightBySlope(rule, ctx);
+
+    case "ground_story": {
+      const story = ctx.firstStory!;
+      const where =
+        story.heightDistrictFt === null
+          ? "the mapped height can't be read here"
+          : story.exception
+            ? `this lot is in a ${ft(story.heightDistrictFt)} height district (${ft(rule.params.minFloorToFloorFeet)} elsewhere)`
+            : `this lot is in a ${ft(story.heightDistrictFt)} height district`;
+      return {
+        status: "info",
+        sentence:
+          `${rule.title}: a shop or other non-residential ground floor must be at least ${ft(story.feet)} floor to floor, because ${where}. ` +
+          `The first story is drawn ${ft(story.feet)} tall; a taller one is allowed.`,
+        numbers: { firstStoryFt: story.feet, ...(story.heightDistrictFt === null ? {} : { heightDistrictFt: story.heightDistrictFt }) },
+        cut: { type: "none" },
+      };
+    }
+
+    case "far": {
+      const { ratio } = rule.params;
+      const budgetSqFt = ratio * ctx.lotAreaSqFt;
+      return {
+        status: "info",
+        sentence:
+          `${rule.title}: ${ratio} to 1 for non-residential uses, so shops, offices and other non-residential floor area may total ` +
+          `${ratio} × ${sqft(ctx.lotAreaSqFt)} = ${sqft(budgetSqFt)}. Homes don't count toward it.`,
+        numbers: { ratio, lotAreaSqFt: ctx.lotAreaSqFt, budgetSqFt },
+        cut: { type: "none" },
+      };
+    }
 
     case "sky_plane": {
       const { fromLine, startHeightFeet, angleDeg, skipWhenRearHigherByFeet: skip } = rule.params;
@@ -303,6 +364,10 @@ function resolveMappedHeight(rule: Rule, ctx: ResolveContext): Resolved {
 
 export function ft(value: number): string {
   return `${(Number(value.toFixed(1)) || 0).toLocaleString("en-US")} ft`; // "|| 0" turns -0 into 0
+}
+
+function sqft(value: number): string {
+  return `${Math.round(value).toLocaleString("en-US")} sq ft`;
 }
 
 function pct(fraction: number): string {

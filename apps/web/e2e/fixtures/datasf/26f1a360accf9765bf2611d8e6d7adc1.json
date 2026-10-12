@@ -1,0 +1,1 @@
+{"url":"https://data.sf.gov/resource/h9wh-cg3m.json?%24select=height%2Cgen_hght&%24where=intersects%28the_geom%2C%27MULTIPOLYGON%28%28%28-122.414569024+37.759129145%2C-122.4145807+37.759252382%2C-122.41425302+37.759272161%2C-122.414241345+37.759148923%2C-122.414569024+37.759129145%29%29%29%27%29","fetchedAt":"2026-10-12T17:15:44.406Z","body":[{"height":"45-X","gen_hght":"45"}]}

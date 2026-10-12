@@ -24,7 +24,7 @@ import {
   type HeightReference,
 } from "./geometry/terrain";
 import { applyCut, cutPlanesFor, dimensionsFor, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
-import { ft, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
+import { ft, resolveFirstStory, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
 import type { DistrictFile } from "./rules/schema";
 import type {
   EnvelopeOptions,
@@ -163,15 +163,18 @@ function computeEnvelope(
   const start = { ...toSolid(current), heightFt: startHeightFt };
 
   // 5–7. Resolve, cut and measure each rule in order.
+  const zoneContexts = zones.map((z) => ({
+    label: z.label,
+    heightFt: z.heightFt,
+    localProgramHeightFt: z.localProgramHeightFt ?? null,
+    share: z.share,
+  }));
+  const firstStory = resolveFirstStory(district, zoneContexts);
   const ctx: ResolveContext = {
     widthFt: frame.widthFt,
     depthFt: frame.depthFt,
-    zones: zones.map((z) => ({
-      label: z.label,
-      heightFt: z.heightFt,
-      localProgramHeightFt: z.localProgramHeightFt ?? null,
-      share: z.share,
-    })),
+    lotAreaSqFt,
+    zones: zoneContexts,
     frontSetbackFt: resolveFrontSetback(district, options),
     ground: terrain
       ? {
@@ -181,6 +184,7 @@ function computeEnvelope(
         }
       : null,
     reference: reference.kind,
+    firstStory,
   };
   const disabled = new Set(options.disabledRuleIds ?? []);
   const steps: Step[] = [];
@@ -256,8 +260,8 @@ function computeEnvelope(
 
   // 8. Slice floors.
   const floorToFloor = options.floorToFloorFeet ?? DEFAULT_FLOOR_TO_FLOOR_FT;
-  const floors =
-    reference.kind === "upslope" ? referenceFloors(current, floorToFloor, cutCtx) : sliceFloors(current, floorToFloor);
+  const levels = storyLevels(floorToFloor, firstStory?.feet ?? null);
+  const floors = reference.kind === "upslope" ? referenceFloors(current, levels, cutCtx) : sliceFloors(current, levels);
   const finalVolume = current.volume();
   if (finalVolume <= EMPTY_VOLUME_FT3) {
     notes.push("Nothing is left: together these limits cover the whole lot. On a corner lot, measuring from the other front may leave room.");
@@ -325,23 +329,38 @@ function measureTerrain(
   };
 }
 
-/** Floor plates every `floorToFloorFt`, counted from the curb datum; on downsloping lots some levels sit below it. */
-function sliceFloors(envelope: Manifold, floorToFloorFt: number): Floor[] {
+/**
+ * Story k runs from level(k) to level(k + 1): every `floorToFloorFt` from the
+ * datum, except that story 0 is `firstStoryFt` tall when the district sets one
+ * (a commercial ground floor). Stories below the datum (k < 0) use the floor-to-floor height.
+ */
+interface StoryLevels {
+  level(k: number): number;
+  /** The story whose span contains `z`. */
+  storyAt(z: number): number;
+}
+
+function storyLevels(floorToFloorFt: number, firstStoryFt: number | null): StoryLevels {
   if (!(floorToFloorFt > 0)) throw new Error(`Floor-to-floor height must be positive, got ${floorToFloorFt}`);
+  const f = floorToFloorFt;
+  const g = firstStoryFt ?? f;
+  return {
+    level: (k) => (k <= 0 ? k * f : g + (k - 1) * f),
+    storyAt: (z) => (z < 0 ? Math.floor(z / f) : z < g ? 0 : 1 + Math.floor((z - g) / f)),
+  };
+}
+
+/** Level floor plates counted from the curb datum; on downsloping lots some sit below it. */
+function sliceFloors(envelope: Manifold, levels: StoryLevels): Floor[] {
   const top = topOf(envelope);
   const floors: Floor[] = [];
-  for (let i = Math.floor(bottomOf(envelope) / floorToFloorFt); (i + 0.5) * floorToFloorFt < top; i++) {
-    const mid = (i + 0.5) * floorToFloorFt;
+  for (let k = levels.storyAt(bottomOf(envelope)); ; k++) {
+    const [bottomFt, topFt] = [levels.level(k), levels.level(k + 1)];
+    const mid = (bottomFt + topFt) / 2;
+    if (mid >= top) break;
     const plateSqFt = sliceArea(envelope, mid);
     if (plateSqFt <= EMPTY_AREA_FT2) continue;
-    floors.push({
-      index: floors.length,
-      bottomFt: i * floorToFloorFt,
-      topFt: (i + 1) * floorToFloorFt,
-      plateSqFt,
-      outline: sliceOutline(envelope, mid),
-      plate: null,
-    });
+    floors.push({ index: floors.length, bottomFt, topFt, plateSqFt, outline: sliceOutline(envelope, mid), plate: null });
   }
   return floors;
 }
@@ -356,13 +375,13 @@ const PLATE_DRAW_FT = 0.3;
  * from reference + k·f to reference + (k + 1)·f, so the building steps up the
  * hill the way its height is measured.
  */
-function referenceFloors(envelope: Manifold, floorToFloorFt: number, ctx: CutContext): Floor[] {
-  if (!(floorToFloorFt > 0)) throw new Error(`Floor-to-floor height must be positive, got ${floorToFloorFt}`);
+function referenceFloors(envelope: Manifold, levels: StoryLevels, ctx: CutContext): Floor[] {
   const floors: Floor[] = [];
-  const first = Math.floor((bottomOf(envelope) - ctx.reference.maxFt) / floorToFloorFt);
-  const last = Math.ceil(topOf(envelope) / floorToFloorFt);
+  const first = levels.storyAt(bottomOf(envelope) - ctx.reference.maxFt);
+  const last = levels.storyAt(topOf(envelope)) + 1;
   for (let k = first; k <= last; k++) {
-    const mid = (k + 0.5) * floorToFloorFt;
+    const [bottomFt, topFt] = [levels.level(k), levels.level(k + 1)];
+    const mid = (bottomFt + topFt) / 2;
     const band = referenceBand(ctx, mid - PLATE_MEASURE_FT / 2, mid + PLATE_MEASURE_FT / 2);
     const piece = envelope.intersect(band);
     const plateSqFt = piece.volume() / PLATE_MEASURE_FT;
@@ -370,12 +389,12 @@ function referenceFloors(envelope: Manifold, floorToFloorFt: number, ctx: CutCon
       const shadow = piece.project();
       const outline = shadow.toPolygons().map((ring) => ring.map(([x, y]) => [x, y] as XY));
       shadow.delete();
-      const base = referenceBand(ctx, k * floorToFloorFt, k * floorToFloorFt + PLATE_DRAW_FT);
+      const base = referenceBand(ctx, bottomFt, bottomFt + PLATE_DRAW_FT);
       const slab = envelope.intersect(base);
       floors.push({
         index: floors.length,
-        bottomFt: k * floorToFloorFt,
-        topFt: (k + 1) * floorToFloorFt,
+        bottomFt,
+        topFt,
         plateSqFt,
         outline,
         plate: slab.isEmpty() ? null : toSolid(slab),

@@ -27,9 +27,24 @@ export function zoningCoverage(raw: string | null | undefined, covered: readonly
   return covered.includes(code) ? { kind: "covered", code } : { kind: "not_covered", code };
 }
 
+/** "RH-1(D), RH-1, RM-1, RM-2, RM-3" → "RH-1(D), RH-1, RM-1–RM-3": runs of one numbered family are shortened. */
+export function districtList(codes: readonly string[]): string {
+  const parts: string[] = [];
+  for (let i = 0; i < codes.length; ) {
+    const family = /^([A-Z]+)-(\d+)$/.exec(codes[i]!);
+    let j = i + 1;
+    if (family) {
+      while (j < codes.length && codes[j] === `${family[1]}-${Number(family[2]) + (j - i)}`) j++;
+    }
+    parts.push(j - i >= 3 ? `${codes[i]}–${codes[j - 1]}` : codes.slice(i, j).join(", "));
+    i = j;
+  }
+  return parts.join(", ");
+}
+
 /** One line on why a lot has no envelope, or null when it is covered. */
 export function coverageNote(coverage: ZoningCoverage, covered: readonly string[] = availableDistricts()): string | null {
-  const list = covered.join(", ");
+  const list = districtList(covered);
   switch (coverage.kind) {
     case "covered":
       return null;

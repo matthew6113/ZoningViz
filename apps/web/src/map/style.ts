@@ -13,6 +13,16 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "RH-1(S)": "#93b84a",
   "RH-2": "#4a7fc1",
   "RH-3": "#8a6cc4",
+  // RM: golds, light to dark with density.
+  "RM-1": "#e5cb61",
+  "RM-2": "#d3b436",
+  "RM-3": "#ae9529",
+  "RM-4": "#84731f",
+  // NC: cyans and slate.
+  "NC-1": "#63b6c9",
+  "NC-2": "#2f8fa8",
+  "NC-3": "#1f6a7f",
+  "NC-S": "#7a9cb3",
 };
 export const OTHER_RESIDENTIAL = "#b9b4a3";
 export const OTHER_ZONING = "#c5c8ce";

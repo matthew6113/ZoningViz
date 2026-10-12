@@ -152,9 +152,10 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 });
 
 test("a lot outside the covered districts says so", async ({ page }) => {
-  await page.goto("/?parcel=0119012");
-  await expect(page.locator(".notice")).toContainText("Zoned RM-2. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3 only so far");
-  await expect(page.locator(".fact-card")).toContainText("RM-2");
+  // 2139 Polk St: a named neighborhood commercial district, each of which has its own control table.
+  await page.goto("/?parcel=0571003");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, NC-1–NC-3, NC-S only so far");
+  await expect(page.locator(".fact-card")).toContainText("NCD");
 });
 
 test("a fresh visit plays the arrival, then waits at the starting block", async ({ page }) => {
@@ -298,4 +299,42 @@ test("an uphill lot: 118 Dellbrook Ave rises 37 ft, so 40 ft and no front plane,
   await expect(page.getByTestId("summary")).toContainText("4 stories");
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/dellbrook-uphill-result.png` });
+});
+
+test("an RM-2 lot: 619 Chestnut St keeps a 30% rear yard, and its floor-area limit covers shops only", async ({ page }) => {
+  await page.goto("/?parcel=0065024&step=4");
+  await expect(page.locator(".fact-card h2")).toHaveText("619–621 Chestnut St");
+  await expect(label(page)).toHaveText("Rule 4 of 10: Rear yard");
+  await expect(currentSentence(page)).toHaveText("Rear yard: 30% of 97.7 ft lot depth = 29.3 ft.");
+
+  // The FAR card is a budget with a gauge, not a cut, so it has no on/off switch.
+  const far = page.locator("[data-rule=far]");
+  await expect(far.locator(".sentence")).toContainText("1.8 × 3,346 sq ft = 6,023 sq ft. Homes don't count toward it.");
+  await expect(far.getByTestId("far-gauge")).toContainText("could be non-residential, and homes may use any of it");
+  await expect(far.locator(".eye")).toHaveCount(0);
+  await expect(page.locator("[data-rule=front-modulation]")).toContainText("Not modeled");
+
+  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await expect(label(page)).toHaveText("Result");
+  await expect(page.getByTestId("far-cap")).toHaveText("6,023 sq ft (FAR 1.8; homes aren't limited)");
+  await expectSceneDrawn(page);
+  await page.screenshot({ path: `${SHOTS}/chestnut-rm2-result.png` });
+});
+
+test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard starts above it", async ({ page }) => {
+  await page.goto("/?parcel=3593008&step=5");
+  await expect(page.locator(".fact-card h2")).toHaveText("2385–2389 Folsom St");
+  await expect(page.locator("[data-rule=ground-floor] .sentence")).toContainText(
+    "a shop or other non-residential ground floor must be at least 14 ft floor to floor, because this lot is in a 45 ft height district",
+  );
+  await expect(label(page)).toHaveText("Rule 5 of 11: Rear yard");
+  await expect(currentSentence(page)).toHaveText(/^Rear yard: 25% of 95 ft lot depth = 23\.7 ft\. It starts above the 14 ft first story/);
+  await expect(page.locator(".dimension-label").filter({ hasText: "14 ft first story" })).toHaveCount(1);
+  await expectSceneDrawn(page);
+  await page.screenshot({ path: `${SHOTS}/folsom-nc2-rear-yard.png` });
+
+  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await expect(label(page)).toHaveText("Result");
+  await expect(page.getByTestId("summary")).toContainText("4 stories at 10 ft floor-to-floor, 14 ft ground floor");
+  await expect(page.getByTestId("far-cap")).toContainText("(FAR 2.5; homes aren't limited)");
 });

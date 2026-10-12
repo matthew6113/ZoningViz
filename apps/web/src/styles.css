@@ -130,6 +130,11 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .rule-card.status-already_satisfied .sentence, .rule-card.status-disabled .sentence { color: var(--muted); }
 .sentence { margin: 6px 0; }
 .rule-card .plain { margin: 0 0 6px; font-size: 0.86rem; color: var(--muted); }
+.far-gauge { margin: 4px 0 8px; }
+.far-bar { position: relative; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.far-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 5px 0 0 5px; }
+.far-room { position: absolute; top: 0; bottom: 0; right: 0; background: repeating-linear-gradient(135deg, transparent 0 4px, var(--panel) 4px 6px); }
+.far-text { margin: 6px 0 0; font-size: 0.86rem; }
 .chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; background: #efece4; color: var(--muted); white-space: nowrap; }
 .removed-line { margin: 4px 0; font-size: 0.88rem; color: var(--muted); }
 .removed-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--removed); vertical-align: -1px; }

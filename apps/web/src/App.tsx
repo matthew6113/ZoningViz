@@ -1,4 +1,4 @@
-import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions } from "@zoningviz/engine";
+import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions, type Step } from "@zoningviz/engine";
 import { coverageNote, zoningCoverage } from "@zoningviz/jurisdictions/sf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MotionMode } from "./anim/schedule";
@@ -16,7 +16,7 @@ import { HonestyStrip } from "./ui/HonestyStrip";
 import { RuleCards } from "./ui/RuleCards";
 import { Hud } from "./ui/Hud";
 import { PlayerControls } from "./ui/PlayerControls";
-import { Summary } from "./ui/Summary";
+import { Summary, type FarBudget } from "./ui/Summary";
 
 type SetUrl = (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
 
@@ -199,7 +199,14 @@ function EnvelopeView({
       controls={<PlayerControls player={player} label={label} steps={result.steps} />}
       side={
         <>
-          {position === last && <Summary totals={result.totals} floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT} />}
+          {position === last && (
+            <Summary
+              totals={result.totals}
+              floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT}
+              firstStoryFt={result.steps.find((s) => s.rule.kind === "ground_story")?.numbers.firstStoryFt ?? null}
+              far={farBudget(result.steps)}
+            />
+          )}
           <FactCard facts={lot.facts} lot={result.lot} notes={result.notes} />
           {result.lot.frontCandidates.length > 1 && (
             <p className="muted front-note">
@@ -217,6 +224,7 @@ function EnvelopeView({
           )}
           <RuleCards
             steps={result.steps}
+            floorAreaSqFt={result.totals.grossFloorAreaSqFt}
             current={current ? position - 1 : null}
             onSetback={(feet) => setbackRule && setUrl({ setback: feet })}
             off={url.off}
@@ -227,6 +235,12 @@ function EnvelopeView({
       }
     />
   );
+}
+
+/** The floor-area-ratio rule's budget, unless it's switched off or the district has none. */
+function farBudget(steps: Step[]): FarBudget | null {
+  const far = steps.find((s) => s.rule.kind === "far" && s.status !== "disabled");
+  return far ? { ratio: far.numbers.ratio!, budgetSqFt: far.numbers.budgetSqFt! } : null;
 }
 
 function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions {

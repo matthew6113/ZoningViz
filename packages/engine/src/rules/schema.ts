@@ -28,7 +28,11 @@ export const RearYardParams = z
   .object({
     pctOfLotDepth: z.number().gt(0).lt(1),
     minFeet: z.number().min(0),
-    appliesAt: z.literal("grade_and_every_story"),
+    /**
+     * "grade_and_every_story": the yard stays open from the ground up.
+     * "above_first_story": the first story (its height set by an earlier ground_story rule) may fill the yard.
+     */
+    appliesAt: z.enum(["grade_and_every_story", "above_first_story"]),
   })
   .strict();
 
@@ -77,6 +81,33 @@ export const HeightBySlopeParams = z
   })
   .strict();
 
+/** Sets the first story's height, used by rear yards that start above it and by floor slicing. */
+export const GroundStoryParams = z
+  .object({
+    minFloorToFloorFeet: z.number().positive(),
+    /** A different minimum in some height districts (by the mapped height, in feet). */
+    exceptions: z
+      .array(
+        z
+          .object({
+            heightDistrictFeet: z.array(z.number().positive()).min(1),
+            minFloorToFloorFeet: z.number().positive(),
+          })
+          .strict(),
+      )
+      .default([]),
+  })
+  .strict();
+
+/** A floor-area budget for some uses, shown against the envelope's floor area; it doesn't cut the volume. */
+export const FarParams = z
+  .object({
+    ratio: z.number().positive(),
+    /** Which floor area the ratio limits. Residential floor area is exempt in SF's R, RC, NC and mixed-use districts (§124(b)). */
+    appliesTo: z.literal("non_residential"),
+  })
+  .strict();
+
 /** One row of a side-yard table: applies to lots at least `minWidthFeet` wide, up to the next row. */
 export const SideYardBracket = z.union([
   z.object({ minWidthFeet: z.number().min(0), eachSideFeet: z.number().min(0) }).strict(),
@@ -116,6 +147,8 @@ export const RuleSchema = z
     z.object({ ...common, kind: z.literal("side_yard"), params: SideYardParams }).strict(),
     z.object({ ...common, kind: z.literal("height_reference"), params: HeightReferenceParams }).strict(),
     z.object({ ...common, kind: z.literal("height_by_slope"), params: HeightBySlopeParams }).strict(),
+    z.object({ ...common, kind: z.literal("ground_story"), params: GroundStoryParams }).strict(),
+    z.object({ ...common, kind: z.literal("far"), params: FarParams }).strict(),
   ])
   .superRefine((rule, ctx) => {
     if (rule.verified && rule.effectiveDate === null) {
@@ -133,11 +166,20 @@ export const DistrictFileSchema = z
   .strict()
   .superRefine((file, ctx) => {
     const seen = new Set<string>();
+    let groundStory = false;
     file.rules.forEach((rule, index) => {
       if (seen.has(rule.id)) {
         ctx.addIssue({ code: "custom", path: ["rules", index, "id"], message: `duplicate rule id "${rule.id}"` });
       }
       seen.add(rule.id);
+      if (rule.kind === "ground_story") groundStory = true;
+      if (rule.kind === "rear_yard" && rule.params.appliesAt === "above_first_story" && !groundStory) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["rules", index, "params", "appliesAt"],
+          message: "a rear yard above the first story needs a ground_story rule before it",
+        });
+      }
     });
   });
 

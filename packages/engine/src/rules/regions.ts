@@ -85,8 +85,17 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): [Manifold, 
       return splitHalfSpace(prev, [0, 0, -1], [0, 0, cut.heightFt]);
     case "zone_heights":
       return splitBy(prev, zonesAllowed(cut.heights, ctx));
-    case "max_depth":
-      return splitHalfSpace(prev, [-n[0], -n[1], 0], at(0, cut.depthFt, 0));
+    case "max_depth": {
+      if (cut.aboveFt === undefined) return splitHalfSpace(prev, [-n[0], -n[1], 0], at(0, cut.depthFt, 0));
+      // The first story may fill the yard: behind the yard line, keep only what lies below the first story's top.
+      const aboveFt = cut.aboveFt;
+      const [front, rear] = splitHalfSpace(prev, [-n[0], -n[1], 0], at(0, cut.depthFt, 0));
+      const [low, removed] =
+        ctx.reference.kind === "upslope" ? splitBelowSurface(rear, ctx, () => aboveFt) : splitHalfSpace(rear, [0, 0, -1], [0, 0, aboveFt]);
+      const next = front.add(low);
+      [front, rear, low].forEach((o) => o.delete());
+      return [next, removed];
+    }
     case "min_depth":
       return splitHalfSpace(prev, n, at(0, cut.depthFt, 0));
     case "plane": {
@@ -262,14 +271,18 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
         const z0 = reference.at(frame.toFrame(c)[1]);
         return [{ from: [c[0], c[1], z0] as Vec3, to: [c[0], c[1], z0 + h] as Vec3, label: ft(h) }];
       });
-    case "max_depth":
+    case "max_depth": {
+      if (cut.aboveFt === undefined) {
+        return [{ from: at(mid, frame.depthFt, "ground"), to: at(mid, cut.depthFt, "ground"), label: ft(frame.depthFt - cut.depthFt) }];
+      }
+      // The yard's depth at the first story's top (mid-width), and the first story's height at a back corner.
+      const top = (d: number) => reference.at(d) + cut.aboveFt!;
+      const [bx, by] = frame.toWorld(0, frame.depthFt);
       return [
-        {
-          from: at(mid, frame.depthFt, "ground"),
-          to: at(mid, cut.depthFt, "ground"),
-          label: ft(frame.depthFt - cut.depthFt),
-        },
+        { from: at(mid, frame.depthFt, top(frame.depthFt)), to: at(mid, cut.depthFt, top(cut.depthFt)), label: ft(frame.depthFt - cut.depthFt) },
+        { from: [bx, by, reference.at(frame.depthFt)], to: [bx, by, top(frame.depthFt)], label: `${ft(cut.aboveFt)} first story` },
       ];
+    }
     case "min_depth":
       return cut.depthFt > 0 ? [{ from: at(mid, 0, "ground"), to: at(mid, cut.depthFt, "ground"), label: ft(cut.depthFt) }] : [];
     case "plane": {
@@ -334,7 +347,13 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
         const zone = ctx.zones[i];
         return h === null || !zone ? [] : [horizontal(span(zone.planar.flat(2)), h)];
       });
-    case "max_depth":
+    case "max_depth": {
+      if (cut.aboveFt === undefined) return [vertical(cut.depthFt)];
+      // Up the yard line from the first story's top, and across the yard at that height.
+      const z = reference.at(cut.depthFt) + cut.aboveFt;
+      const up: CutPlane = { origin: at(lot.s0, cut.depthFt, z), u: along(width, 0), v: [0, 0, Math.max(top - z, 0)] };
+      return [up, horizontal({ ...lot, d0: cut.depthFt }, cut.aboveFt)];
+    }
     case "min_depth":
       return [vertical(cut.depthFt)];
     case "side_strips": {
