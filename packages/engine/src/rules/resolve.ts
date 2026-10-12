@@ -10,6 +10,8 @@ export interface ZoneContext {
   localProgramHeightFt: number | null;
   /** Fraction of the lot inside this zone. */
   share: number;
+  /** The mapped bulk district (e.g. "A", "X", "R-4"), or null when the label can't be read. */
+  bulk: string | null;
 }
 
 export interface ResolveContext {
@@ -47,7 +49,25 @@ export type Cut =
   /** Keep what lies under a plane rising at `angleDeg` from `startHeightFt`, `fromDepthFt` behind the front line. */
   | { type: "plane"; fromDepthFt: number; startHeightFt: number; angleDeg: number }
   /** Keep what lies at least `leftFt` from the left side of the lot and `rightFt` from the right (seen from the street). */
-  | { type: "side_strips"; leftFt: number; rightFt: number };
+  | { type: "side_strips"; leftFt: number; rightFt: number }
+  /** Per height zone (same order as the context): plan limits above a height, or null for no limit there. Boxes are chosen by the geometry stage. */
+  | { type: "bulk"; zones: (BulkZoneCut | null)[] };
+
+export interface BulkZoneCut {
+  label: string;
+  aboveFt: number;
+  lengthFt: number;
+  diagonalFt: number;
+  /** Filled in by the geometry stage (regions.planBulk). */
+  plan?: BulkPlan;
+}
+
+export interface BulkPlan {
+  /** The envelope above the bulk height, measured across (width) and along (depth) the lot frame, and corner to corner. Null if nothing is there. */
+  measured: { widthFt: number; depthFt: number; diagonalFt: number } | null;
+  /** The kept box in lot-frame coordinates (s across, d back from the front line), or null when the envelope already fits. */
+  box: { s0: number; s1: number; d0: number; d1: number } | null;
+}
 
 export interface Resolved {
   status: "cut" | "info" | "not_applicable" | "not_modeled";
@@ -169,6 +189,9 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
       };
     }
 
+    case "bulk":
+      return resolveBulk(rule, ctx);
+
     case "far": {
       const { ratio } = rule.params;
       const budgetSqFt = ratio * ctx.lotAreaSqFt;
@@ -272,6 +295,75 @@ function resolveHeightBySlope(rule: Extract<Rule, { kind: "height_by_slope" }>, 
     nearest === undefined ? `${rule.title}: ${where}, so ${ft(baseFeet)}.` : `${rule.title}: ${where}, less than ${ft(nearest)}, so ${ft(baseFeet)}.`,
     numbers,
   );
+}
+
+function resolveBulk(rule: Extract<Rule, { kind: "bulk" }>, ctx: ResolveContext): Resolved {
+  const { letters, noLimit, podiumOnly } = rule.params;
+  type Outcome = { cut: BulkZoneCut | null; text: string; status: "cut" | "not_applicable" | "not_modeled" };
+  const outcomes = ctx.zones.map((zone): Outcome => {
+    const letter = zone.bulk;
+    const limit = letter === null ? undefined : letters[letter];
+    const height = zone.heightFt;
+    if (letter === null || height === null) {
+      return { cut: null, text: `${zone.label} can't be read, so its bulk limits aren't modeled`, status: "not_modeled" };
+    }
+    if (limit) {
+      if (height <= limit.aboveFeet) {
+        return { cut: null, text: `${zone.label}: its limits start above ${ft(limit.aboveFeet)}, but the height limit here is ${ft(height)}`, status: "not_applicable" };
+      }
+      return {
+        cut: { label: zone.label, aboveFt: limit.aboveFeet, lengthFt: limit.lengthFeet, diagonalFt: limit.diagonalFeet },
+        text: `${zone.label}: above ${ft(limit.aboveFeet)}, no floor may be longer than ${ft(limit.lengthFeet)} or measure more than ${ft(limit.diagonalFeet)} corner to corner`,
+        status: "cut",
+      };
+    }
+    if (noLimit.includes(letter)) return { cut: null, text: `${zone.label}: bulk district ${letter} has no length or diagonal limits`, status: "not_applicable" };
+    const podium = podiumOnly[letter];
+    if (podium !== undefined) {
+      return height <= podium
+        ? { cut: null, text: `${zone.label}: ${letter} bulk limits start above the ${ft(podium)} podium, and the height limit here is ${ft(height)}`, status: "not_applicable" }
+        : { cut: null, text: `${zone.label}: ${letter} bulk limits above the ${ft(podium)} podium (setbacks, floor plates, tower spacing) aren't modeled`, status: "not_modeled" };
+    }
+    return { cut: null, text: `${zone.label}: bulk district ${letter} has rules this app doesn't model`, status: "not_modeled" };
+  });
+  const status = outcomes.some((o) => o.status === "cut") ? "cut" : outcomes.some((o) => o.status === "not_modeled") ? "not_modeled" : "not_applicable";
+  const first = outcomes.find((o) => o.cut)?.cut;
+  return {
+    status,
+    sentence: `${rule.title}: ${outcomes.map((o) => o.text).join("; ")}.`,
+    numbers: first ? { aboveFt: first.aboveFt, lengthFt: first.lengthFt, diagonalFt: first.diagonalFt } : {},
+    cut: status === "cut" ? { type: "bulk", zones: outcomes.map((o) => o.cut) } : { type: "none" },
+  };
+}
+
+/** What the geometry stage found, for the card: one sentence and its numbers. */
+export function describeBulkPlan(cut: Extract<Cut, { type: "bulk" }>): { sentence: string; numbers: Record<string, number> } {
+  const parts: string[] = [];
+  const numbers: Record<string, number> = {};
+  for (const zone of cut.zones) {
+    const plan = zone?.plan;
+    if (!zone || !plan) continue;
+    const above = `${cut.zones.filter(Boolean).length > 1 ? `In ${zone.label}, above` : "Above"} ${ft(zone.aboveFt)}`;
+    if (!plan.measured) {
+      parts.push(`${above} nothing is left.`);
+      continue;
+    }
+    const { widthFt, depthFt, diagonalFt } = plan.measured;
+    const size = `${above} the envelope is ${ft(widthFt)} wide and ${ft(depthFt)} deep (${ft(diagonalFt)} corner to corner)`;
+    if (!plan.box) {
+      parts.push(`${size}, within both limits.`);
+    } else {
+      const boxWidth = plan.box.s1 - plan.box.s0;
+      const boxDepth = plan.box.d1 - plan.box.d0;
+      parts.push(
+        `${size}, so the upper floors are drawn as a ${ft(boxWidth)} × ${ft(boxDepth)} box at the front; ` +
+          "they could sit anywhere on the lot within those dimensions.",
+      );
+      Object.assign(numbers, { boxWidthFt: boxWidth, boxDepthFt: boxDepth });
+    }
+    Object.assign(numbers, { measuredWidthFt: widthFt, measuredDepthFt: depthFt, measuredDiagonalFt: diagonalFt });
+  }
+  return { sentence: parts.join(" "), numbers };
 }
 
 function resolveSideYard(rule: Extract<Rule, { kind: "side_yard" }>, ctx: ResolveContext): Resolved {

@@ -15,7 +15,7 @@ const STATUS_LABEL: Record<Step["status"], string> = {
 };
 
 /** Rules that cut the volume; only these can be switched off to see what they cost. */
-const TOGGLEABLE: ReadonlySet<Step["rule"]["kind"]> = new Set(["height_cap", "height_by_slope", "rear_yard", "front_setback", "side_yard", "sky_plane"]);
+const TOGGLEABLE: ReadonlySet<Step["rule"]["kind"]> = new Set(["height_cap", "height_by_slope", "rear_yard", "front_setback", "side_yard", "sky_plane", "bulk"]);
 
 export interface RuleCardsProps {
   steps: Step[];

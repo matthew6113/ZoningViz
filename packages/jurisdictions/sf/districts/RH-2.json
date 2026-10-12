@@ -108,6 +108,101 @@
       "effectiveDate": null
     },
     {
+      "id": "bulk",
+      "kind": "bulk",
+      "title": "Bulk limits",
+      "plain": "Above a height set by the lot's bulk district (the letter after the height, as in 65-A), no floor may be longer, or longer corner to corner, than the district allows.",
+      "params": {
+        "letters": {
+          "A": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "B": {
+            "aboveFeet": 50,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "C": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "D": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "E": {
+            "aboveFeet": 65,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "F": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "G": {
+            "aboveFeet": 80,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "H": {
+            "aboveFeet": 100,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "I": {
+            "aboveFeet": 150,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "J": {
+            "aboveFeet": 40,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "K": {
+            "aboveFeet": 60,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "L": {
+            "aboveFeet": 80,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "M": {
+            "aboveFeet": 100,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "N": {
+            "aboveFeet": 40,
+            "lengthFeet": 50,
+            "diagonalFeet": 100
+          },
+          "T": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          }
+        },
+        "noLimit": [
+          "X"
+        ],
+        "podiumOnly": {
+          "R-4": 85
+        }
+      },
+      "citation": "§270(a), Table 270; §102 (Plan Dimensions); §270(i)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
       "id": "narrow-street",
       "kind": "flag",
       "title": "Narrow streets",

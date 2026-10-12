@@ -23,8 +23,8 @@ import {
   type GroundMeasurements,
   type HeightReference,
 } from "./geometry/terrain";
-import { applyCut, cutPlanesFor, dimensionsFor, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
-import { ft, resolveFirstStory, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
+import { applyCut, cutPlanesFor, dimensionsFor, planBulk, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
+import { describeBulkPlan, ft, resolveFirstStory, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
 import type { DistrictFile } from "./rules/schema";
 import type {
   EnvelopeOptions,
@@ -176,6 +176,7 @@ function computeEnvelope(
     heightFt: z.heightFt,
     localProgramHeightFt: z.localProgramHeightFt ?? null,
     share: z.share,
+    bulk: z.bulk ?? null,
   }));
   const firstStory = resolveFirstStory(district, zoneContexts);
   const ctx: ResolveContext = {
@@ -240,8 +241,13 @@ function computeEnvelope(
       continue;
     }
 
-    const cutPlanes = cutPlanesFor(resolved.cut, { ...cutCtx, topFt: topOf(current), bottomFt: bottomOf(current) });
-    const [next, removed] = applyCut(current, resolved.cut, cutCtx);
+    // Bulk limits fix plan dimensions, not a place: the geometry stage measures the envelope and picks the box to keep.
+    const cut = resolved.cut.type === "bulk" ? planBulk(current, resolved.cut, cutCtx) : resolved.cut;
+    const planned = cut.type === "bulk" ? describeBulkPlan(cut) : null;
+    const sentence = planned?.sentence ? `${resolved.sentence} ${planned.sentence}` : resolved.sentence;
+    const numbers = planned ? { ...resolved.numbers, ...planned.numbers } : resolved.numbers;
+    const cutPlanes = cutPlanesFor(cut, { ...cutCtx, topFt: topOf(current), bottomFt: bottomOf(current) });
+    const [next, removed] = applyCut(current, cut, cutCtx);
     const removedVolume = removed.volume();
     const hasEffect = removedVolume > EMPTY_VOLUME_FT3;
     const removedSolid = hasEffect ? toSolid(removed) : null;
@@ -253,11 +259,9 @@ function computeEnvelope(
     steps.push({
       rule,
       status: hasEffect ? "cut" : "already_satisfied",
-      sentence: hasEffect
-        ? resolved.sentence
-        : `${resolved.sentence} Already satisfied: earlier limits already keep the building inside this one.`,
-      numbers: resolved.numbers,
-      dimensions: dimensionsFor(resolved.cut, cutCtx, zones.map((z) => z.center)),
+      sentence: hasEffect ? sentence : `${sentence} Already satisfied: earlier limits already keep the building inside this one.`,
+      numbers,
+      dimensions: dimensionsFor(cut, cutCtx, zones.map((z) => z.center)),
       cutPlanes,
       before,
       removed: removedSolid,

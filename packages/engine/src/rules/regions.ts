@@ -4,7 +4,7 @@ import { crossSection, profileSolid, splitHalfSpace } from "../geometry/manifold
 import type { PlanarMultiPolygon, XY } from "../geometry/projection";
 import type { Ground, HeightReference } from "../geometry/terrain";
 import type { CutPlane, Dimension, Vec3 } from "../types";
-import { ft, type Cut } from "./resolve";
+import { ft, type BulkPlan, type Cut } from "./resolve";
 
 // Builds the allowed region for each kind of cut and applies it, returning
 // [next, removed] = [prev ∩ allowed, prev − allowed]. Removed is cut against the
@@ -108,7 +108,118 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): [Manifold, 
     }
     case "side_strips":
       return keepOutsideSideYards(prev, cut, ctx);
+    case "bulk":
+      return splitBy(prev, bulkAllowed(cut, ctx));
   }
+}
+
+// A bulk limit counts as met within this much (floating-point noise).
+const BULK_TOLERANCE_FT = 1e-6;
+
+/** A zone's plan section grown slightly (see ZONE_GROWTH_FT), as a prism from far below to far above. */
+function zonePrism(ctx: CutContext, index: number): Manifold {
+  const section = crossSection(ctx.wasm, ctx.zones[index]!.planar);
+  const grown = section.offset(ZONE_GROWTH_FT, "Miter");
+  const prism = tallPrism(grown, ctx.bigFt);
+  [section, grown].forEach((o) => o.delete());
+  return prism;
+}
+
+/** The part of `m` at or below `h` above the height reference. */
+function keepBelow(m: Manifold, ctx: CutContext, h: number): Manifold {
+  if (ctx.reference.kind !== "upslope") return m.trimByPlane([0, 0, -1], -h);
+  const below = belowSurface(ctx, () => h);
+  const kept = m.intersect(below);
+  below.delete();
+  return kept;
+}
+
+/** The part of `m` above `h` above the height reference. */
+function keepAbove(m: Manifold, ctx: CutContext, h: number): Manifold {
+  if (ctx.reference.kind !== "upslope") return m.trimByPlane([0, 0, 1], h);
+  const below = belowSurface(ctx, () => h);
+  const kept = m.subtract(below);
+  below.delete();
+  return kept;
+}
+
+/**
+ * Measures the envelope above each zone's bulk height (across and along the lot
+ * frame, and corner to corner) and, where it's too big, picks the box to keep:
+ * as wide as the limits allow, then as deep as the diagonal allows, at the front
+ * of what's there and centered across it.
+ */
+export function planBulk(prev: Manifold, cut: Extract<Cut, { type: "bulk" }>, ctx: CutContext): Extract<Cut, { type: "bulk" }> {
+  const { frame } = ctx;
+  return {
+    type: "bulk",
+    zones: cut.zones.map((zone, i) => {
+      if (!zone) return null;
+      const prism = zonePrism(ctx, i);
+      const inZone = prev.intersect(prism);
+      const above = keepAbove(inZone, ctx, zone.aboveFt);
+      const shadow = above.project();
+      const points = shadow.area() > 1e-6 ? (shadow.toPolygons().flat() as XY[]) : [];
+      [prism, inZone, above, shadow].forEach((o) => o.delete());
+      if (points.length === 0) return { ...zone, plan: { measured: null, box: null } satisfies BulkPlan };
+
+      const local = points.map((p) => frame.toFrame(p));
+      const [s0, s1] = [Math.min(...local.map((p) => p[0])), Math.max(...local.map((p) => p[0]))];
+      const [d0, d1] = [Math.min(...local.map((p) => p[1])), Math.max(...local.map((p) => p[1]))];
+      let diagonalFt = 0;
+      for (let a = 0; a < points.length; a++) {
+        for (let b = a + 1; b < points.length; b++) {
+          diagonalFt = Math.max(diagonalFt, Math.hypot(points[a]![0] - points[b]![0], points[a]![1] - points[b]![1]));
+        }
+      }
+      const measured = { widthFt: s1 - s0, depthFt: d1 - d0, diagonalFt };
+      const { lengthFt: length, diagonalFt: diagonal } = zone;
+      const fits =
+        measured.widthFt <= length + BULK_TOLERANCE_FT && measured.depthFt <= length + BULK_TOLERANCE_FT && diagonalFt <= diagonal + BULK_TOLERANCE_FT;
+      if (fits) return { ...zone, plan: { measured, box: null } };
+
+      const width = Math.min(measured.widthFt, length);
+      let depth = Math.min(measured.depthFt, length);
+      if (Math.hypot(width, depth) > diagonal) depth = Math.sqrt(Math.max(diagonal * diagonal - width * width, 0));
+      const middle = (s0 + s1) / 2;
+      return { ...zone, plan: { measured, box: { s0: middle - width / 2, s1: middle + width / 2, d0, d1: d0 + depth } } };
+    }),
+  };
+}
+
+/** Each zone's prism, kept whole below its bulk height and only inside its box above it; uncovered parts of the lot stay whole. */
+function bulkAllowed(cut: Extract<Cut, { type: "bulk" }>, ctx: CutContext): Manifold {
+  const { wasm, frame, bigFt } = ctx;
+  const parts: Manifold[] = [];
+  ctx.zones.forEach((_, i) => {
+    const prism = zonePrism(ctx, i);
+    const box = cut.zones[i]?.plan?.box;
+    if (!box) return parts.push(prism);
+    const corners = [
+      [box.s0, box.d0],
+      [box.s1, box.d0],
+      [box.s1, box.d1],
+      [box.s0, box.d1],
+    ].map(([s, d]) => frame.toWorld(s!, d!) as [number, number]);
+    const section = new wasm.CrossSection([corners], "NonZero");
+    const boxPrism = tallPrism(section, bigFt);
+    const inBox = prism.intersect(boxPrism);
+    parts.push(keepBelow(prism, ctx, cut.zones[i]!.aboveFt), inBox);
+    [section, boxPrism, prism].forEach((o) => o.delete());
+  });
+  const lotSection = crossSection(wasm, ctx.lot);
+  const grown = ctx.zones.map((zone) => {
+    const section = crossSection(wasm, zone.planar);
+    const bigger = section.offset(ZONE_GROWTH_FT, "Miter");
+    section.delete();
+    return bigger;
+  });
+  const covered = wasm.CrossSection.union(grown);
+  const uncovered = lotSection.subtract(covered);
+  if (!uncovered.isEmpty()) parts.push(tallPrism(uncovered, bigFt));
+  const allowed = wasm.Manifold.union(parts);
+  [...parts, lotSection, ...grown, covered, uncovered].forEach((o) => o.delete());
+  return allowed;
 }
 
 // Lot edges that run more front-to-back than across count as side lot lines.
@@ -295,6 +406,20 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
         },
       ];
     }
+    case "bulk":
+      // The kept box's depth (and its width where that was cut), at the bulk height.
+      return cut.zones.flatMap((zone) => {
+        const box = zone?.plan?.box;
+        const measured = zone?.plan?.measured;
+        if (!zone || !box || !measured) return [];
+        const z = (d: number) => reference.at(d) + zone.aboveFt;
+        const middle = (box.s0 + box.s1) / 2;
+        const lines: Dimension[] = [{ from: at(middle, box.d0, z(box.d0)), to: at(middle, box.d1, z(box.d1)), label: ft(box.d1 - box.d0) }];
+        if (box.s1 - box.s0 < measured.widthFt - BULK_TOLERANCE_FT) {
+          lines.push({ from: at(box.s0, box.d0, z(box.d0)), to: at(box.s1, box.d0, z(box.d0)), label: ft(box.s1 - box.s0) });
+        }
+        return lines;
+      });
     case "side_strips": {
       // Across each yard from the middle of its longest side line.
       const sides = longestSideEdges(ctx);
@@ -373,6 +498,24 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
       }
       return planes;
     }
+    case "bulk":
+      // The kept box's faces above the bulk height, where they cut: the back, and the sides if the width was cut.
+      return cut.zones.flatMap((zone) => {
+        const box = zone?.plan?.box;
+        const measured = zone?.plan?.measured;
+        if (!zone || !box || !measured) return [];
+        const z0 = (d: number) => reference.at(d) + zone.aboveFt;
+        const planes: CutPlane[] = [];
+        const back = z0(box.d1);
+        planes.push({ origin: at(box.s0, box.d1, back), u: along(box.s1 - box.s0, 0), v: [0, 0, Math.max(top - back, 0)] });
+        if (box.s1 - box.s0 < measured.widthFt - BULK_TOLERANCE_FT) {
+          for (const s of [box.s0, box.s1]) {
+            const front = z0(box.d0);
+            planes.push({ origin: at(s, box.d0, front), u: along(0, box.d1 - box.d0), v: [0, 0, Math.max(top - front, 0)] });
+          }
+        }
+        return planes;
+      });
     case "plane": {
       // From the start line up to the top of the block, or to the back of the lot if that comes first.
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);

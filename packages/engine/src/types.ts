@@ -11,6 +11,8 @@ export interface HeightZoneInput {
   heightFt: number | null;
   /** R-4 only: the higher height available through the local program. Shown, never cut to. */
   localProgramHeightFt?: number | null;
+  /** The bulk district as mapped (the letter after the height, e.g. "A" in "65-A", or "R-4"); null when the label can't be read. */
+  bulk?: string | null;
   /** The part of the lot inside this district. */
   geometry: MultiPolygon;
 }

@@ -43,6 +43,7 @@ Sections 133 and 261.1 were also read directly on gocodebook. Pages: [§133](htt
 | `rear-yard` | 30% of lot depth, never less than 15 ft, at grade and every story | §134(c)(1), §134(d)(1) | S1, S5, S7 | Text 1/14/2024 (Ord. 248-23); reworded 1/12/2026 (Ord. 245-25) |
 | `front-setback` | As deep as the adjacent building with the shallowest setback, up to 10 ft. The 15 ft exception for some block faces isn't modeled | §132(a), (c)(1), (d) | S1, S5 | §132(a) 1/19/2025 (Ord. 297-24); §132(d) 1/14/2024 |
 | `narrow-street` (flag) | Frontages on streets 40 ft wide or narrower step back upper stories; not modeled | §261.1 | S2 | 5/17/2021 (Ord. 47-21) |
+| `bulk` (every district) | Table 270 by the bulk letter mapped for each height zone: above the listed height, every floor's length and diagonal stay within the limits. A 40/110/125, B 50/110/125, C 80/110/125, D 40/110/140, E 65/110/140, F 80/110/140, G 80/170/200, H 100/170/200, I 150/170/200, J 40/250/300, K 60/250/300, L 80/250/300, M 100/250/300, N 40/50/100, T 80/110/125 (height / length / diagonal, ft). X: no limits. R-4: limits start above the 85 ft podium (§270(i)); not modeled above it. Other letters (R, R-2, R-3, S, S-2, CS, V, TB, CP, HP, PM, TI, EP, IB, PY, OS) are governed elsewhere and not modeled. Where the envelope is too big, the app keeps one box (widest allowed street front, then the depth the diagonal allows, at the front and centered) | §270(a)–(c), Table 270, §102 (Plan Dimensions), §270(i) | S13 | Table 270 amended by Ord. 245-25 (1/12/2026; R-3, R-4 rows) and Ord. 13-26 (3/16/2026; row T) |
 | `cross-slope` (flag) | Where the street or ground slopes across the lot by more than 5%, the building is measured from several points, each covering a width of 65 ft or less (Table 260-1: 65 / 55 / 45 / 35 ft for slopes over 5 / 15 / 20 / 25%); not modeled | §260(a)(3), Table 260-1 | S8 | 1/12/2026 |
 
 ## RH-1(D)
@@ -83,7 +84,6 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 | Rule id | Value in the files | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
 | `far` | A floor area ratio for **non-residential** floor area only: RM-1 1.8, RM-2 1.8, RM-3 3.6, RM-4 4.8, NC-1 1.8, NC-2 2.5, NC-3 3.6, NC-S 1.8. "In R, RC, NC, and Mixed Use Districts, Floor Area Ratio limits shall not apply to Residential Uses." The FAR rows sit under "Non-residential standards" in Tables 209.2 and 710–713 | §124(a)–(b), Table 124 | S10, S11, S12 | §124(b) reworded by Ord. 245-25 (1/12/2026); the exemption itself is older |
-| `bulk` (flag) | Bulk letters other than X limit plan length and diagonal above a set height; R-4 uses §270(i) above an 85 ft podium. Not modeled | §252, §270, Table 270 | S13 | Check |
 
 ## RM-1, RM-2, RM-3, RM-4
 
@@ -130,3 +130,10 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 18. **§134(l) on large RM lots.** Residential districts get 60% coverage at street grade and above on lots of 2 acres or more. It isn't flagged in the RM files because few RM lots are that big; check whether any are.
 19. **§144.1 in RM-3 and RM-4.** The Table 209.2 row extracts as if it spans all four RM columns, but §144.1 itself names only RM-1 and RM-2. The files follow §144.1.
 20. **Amendments after 2026-09-23.** The mirror's text is as of that date. Ord. 1-26, 13-26 (§134(d)(3)) and 37-26 amended NC tables or §134 earlier in 2026; their text should already be included.
+21. **Bulk height reference.** §270(a) applies the limits "above the height indicated", and §102 defines Height by pointing to §260. The app measures the bulk height from the same §260 reference as the height limits. That reading is an inference: §270 doesn't say so in as many words.
+22. **Length on irregular lots.** §102 measures length "parallel to an exterior wall". The app measures the envelope across and along the lot's front line, which matches the walls on rectangular lots and approximates them on irregular ones. The diagonal is exact (the two most separated points).
+23. **Where the box goes.** Bulk limits fix size, not position. The app keeps the widest street front the limits allow, then the depth the diagonal allows, at the front and centered across. That is one allowed placement among many, and the card says so.
+24. **Row T.** The mirror shows 80 / 110 / 125. Ord. 13-26 amended row T; the scanned page appears to strike "At setback height established pursuant to Section 132.2, but no higher then" and keep "80". Confirm.
+25. **Row V.** The height cell is blank in the code (it once pointed at the repealed §253.2), so V is not modeled.
+26. **§271 exceptions.** The Planning Commission may let a project exceed the limits (conditional use, or design review in the Eastern Neighborhoods). Not modeled; the envelope shows the limits as written.
+27. **R-4 above the podium.** §270(i): above 85 ft, 15 ft interior setbacks, a 12,000 sq ft average floor plate, 130 ft length and 160 ft diagonal, tower spacing, and top-third reductions. Covered lots' R-4 base heights don't reach 85 ft, so the card says the limits don't apply; a lot above the podium would say they aren't modeled.

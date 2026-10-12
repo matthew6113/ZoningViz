@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EnvelopeOptions, EnvelopeResult, ParcelInput, Solid } from "../src";
 import { crossSection, loadManifold } from "../src/geometry/manifold";
-import { getEngine, loadDistrict, loadParcel, rectangularLot, slopedLot, toManifold } from "./helpers";
+import { getEngine, loadDistrict, loadParcel, rectangularLot, slopedLot, toManifold, withHeightDistrict } from "./helpers";
 
 // SPEC.md invariants, checked on every fixture and recorded real lot, with the
 // default front setback, no setback, and one rule switched off.
@@ -37,6 +37,11 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["2385 Folsom St (3593008)", loadParcel("3593008"), "NC-2", {}],
   ["1618 Lombard St (0496004)", loadParcel("0496004"), "NC-3", {}],
   ["3580 California St, front 1 (1018019)", loadParcel("1018019"), "NC-S", { frontSide: 1 }],
+  ["K 50x150 65-A", withHeightDistrict(rectangularLot(50, 150), "65-A", 65, "A"), "RM-4", {}],
+  ["L 105x100 65-A", withHeightDistrict(rectangularLot(105, 100), "65-A", 65, "A"), "RM-4", {}],
+  ["N 25x100 65-N", withHeightDistrict(rectangularLot(25, 100), "65-N", 65, "N"), "RM-4", {}],
+  ["50x150 65-A rising 25 ft", withHeightDistrict(slopedLot(50, 150, 25), "65-A", 65, "A"), "RM-4", {}],
+  ["50x150 65-A falling 25 ft, NC-3", withHeightDistrict(slopedLot(50, 150, -25), "65-A", 65, "A"), "NC-3", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

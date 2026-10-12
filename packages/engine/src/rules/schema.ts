@@ -108,6 +108,23 @@ export const FarParams = z
   })
   .strict();
 
+/** One row of a bulk table: above `aboveFeet`, every floor stays within these plan dimensions. */
+export const BulkLimit = z
+  .object({ aboveFeet: z.number().min(0), lengthFeet: z.number().positive(), diagonalFeet: z.number().positive() })
+  .strict()
+  .refine((limit) => limit.lengthFeet <= limit.diagonalFeet, { message: "a length can't be longer than its diagonal" });
+
+/** Bulk limits by the bulk district's letter (the letter is mapped per height zone, e.g. "A" in "65-A"). */
+export const BulkParams = z
+  .object({
+    letters: z.record(z.string().min(1), BulkLimit),
+    /** Letters with no length or diagonal limit. */
+    noLimit: z.array(z.string().min(1)),
+    /** Letters whose limits start above a podium height and aren't modeled above it. */
+    podiumOnly: z.record(z.string().min(1), z.number().positive()),
+  })
+  .strict();
+
 /** One row of a side-yard table: applies to lots at least `minWidthFeet` wide, up to the next row. */
 export const SideYardBracket = z.union([
   z.object({ minWidthFeet: z.number().min(0), eachSideFeet: z.number().min(0) }).strict(),
@@ -149,6 +166,7 @@ export const RuleSchema = z
     z.object({ ...common, kind: z.literal("height_by_slope"), params: HeightBySlopeParams }).strict(),
     z.object({ ...common, kind: z.literal("ground_story"), params: GroundStoryParams }).strict(),
     z.object({ ...common, kind: z.literal("far"), params: FarParams }).strict(),
+    z.object({ ...common, kind: z.literal("bulk"), params: BulkParams }).strict(),
   ])
   .superRefine((rule, ctx) => {
     if (rule.verified && rule.effectiveDate === null) {

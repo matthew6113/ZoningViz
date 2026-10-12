@@ -13,6 +13,7 @@ export function toParcelInput(parcel: SfParcel, neighbors: SfNeighbor[], terrain
         // R-4: the base height governs; the local program height is shown, never cut to.
         heightFt: parsed.kind === "standard" ? parsed.heightFt : parsed.kind === "r4" ? parsed.baseHeightFt : null,
         localProgramHeightFt: parsed.kind === "r4" ? parsed.localProgramHeightFt : null,
+        bulk: parsed.kind === "standard" ? parsed.bulk : parsed.kind === "r4" ? "R-4" : null,
         geometry: d.geometry,
       },
     ];

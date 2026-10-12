@@ -25,9 +25,15 @@ const CONCURRENCY = 6;
 
 type Outcome =
   /** `emptyFronts`: front choices whose rules leave nothing (short lots measured from their long side). */
-  | { kind: "ok"; frontChoice: boolean; emptyFronts: number[]; rise: number | null }
+  | { kind: "ok"; frontChoice: boolean; emptyFronts: number[]; rise: number | null; bulk: BulkOutcome }
   | { kind: "not_modeled"; note: string }
   | { kind: "error"; message: string };
+
+/** The bulk rule's outcome on the first front shown, and the bulk letters mapped on the lot. */
+interface BulkOutcome {
+  status: string;
+  letters: string[];
+}
 
 const random = () => {
   // mulberry32: a seeded sample, so a rerun hits the same lots (and the cache)
@@ -91,6 +97,7 @@ async function run(blklot: string): Promise<Outcome> {
     if (fronts.length === 0) return { kind: "error", message: "no front candidates" };
     const emptyFronts: number[] = [];
     let rise: number | null = null;
+    let bulk: BulkOutcome | null = null;
     for (const side of fronts) {
       const result = side === null ? first : engine.computeEnvelope(input, district, { frontSide: side });
       const label = side === null ? "" : `front side ${side}: `;
@@ -100,8 +107,9 @@ async function run(blklot: string): Promise<Outcome> {
       if (result.totals.volume === 0) emptyFronts.push(side ?? 0);
       // Slope as measured from the first front the viewer would see.
       if (rise === null && result.lot.terrain) rise = result.lot.terrain.rearMinusFrontFt;
+      bulk ??= { status: result.steps.find((s) => s.rule.kind === "bulk")?.status ?? "none", letters: input.heightZones.map((z) => z.bulk ?? "?") };
     }
-    return { kind: "ok", frontChoice: first.status === "needs_front_choice", emptyFronts, rise };
+    return { kind: "ok", frontChoice: first.status === "needs_front_choice", emptyFronts, rise, bulk: bulk! };
   } catch (error) {
     // An unreadable height label is flagged to the viewer, not guessed.
     if (error instanceof UnreadableHeightError) return { kind: "not_modeled", note: error.message };
@@ -130,6 +138,8 @@ const failures: string[] = [];
 // Rear-minus-front ground, against the §261(b) thresholds in the RH-1 family files (20 and 40 ft).
 const slopeRows: string[][] = [["District", "No ground", "Rear 20+ ft higher", "Within 20 ft", "Rear 20-40 ft lower", "Rear 40+ ft lower"]];
 const steepUp: string[] = [];
+const bulkRows: string[][] = [["District", "Letters seen", "Cut", "Already satisfied", "Doesn't apply", "Not modeled"]];
+const bulkCuts: string[] = [];
 for (const code of availableDistricts()) {
   const all = await landParcels(`zoning_code=${soqlString(code)}`);
   const outcomes = await runAll(sample(all, perDistrict));
@@ -148,7 +158,19 @@ for (const code of availableDistricts()) {
     band((r) => r <= -20 && r > -40),
     band((r) => r <= -40),
   ]);
+  const letters = new Map<string, number>();
+  for (const o of oks) for (const letter of o.bulk.letters) letters.set(letter, (letters.get(letter) ?? 0) + 1);
+  const bulkCount = (status: string) => String(oks.filter((o) => o.bulk.status === status).length);
+  bulkRows.push([
+    code,
+    [...letters].sort((a, b) => b[1] - a[1]).map(([letter, n]) => `${letter} ${n}`).join(", "),
+    bulkCount("cut"),
+    bulkCount("already_satisfied"),
+    bulkCount("not_applicable"),
+    bulkCount("not_modeled"),
+  ]);
   for (const [blklot, o] of outcomes) {
+    if (o.kind === "ok" && o.bulk.status === "cut") bulkCuts.push(`${code} ${blklot} (${o.bulk.letters.join("/")})`);
     if (o.kind === "ok" && o.rise !== null && o.rise >= 20) steepUp.push(`${code} ${blklot} (+${o.rise.toFixed(1)} ft)`);
     if (o.kind === "ok" && o.emptyFronts.length) empties.push(`${code} ${blklot}: front ${o.emptyFronts.join(", ")}`);
     if (o.kind === "error") failures.push(`${code} ${blklot}: ${o.message}`);
@@ -171,6 +193,9 @@ table(rows);
 console.log("\nGround (USGS 3DEP), rear lot line minus front, from the first front shown:");
 table(slopeRows);
 if (steepUp.length) console.log(`Rear 20+ ft higher: ${steepUp.join(", ")}`);
+console.log("\nBulk limits (Table 270), from the first front shown:");
+table(bulkRows);
+if (bulkCuts.length) console.log(`Bulk cuts: ${bulkCuts.join(", ")}`);
 console.log(
   `\nSplit-zoned RH lots: ${split.length} in all; ${splitOutcomes.size} sampled, ${splitExplained} explained (envelope or "not modeled" note), ${splitOutcomes.size - splitExplained} errors.`,
 );

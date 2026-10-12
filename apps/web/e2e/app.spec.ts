@@ -51,15 +51,16 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await fast(page);
 
   const expected: [string, string | RegExp][] = [
-    ["Rule 1 of 9: Homes, up to two units", /^RH-2 lots are for homes: two units per lot/],
-    ["Rule 2 of 9: Where height is measured from", /no ground elevations for this lot, so it is treated as flat/],
-    ["Rule 3 of 9: Height limit", "Height limit: 40 ft (40-X)."],
-    ["Rule 4 of 9: RH-2 dwelling cap", /assumes a flat lot: 40 ft\. Already satisfied/],
-    ["Rule 5 of 9: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
-    ["Rule 6 of 9: Front setback", /0 ft, your setting.*Already satisfied/],
-    ["Rule 7 of 9: Front height plane", /above 30 ft, the building steps back at 45°/],
-    ["Rule 8 of 9: Narrow streets", /^Not modeled:/],
-    ["Rule 9 of 9: Cross-slope", /^Not modeled:/],
+    ["Rule 1 of 10: Homes, up to two units", /^RH-2 lots are for homes: two units per lot/],
+    ["Rule 2 of 10: Where height is measured from", /no ground elevations for this lot, so it is treated as flat/],
+    ["Rule 3 of 10: Height limit", "Height limit: 40 ft (40-X)."],
+    ["Rule 4 of 10: RH-2 dwelling cap", /assumes a flat lot: 40 ft\. Already satisfied/],
+    ["Rule 5 of 10: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
+    ["Rule 6 of 10: Front setback", /0 ft, your setting.*Already satisfied/],
+    ["Rule 7 of 10: Front height plane", /above 30 ft, the building steps back at 45°/],
+    ["Rule 8 of 10: Bulk limits", "Bulk limits: 40-X: bulk district X has no length or diagonal limits."],
+    ["Rule 9 of 10: Narrow streets", /^Not modeled:/],
+    ["Rule 10 of 10: Cross-slope", /^Not modeled:/],
   ];
   for (const [i, [stepLabel, sentence]] of expected.entries()) {
     await next(page).click();
@@ -90,12 +91,12 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
 
 test("Back, arrow keys and deep links move between steps", async ({ page }) => {
   await page.goto("/?parcel=fixture-a&step=5");
-  await expect(label(page)).toHaveText("Rule 5 of 9: Rear yard");
+  await expect(label(page)).toHaveText("Rule 5 of 10: Rear yard");
   await page.getByRole("button", { name: "← Back" }).click();
-  await expect(label(page)).toHaveText("Rule 4 of 9: RH-2 dwelling cap");
+  await expect(label(page)).toHaveText("Rule 4 of 10: RH-2 dwelling cap");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
-  await expect(label(page)).toHaveText("Rule 6 of 9: Front setback");
+  await expect(label(page)).toHaveText("Rule 6 of 10: Front setback");
   await page.goto("/?parcel=fixture-a&step=99");
   await expect(label(page)).toHaveText("Result");
 });
@@ -109,9 +110,9 @@ test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) 
   await expectSceneDrawn(page);
 
   const sentences: string[] = [];
-  for (let i = 1; i <= 9; i++) {
+  for (let i = 1; i <= 10; i++) {
     await next(page).click();
-    await expect(label(page)).toContainText(`Rule ${i} of 9`);
+    await expect(label(page)).toContainText(`Rule ${i} of 10`);
     sentences.push((await currentSentence(page).textContent()) ?? "");
     if (i === 5) await page.screenshot({ path: `${SHOTS}/hampshire-front-setback.png` });
   }
@@ -181,7 +182,7 @@ test("Play runs the whole sequence to the result", async ({ page }) => {
 test("the scrubber jumps to a rule's tick and drags both ways", async ({ page }) => {
   await page.goto("/?parcel=fixture-a&step=0");
   await page.getByRole("button", { name: "Go to rule 5: Rear yard" }).click();
-  await expect(label(page)).toHaveText("Rule 5 of 9: Rear yard");
+  await expect(label(page)).toHaveText("Rule 5 of 10: Rear yard");
   await expect(page).toHaveURL(/step=5/);
   const scrubber = page.getByRole("slider", { name: "Timeline" });
   await scrubber.fill("1000");
@@ -191,7 +192,7 @@ test("the scrubber jumps to a rule's tick and drags both ways", async ({ page })
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("200,000 cu ft");
   await scrubber.fill("520");
-  await expect(label(page)).toHaveText(/^Rule \d of 9/);
+  await expect(label(page)).toHaveText(/^Rule \d+ of 10/);
   await page.screenshot({ path: `${SHOTS}/fixture-a-scrubbed.png` });
 });
 
@@ -199,7 +200,7 @@ test("switching a rule off recomputes the envelope and keeps the step", async ({
   await page.goto("/?parcel=fixture-a&step=5");
   await page.getByRole("button", { name: "Turn off Rear yard" }).click();
   await expect(page).toHaveURL(/off=rear-yard/);
-  await expect(label(page)).toHaveText("Rule 5 of 9: Rear yard");
+  await expect(label(page)).toHaveText("Rule 5 of 10: Rear yard");
   await expect(page.locator("[aria-current=step] .chip")).toHaveText("Off");
   await page.getByRole("slider", { name: "Timeline" }).fill("1000");
   // 40 ft over the whole 2,500 sq ft lot, less the 1,250 cu ft front plane.
@@ -272,7 +273,7 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   // USGS 3DEP ground, measured along the lot lines (replayed).
   await expect(page.getByTestId("ground")).toContainText(/Rear 3\d\.\d ft lower than front · level with or below the street/);
   await expect(page.locator(".fact-card")).toContainText("USGS 3DEP 1 m LiDAR (CA_SanFrancisco_B23): 2023-04-20");
-  await expect(label(page)).toHaveText("Rule 4 of 10: RH-1(D) dwelling cap");
+  await expect(label(page)).toHaveText("Rule 4 of 11: RH-1(D) dwelling cap");
   await expect(currentSentence(page)).toHaveText(
     /^RH-1\(D\) dwelling cap: the rear lot line averages 3\d\.\d ft lower than the front \(.*\), 20 ft or more, so 30 ft instead of 35 ft\.$/,
   );
@@ -289,7 +290,7 @@ test("an uphill lot: 118 Dellbrook Ave rises 37 ft, so 40 ft and no front plane,
   await page.goto("/?parcel=2820020&step=8");
   await expect(page.locator(".fact-card h2")).toHaveText("118 Dellbrook Ave");
   await expect(page.getByTestId("ground")).toContainText(/Rear 3\d\.\d ft higher than front · slopes up from the street/);
-  await expect(label(page)).toHaveText("Rule 8 of 10: Front height plane");
+  await expect(label(page)).toHaveText("Rule 8 of 11: Front height plane");
   await expect(page.locator("[aria-current=step] .chip")).toHaveText("Doesn't apply");
   await expect(currentSentence(page)).toHaveText(/^Front height plane: doesn't apply, because the rear lot line averages 3\d\.\d ft higher than the front \(20 ft or more\)\.$/);
   await expect(page.locator("[data-rule=rh-dwelling-height] .sentence")).toContainText("so 40 ft instead of 35 ft");

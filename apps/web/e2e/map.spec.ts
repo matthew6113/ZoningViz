@@ -119,7 +119,7 @@ test("an RH-1(D) lot shows its side yards", async ({ page }) => {
   await serveMap(page);
   await page.goto("/?parcel=2687029&step=6");
   await expect(factTitle(page)).toHaveText("124 Clarendon Ave");
-  await expect(page.getByTestId("step-label")).toHaveText("Rule 6 of 10: Side yards");
+  await expect(page.getByTestId("step-label")).toHaveText("Rule 6 of 11: Side yards");
   const card = page.locator("[aria-current=step]");
   await expect(card.locator(".sentence")).toHaveText("Side yards: this lot is 50.6 ft wide (50 ft or more), so 5 ft on each side.");
   await expect(card.locator(".plain")).toContainText("Not shown: buildings 25 feet tall or less may shift width");

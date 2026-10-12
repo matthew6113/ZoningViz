@@ -165,7 +165,7 @@ Decided with the user: missing fields in SPEC.md's RH-2 example are filled as un
 | `height_by_slope` | horizontal cut (on the reference) whose height depends on rear − front ground | `{ baseFeet, steps: [{ rear: "higher" \| "lower", byAtLeastFeet, feet }] }` |
 | `ground_story` | none itself; sets the first story's height for `above_first_story` rear yards and floor slicing (NC, §145.1) | `{ minFloorToFloorFeet, exceptions: [{ heightDistrictFeet: [40, 50], minFloorToFloorFeet }] }` (info card; the exception is picked by the mapped height covering most of the lot) |
 | `far` | none; a non-residential floor-area budget (ratio × lot area), shown as a gauge against the envelope's floor area | `{ ratio, appliesTo: "non_residential" }` (§124(b): FAR doesn't limit residential uses in R and NC districts) |
-| `bulk` | caps plan dimensions above a height | Phase 6 (not in the schema yet; a `bulk` flag stands in) |
+| `bulk` | above each zone's bulk height, cuts the envelope to one box that meets the length and diagonal limits (Table 270) | `{ letters: { A: { aboveFeet, lengthFeet, diagonalFeet }, … }, noLimit: ["X"], podiumOnly: { "R-4": 85 } }` (the letter comes from the zone, `HeightZoneInput.bulk`; X and R-4 below the podium → `not_applicable`; other letters → `not_modeled`; the same table is in every file, checked by `sf/test/districts.test.ts`) |
 | `flag` | not modeled; card says what's missing and why | `{}` |
 
 The schema rejects kinds the engine can't build yet; add the kind to `rules/schema.ts`, `resolve.ts` and `regions.ts` together.
@@ -181,6 +181,7 @@ Project parcel to EPSG:2227 feet, recentered on centroid → find front lot line
 - **Front setback:** `options.overrides[ruleId].feet` (clamped to the rule's max) when the rule allows it; otherwise the rule's maximum (neighbors' setbacks aren't in city data).
 - **Side yards:** lot edges that run more front-to-back than across are side lot lines, assigned left/right (seen from the street) by their midpoint. Everything within the yard width of them is removed (a sliver grown with round joins), so bent and angled side lines are followed. The lot width (front chord) picks the row of the district's table. Corner lots get yards on a street side too (open question in VERIFY.md).
 - **Heights:** each zone is cut to its own height (R-4 uses the base). A zone with no readable height is not cut and its card says it isn't modeled.
+- **Bulk (Table 270):** `regions.planBulk` measures the envelope above each zone's bulk height (on the height reference) across and along the lot frame and corner to corner. If it's too big, it keeps one box: the widest street front the length allows, then the depth the length and diagonal allow, at the front of what's there and centered across. The card says that is one allowed placement. Bulk runs after every yard, setback and plane.
 - **Terrain (Phase 6):** `ParcelInput.terrain` holds a fine grid over the lot and a coarse one around it (planar CRS, feet). The engine averages the ground along the front and rear lot lines, puts the curb estimate (ground at the middle of the front line) at z = 0, and builds the `height_reference`: the curb on level/downslope lots; on upslope lots the curb within 10 ft, then the average ground at the two side lot lines of each cross-section. Height cuts are profile solids (depth, z) extruded across the lot when the reference varies; half-spaces otherwise. The starting block is the lot prism minus a heightfield ground solid, up to max(reference) + 2× the mapped height. Footprint is the plan projection. Floors: level slices from the curb (below it too, on downslope lots); on upslope lots stories follow the reference (stepped plates). With a `ground_story` rule the first story above the curb is that tall, then the floor-to-floor height. No terrain → flat, and slope rules use their base values with a note.
 - Cuts return `[next, removed]` from one `split` against the allowed region. Never compute removed as prev − next: on terrain both share the ground surface and the subtraction leaves slivers.
 - `options.disabledRuleIds` skips rules (Phase 4's toggles).
@@ -208,6 +209,9 @@ Fixtures (hand-checked):
 | H | 25 x 100 ft, NC-2, 40-X, flat | 10 ft first story (40/50-ft exception); rear yard 25 ft from 10 ft up; 81,250 cu ft; floors 2,500 + 3 × 1,875 = 8,125 sq ft; FAR 2.5 budget 6,250 sq ft |
 | I | 25 x 100 ft, NC-2, 65-A, flat | 14 ft first story; 130,625 cu ft; stories 0–14, then 10 ft to 64; 11,875 sq ft |
 | J | 25 x 100 ft, RM-1, 40-X, flat, no setback | 30 ft rear yard at every level; 70,000 cu ft; 4 × 1,750 = 7,000 sq ft; FAR 1.8 budget 4,500 sq ft |
+| K | 50 x 150 ft, RM-4, 65-A, flat, no setback | 112.5 ft deep above 40 ft > 110 ft length: 50 × 110 ft box; removes 3,125 cu ft; 362,500 cu ft; floors 4 × 5,625 + 2 × 5,500 = 33,500 sq ft |
+| L | 105 x 100 ft, RM-4, 65-A | 105 × 75 ft above 40 ft: diagonal 129 > 125; depth → √(125² − 105²) = 67.8 ft |
+| N | 25 x 100 ft, RM-4, 65-N | 50 ft length limit: 75 → 50 ft deep above 40 ft; removes 15,625 cu ft |
 
 Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane).
 
@@ -222,7 +226,8 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
 - [ ] Phase 6 — Depth (one item per session)
   - [x] Terrain and slope: §260 height reference and §261 slope caps from USGS 3DEP ground; drawn terrain; fixtures F and G
   - [x] FAR districts: RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S drafts, `far` gauge, `ground_story`, rear yards above the first story; fixtures H–J
-  - [ ] Bulk letters · Family Zoning Plan local-program unlock · share images
+  - [x] Bulk letters: Table 270 `bulk` rule in every district, one fitting box above the bulk height; fixtures K, L, N
+  - [ ] Family Zoning Plan local-program unlock · share images
 
 ## Web app notes
 
@@ -232,7 +237,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
 - Tiles: `VITE_SF_TILES` (default `tiles/sf.pmtiles`) and `VITE_BASEMAP_STYLE` (default OpenFreeMap positron, no key). The static host must answer HTTP range requests. A missing tiles file shows a "run `pnpm build-tiles`" notice; search still works.
 - Hover and click read the parcel tiles' `zoning`; the tint comes from the zoning-district layer. Covered and zoning-less lots open; others (and split-zoned lots) get a popup that says why. Map colors live in `map/style.ts` and must not be red (`map/map.test.ts`).
 - e2e: `e2e/map.ts` routes the basemap style to a background-only style and serves the fixture tileset with HTTP 206 range answers; every spec calls `serveMap(page)`.
-- Rule cards: only rules that cut volume get the eye toggle (height caps, yards, setbacks, planes); info, flag, `height_reference`, `ground_story` and `far` cards don't. The `far` card shows a gauge (budget against the final floor area) and the result adds a "Non-residential cap" row.
+- Rule cards: only rules that cut volume get the eye toggle (height caps, yards, setbacks, planes, bulk); info, flag, `height_reference`, `ground_story` and `far` cards don't. The `far` card shows a gauge (budget against the final floor area) and the result adds a "Non-residential cap" row.
 - Step positions: 0 = starting block, 1…N = rule N applied (envelope + red removed piece), N+1 = finale (floors + summary).
 - **Animation:** `anim/schedule.ts` sets the beats (arrival 1.5 s, rise 1.2 s; per rule announce 0.6 / measure 0.8 / cut 1.2 / remove 0.9; info/flag/off rules 1.5 s; "already satisfied" = announce + measure). Step *k* rests at the end of rule *k*'s cut, with the red piece showing. `anim/timeline.ts` builds one GSAP timeline that tweens a plain `AnimState`; the scene reads it in `useFrame` and the HUD/scrubber are written through refs. React re-renders only when the step changes. Keep it that way: no per-frame React state.
 - A fresh visit plays the arrival and pauses at the start; `?step=n` opens paused there; `?step` follows the playhead; `?off=` lists rules switched off (engine `disabledRuleIds`).

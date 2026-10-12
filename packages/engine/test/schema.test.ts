@@ -27,6 +27,7 @@ describe("district schema", () => {
       "rear-yard",
       "front-setback",
       "front-plane",
+      "bulk",
       "narrow-street",
       "cross-slope",
     ]);
@@ -63,7 +64,7 @@ describe("district schema", () => {
 
   it.each([
     ["a verified rule without an effective date", [rule({ verified: true })], /effective date/],
-    ["an unknown kind", [rule({ kind: "bulk" })], /kind/],
+    ["an unknown kind", [rule({ kind: "lot_coverage" })], /kind/],
     ["duplicate ids", [rule({}), rule({})], /duplicate rule id/],
     ["a malformed URL", [rule({ url: "not a url" })], /url/i],
     ["a missing plain sentence", [rule({ plain: "" })], /plain/],

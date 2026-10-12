@@ -15,10 +15,10 @@ describe("schedule", () => {
   const s = buildSchedule(result, "full");
 
   it("gives each kind of rule its beats", () => {
-    // use, height reference, height, RH-2 cap, rear yard, setback (0 ft), front plane, narrow streets, cross-slope
-    expect(s.rules.map((r) => r.kind)).toEqual(["card", "card", "cut", "satisfied", "cut", "satisfied", "cut", "card", "card"]);
+    // use, height reference, height, RH-2 cap, rear yard, setback (0 ft), front plane, bulk (X: none), narrow streets, cross-slope
+    expect(s.rules.map((r) => r.kind)).toEqual(["card", "card", "cut", "satisfied", "cut", "satisfied", "cut", "card", "card", "card"]);
     const lengths = s.rules.map((r) => Number((r.end - r.start).toFixed(3)));
-    expect(lengths).toEqual([1.5, 1.5, 3.5, 1.8, 3.5, 1.8, 3.5, 1.5, 1.5]);
+    expect(lengths).toEqual([1.5, 1.5, 3.5, 1.8, 3.5, 1.8, 3.5, 1.5, 1.5, 1.5]);
   });
 
   it("rests each cutting step after its cut, before the red piece lifts", () => {
@@ -27,8 +27,8 @@ describe("schedule", () => {
   });
 
   it("totals the opening, every rule and the finale with its 4 floors", () => {
-    expect(s.duration).toBeCloseTo(2.7 + 20.1 + 0.8 + 4 * 0.35 + 0.6, 6);
-    expect(s.labels).toHaveLength(11);
+    expect(s.duration).toBeCloseTo(2.7 + 21.6 + 0.8 + 4 * 0.35 + 0.6, 6);
+    expect(s.labels).toHaveLength(12);
     expect([...s.labels].sort((a, b) => a - b)).toEqual(s.labels);
   });
 
@@ -37,7 +37,7 @@ describe("schedule", () => {
     // Resting points that coincide with the next step's start still belong to their own step.
     s.labels.forEach((time, p) => expect(positionAt(s, time)).toBe(p));
     expect(positionAt(s, s.rules[4]!.start + 0.1)).toBe(5);
-    expect(positionAt(s, s.duration)).toBe(10);
+    expect(positionAt(s, s.duration)).toBe(11);
     expect(nextPosition(s, s.labels[0]!)).toBe(1);
     expect(nextPosition(s, s.rules[4]!.start + 0.1)).toBe(5); // finish the step in progress
     expect(previousPosition(s, s.labels[5]!)).toBe(4);
