@@ -29,6 +29,27 @@
       "effectiveDate": null
     },
     {
+      "id": "local-program",
+      "kind": "local_program",
+      "title": "Housing Choice-SF",
+      "plain": "On lots in the Family Zoning Plan's R-4 districts, a housing project can opt into Housing Choice-SF. It may then be as tall as the second number in the R-4 height label (65 ft in 40//65-R-4), and at least 65 ft on a corner lot or a lot larger than 8,000 sq ft. Open space and exposure requirements don't apply, and FAR doesn't limit its homes.",
+      "params": {
+        "minHeight": {
+          "feet": 65,
+          "onCornerLot": true,
+          "lotAreaOverSqFt": 8000
+        },
+        "waives": [],
+        "replaces": [],
+        "assumes": "a project that adds homes (2 or more units, at least two-thirds residential, no other density bonus) and doesn't demolish a historic building, a hotel or a building with more than 2 rent-controlled units",
+        "notDrawn": "the optional height bonuses (up to 30 ft), 20 ft more for 100% affordable projects, §263.20's 5 ft for tall ground floors, the 15% adjustments to other standards and the Citywide Design Standards"
+      },
+      "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
       "id": "mapped-height",
       "kind": "height_cap",
       "title": "Height limit",

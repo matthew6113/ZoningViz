@@ -1,4 +1,4 @@
-// pnpm envelope <blklot> [--front N] [--setback FT] [--floor FT] [--off rule-id,...] [--json] [--no-cache]
+// pnpm envelope <blklot> [--front N] [--setback FT] [--floor FT] [--off rule-id,...] [--program] [--json] [--no-cache]
 //
 // Runs the zoning engine on a real San Francisco parcel and prints each rule's
 // step: what it cuts, what's left, and the card sentence.
@@ -11,12 +11,12 @@ import { devFetchJson } from "./node/cache";
 import type { SfParcel } from "./types";
 
 const USAGE =
-  "Usage: pnpm envelope <blklot> [--front N] [--setback FT] [--floor FT] [--off rule-id,...] [--json] [--no-cache]";
+  "Usage: pnpm envelope <blklot> [--front N] [--setback FT] [--floor FT] [--off rule-id,...] [--program] [--json] [--no-cache]";
 
 async function main(): Promise<number> {
   let args;
   try {
-    args = parseCliArgs(process.argv.slice(2), ["--json", "--no-cache", "--help", "-h"], [
+    args = parseCliArgs(process.argv.slice(2), ["--json", "--no-cache", "--program", "--help", "-h"], [
       "--front",
       "--setback",
       "--floor",
@@ -55,6 +55,8 @@ async function main(): Promise<number> {
   }
   if (values.has("--floor")) options.floorToFloorFeet = Number(values.get("--floor"));
   if (values.has("--off")) options.disabledRuleIds = values.get("--off")!.split(",");
+  // Housing Choice-SF on R-4 lots.
+  if (flags.has("--program")) options.localProgram = true;
 
   const engine = await createEngine();
   const [neighbors, terrain] = await Promise.all([adapter.getNeighbors(parcel), adapter.getTerrain(parcel)]);

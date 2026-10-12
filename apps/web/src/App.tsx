@@ -1,4 +1,4 @@
-import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions, type Step } from "@zoningviz/engine";
+import { DEFAULT_FLOOR_TO_FLOOR_FT, type EnvelopeOptions, type EnvelopeTotals, type Step } from "@zoningviz/engine";
 import { coverageNote, zoningCoverage } from "@zoningviz/jurisdictions/sf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MotionMode } from "./anim/schedule";
@@ -16,7 +16,7 @@ import { HonestyStrip } from "./ui/HonestyStrip";
 import { RuleCards } from "./ui/RuleCards";
 import { Hud } from "./ui/Hud";
 import { PlayerControls } from "./ui/PlayerControls";
-import { Summary, type FarBudget } from "./ui/Summary";
+import { Summary, type FarBudget, type ProgramComparison } from "./ui/Summary";
 
 type SetUrl = (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
 
@@ -81,8 +81,13 @@ function LotView({
   const loaded = lot.status === "ready" ? lot.value : null;
 
   const offKey = url.off.join(",");
-  const options = useMemo(() => envelopeOptions(loaded, url), [loaded, url.front, url.setback, offKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const envelope = useEnvelope(engine.status === "ready" ? engine.value : null, loaded, options);
+  const options = useMemo(() => envelopeOptions(loaded, url), [loaded, url.front, url.setback, offKey, url.program]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ready = engine.status === "ready" ? engine.value : null;
+  const envelope = useEnvelope(ready, loaded, options);
+  // With the local program on, the same lot without it, for the summary's comparison.
+  const baseOptions = useMemo(() => (options.localProgram ? { ...options, localProgram: false } : null), [options]);
+  const base = useEnvelope(ready, loaded, baseOptions);
+  const baseTotals = base?.status === "ready" && base.value.status === "ok" ? base.value.totals : null;
 
   useEffect(() => {
     if (loaded) document.title = `${loaded.facts.title} · Zoning envelope`;
@@ -140,12 +145,15 @@ function LotView({
     );
   }
 
-  return <EnvelopeView key={value.id} lot={value} result={result} url={url} setUrl={setUrl} back={back} handoff={handoff} />;
+  return (
+    <EnvelopeView key={value.id} lot={value} result={result} baseTotals={baseTotals} url={url} setUrl={setUrl} back={back} handoff={handoff} />
+  );
 }
 
 function EnvelopeView({
   lot,
   result,
+  baseTotals,
   url,
   setUrl,
   back,
@@ -153,6 +161,8 @@ function EnvelopeView({
 }: {
   lot: LoadedLot;
   result: OkResult;
+  /** The envelope without the local program, when it's switched on. */
+  baseTotals: EnvelopeTotals | null;
   url: UrlState;
   setUrl: SetUrl;
   back: React.ReactNode;
@@ -205,6 +215,7 @@ function EnvelopeView({
               floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT}
               firstStoryFt={result.steps.find((s) => s.rule.kind === "ground_story")?.numbers.firstStoryFt ?? null}
               far={farBudget(result.steps)}
+              program={programComparison(result.steps, url.program, baseTotals)}
             />
           )}
           <FactCard facts={lot.facts} lot={result.lot} notes={result.notes} />
@@ -229,6 +240,8 @@ function EnvelopeView({
             onSetback={(feet) => setbackRule && setUrl({ setback: feet })}
             off={url.off}
             onToggle={toggle}
+            program={url.program}
+            onProgram={(program) => setUrl({ program })}
             registerCard={player.registerCard}
           />
         </>
@@ -243,6 +256,13 @@ function farBudget(steps: Step[]): FarBudget | null {
   return far ? { ratio: far.numbers.ratio!, budgetSqFt: far.numbers.budgetSqFt! } : null;
 }
 
+/** The envelope without the local program, while it's on and applies to this lot. */
+function programComparison(steps: Step[], on: boolean, baseTotals: EnvelopeTotals | null): ProgramComparison | null {
+  const program = steps.find((s) => s.rule.kind === "local_program");
+  if (!on || !program || program.status !== "info" || !baseTotals) return null;
+  return { title: program.rule.title, without: baseTotals };
+}
+
 function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions {
   const options: EnvelopeOptions = {};
   if (url.front !== null) options.frontSide = url.front;
@@ -250,6 +270,7 @@ function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions 
   const setback = url.setback ?? lot?.defaultSetbackFt ?? null;
   if (setbackRule && setback !== null) options.overrides = { [setbackRule.id]: { feet: setback } };
   if (url.off.length) options.disabledRuleIds = url.off;
+  if (url.program) options.localProgram = true;
   return options;
 }
 

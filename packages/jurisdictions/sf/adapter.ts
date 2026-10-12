@@ -428,8 +428,8 @@ function labelWarnings(districts: SfHeightDistrict[]): string[] {
       const { baseHeightFt: base, localProgramHeightFt: local } = d.parsed;
       return [
         base === local
-          ? `Family Zoning Plan R-4 district ${d.label}: base and local program heights are both ${base} ft.`
-          : `Family Zoning Plan R-4 district ${d.label}: base height ${base} ft; ${local} ft only through the Housing Choice SF local program.`,
+          ? `Family Zoning Plan R-4 district ${d.label}: ${base} ft with or without Housing Choice-SF; see its card for what else the program changes.`
+          : `Family Zoning Plan R-4 district ${d.label}: base height ${base} ft; ${local} ft under Housing Choice-SF, which its card can switch on.`,
       ];
     }
     if (d.parsed.kind === "unparsed") {

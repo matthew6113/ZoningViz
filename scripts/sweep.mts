@@ -2,9 +2,11 @@
 // through the DataSF adapter and the engine, the same path a click on the map
 // takes, and checks the SPEC.md invariants on each result.
 //
-//   pnpm sweep [--per-district 50] [--seed 1] [--split 10] [--no-cache]
+//   pnpm sweep [--per-district 50] [--seed 1] [--split 10] [--program] [--no-cache]
 //
-// Prints a table per district and every failure with its block/lot.
+// Prints a table per district and every failure with its block/lot. With
+// --program, lots with a local-program height (R-4) are run again with
+// Housing Choice-SF on, checked the same way, and tallied by what it adds.
 import { createEngine, UnreadableHeightError, type EnvelopeResult } from "../packages/engine/src";
 import { createSfAdapter } from "../packages/jurisdictions/sf/adapter";
 import { DATASETS, soqlString, soqlUrl } from "../packages/jurisdictions/sf/datasf";
@@ -14,7 +16,8 @@ import { parseCliArgs } from "../packages/jurisdictions/sf/node/args";
 import { devFetchJson } from "../packages/jurisdictions/sf/node/cache";
 import { coverageNote, zoningCoverage } from "../packages/jurisdictions/sf/zoning";
 
-const args = parseCliArgs(process.argv.slice(2), ["--no-cache"], ["--per-district", "--seed", "--split"]);
+const args = parseCliArgs(process.argv.slice(2), ["--no-cache", "--program"], ["--per-district", "--seed", "--split"]);
+const withProgram = args.flags.has("--program");
 const perDistrict = Number(args.values.get("--per-district") ?? 50);
 const splitCount = Number(args.values.get("--split") ?? 10);
 let seed = Number(args.values.get("--seed") ?? 1);
@@ -25,9 +28,17 @@ const CONCURRENCY = 6;
 
 type Outcome =
   /** `emptyFronts`: front choices whose rules leave nothing (short lots measured from their long side). */
-  | { kind: "ok"; frontChoice: boolean; emptyFronts: number[]; rise: number | null; bulk: BulkOutcome }
+  | { kind: "ok"; frontChoice: boolean; emptyFronts: number[]; rise: number | null; bulk: BulkOutcome; program: ProgramOutcome | null }
   | { kind: "not_modeled"; note: string }
   | { kind: "error"; message: string };
+
+/** What the local program changes on the first front shown (lots with a local-program height, under --program). */
+interface ProgramOutcome {
+  heightGainFt: number;
+  /** The program's minimum height raised the lot (corner or large lot), and why. */
+  minHeight: "corner" | "large" | "corner and large" | null;
+  floorAreaGainSqFt: number;
+}
 
 /** The bulk rule's outcome on the first front shown, and the bulk letters mapped on the lot. */
 interface BulkOutcome {
@@ -98,6 +109,7 @@ async function run(blklot: string): Promise<Outcome> {
     const emptyFronts: number[] = [];
     let rise: number | null = null;
     let bulk: BulkOutcome | null = null;
+    let baseFloorArea: number | null = null;
     for (const side of fronts) {
       const result = side === null ? first : engine.computeEnvelope(input, district, { frontSide: side });
       const label = side === null ? "" : `front side ${side}: `;
@@ -108,8 +120,30 @@ async function run(blklot: string): Promise<Outcome> {
       // Slope as measured from the first front the viewer would see.
       if (rise === null && result.lot.terrain) rise = result.lot.terrain.rearMinusFrontFt;
       bulk ??= { status: result.steps.find((s) => s.rule.kind === "bulk")?.status ?? "none", letters: input.heightZones.map((z) => z.bulk ?? "?") };
+      baseFloorArea ??= result.totals.grossFloorAreaSqFt;
     }
-    return { kind: "ok", frontChoice: first.status === "needs_front_choice", emptyFronts, rise, bulk: bulk! };
+
+    let program: ProgramOutcome | null = null;
+    if (withProgram && input.heightZones.some((z) => z.localProgramHeightFt != null)) {
+      for (const side of fronts) {
+        const result = engine.computeEnvelope(input, district, { localProgram: true, ...(side === null ? {} : { frontSide: side }) });
+        const label = `Housing Choice-SF, ${side === null ? "" : `front side ${side}: `}`;
+        if (result.status !== "ok") return { kind: "error", message: `${label}${result.status}` };
+        const problems = invariantProblems(result);
+        if (problems.length) return { kind: "error", message: `${label}${problems.join("; ")}` };
+        if (program) continue;
+        const card = result.steps.find((s) => s.rule.kind === "local_program");
+        if (!card || card.status !== "info") return { kind: "error", message: `${label}program card is ${card?.status ?? "missing"}` };
+        const corner = /a corner lot/.test(card.sentence);
+        const large = /larger than/.test(card.sentence);
+        program = {
+          heightGainFt: card.numbers.programHeightFt! - (card.numbers.baseHeightFt ?? card.numbers.programHeightFt!),
+          minHeight: card.numbers.minHeightFt === undefined ? null : corner && large ? "corner and large" : corner ? "corner" : "large",
+          floorAreaGainSqFt: result.totals.grossFloorAreaSqFt - baseFloorArea!,
+        };
+      }
+    }
+    return { kind: "ok", frontChoice: first.status === "needs_front_choice", emptyFronts, rise, bulk: bulk!, program };
   } catch (error) {
     // An unreadable height label is flagged to the viewer, not guessed.
     if (error instanceof UnreadableHeightError) return { kind: "not_modeled", note: error.message };
@@ -140,6 +174,8 @@ const slopeRows: string[][] = [["District", "No ground", "Rear 20+ ft higher", "
 const steepUp: string[] = [];
 const bulkRows: string[][] = [["District", "Letters seen", "Cut", "Already satisfied", "Doesn't apply", "Not modeled"]];
 const bulkCuts: string[] = [];
+const programRows: string[][] = [["District", "R-4 lots", "Taller", "Same height, more floor area", "No change", "65 ft minimum", "Median floor area gain"]];
+const minHeightLots: string[] = [];
 for (const code of availableDistricts()) {
   const all = await landParcels(`zoning_code=${soqlString(code)}`);
   const outcomes = await runAll(sample(all, perDistrict));
@@ -169,7 +205,19 @@ for (const code of availableDistricts()) {
     bulkCount("not_applicable"),
     bulkCount("not_modeled"),
   ]);
+  const programs = oks.flatMap((o) => (o.program ? [o.program] : []));
+  const gains = programs.map((p) => p.floorAreaGainSqFt).sort((a, b) => a - b);
+  programRows.push([
+    code,
+    String(programs.length),
+    String(programs.filter((p) => p.heightGainFt > 0).length),
+    String(programs.filter((p) => p.heightGainFt === 0 && p.floorAreaGainSqFt > 0.5).length),
+    String(programs.filter((p) => p.heightGainFt === 0 && p.floorAreaGainSqFt <= 0.5).length),
+    String(programs.filter((p) => p.minHeight).length),
+    gains.length ? `${Math.round(gains[Math.floor(gains.length / 2)]!).toLocaleString()} sq ft` : "—",
+  ]);
   for (const [blklot, o] of outcomes) {
+    if (o.kind === "ok" && o.program?.minHeight) minHeightLots.push(`${code} ${blklot} (${o.program.minHeight})`);
     if (o.kind === "ok" && o.bulk.status === "cut") bulkCuts.push(`${code} ${blklot} (${o.bulk.letters.join("/")})`);
     if (o.kind === "ok" && o.rise !== null && o.rise >= 20) steepUp.push(`${code} ${blklot} (+${o.rise.toFixed(1)} ft)`);
     if (o.kind === "ok" && o.emptyFronts.length) empties.push(`${code} ${blklot}: front ${o.emptyFronts.join(", ")}`);
@@ -196,6 +244,11 @@ if (steepUp.length) console.log(`Rear 20+ ft higher: ${steepUp.join(", ")}`);
 console.log("\nBulk limits (Table 270), from the first front shown:");
 table(bulkRows);
 if (bulkCuts.length) console.log(`Bulk cuts: ${bulkCuts.join(", ")}`);
+if (withProgram) {
+  console.log("\nHousing Choice-SF (switched on), from the first front shown:");
+  table(programRows);
+  if (minHeightLots.length) console.log(`Raised to the 65 ft minimum: ${minHeightLots.join(", ")}`);
+}
 console.log(
   `\nSplit-zoned RH lots: ${split.length} in all; ${splitOutcomes.size} sampled, ${splitExplained} explained (envelope or "not modeled" note), ${splitOutcomes.size - splitExplained} errors.`,
 );

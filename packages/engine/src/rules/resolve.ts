@@ -6,8 +6,13 @@ import type { DistrictFile, Rule } from "./schema";
 
 export interface ZoneContext {
   label: string;
+  /** The height that governs here: the local program's when it is on and covers this zone, else the mapped height. */
   heightFt: number | null;
+  /** The mapped height without any local program. */
+  baseHeightFt: number | null;
   localProgramHeightFt: number | null;
+  /** True when the local program is on and sets this zone's height. */
+  inProgram: boolean;
   /** Fraction of the lot inside this zone. */
   share: number;
   /** The mapped bulk district (e.g. "A", "X", "R-4"), or null when the label can't be read. */
@@ -27,6 +32,27 @@ export interface ResolveContext {
   reference: "flat" | "curb" | "upslope";
   /** The first story's height from the district's ground_story rule, or null if it has none. */
   firstStory: FirstStory | null;
+  /** The district's local program, or null if it has none. */
+  program: LocalProgram | null;
+}
+
+/** A district's local program, resolved for one lot. */
+export interface LocalProgram {
+  title: string;
+  /** Some zone of the lot carries a local-program height. */
+  eligible: boolean;
+  /** Switched on, and the lot is eligible: the program's heights and rule changes apply. */
+  active: boolean;
+  cornerLot: boolean;
+  /** Larger than the program's large-lot area. */
+  largeLot: boolean;
+  /** True when the program's minimum height applies to this lot (corner or large lot). */
+  minHeightApplies: boolean;
+  /** The height the program allows in each zone (same order as the zones), or null where it doesn't apply. */
+  heights: (number | null)[];
+  /** Later rules the program waives or replaces, by id, with their titles and the program's citations. */
+  waived: Map<string, { title: string; because: string; citation: string }>;
+  replaced: Map<string, { title: string; params: unknown; citation: string }>;
 }
 
 export interface FirstStory {
@@ -74,6 +100,40 @@ export interface Resolved {
   sentence: string;
   numbers: Record<string, number>;
   cut: Cut;
+}
+
+/**
+ * The district's local program for this lot: which zones it covers and the
+ * height it allows there. `on` is the viewer's switch; nothing changes unless
+ * it is on and some zone carries a local-program height.
+ */
+export function planLocalProgram(
+  district: DistrictFile,
+  zones: { localProgramHeightFt?: number | null }[],
+  lot: { cornerLot: boolean; areaSqFt: number },
+  on: boolean,
+): LocalProgram | null {
+  const rule = district.rules.find((r) => r.kind === "local_program");
+  if (!rule) return null;
+  const { minHeight, waives, replaces } = rule.params;
+  const largeLot = lot.areaSqFt > minHeight.lotAreaOverSqFt;
+  const minHeightApplies = (minHeight.onCornerLot && lot.cornerLot) || largeLot;
+  const heights = zones.map(({ localProgramHeightFt: local }) =>
+    local === null || local === undefined ? null : minHeightApplies ? Math.max(local, minHeight.feet) : local,
+  );
+  const eligible = heights.some((h) => h !== null);
+  const title = (id: string) => district.rules.find((r) => r.id === id)?.title ?? id;
+  return {
+    title: rule.title,
+    eligible,
+    active: on && eligible,
+    cornerLot: lot.cornerLot,
+    largeLot,
+    minHeightApplies,
+    heights,
+    waived: new Map(waives.map((w) => [w.ruleId, { title: title(w.ruleId), because: w.because, citation: w.citation }])),
+    replaced: new Map(replaces.map((r) => [r.ruleId, { title: title(r.ruleId), params: r.params, citation: r.citation }])),
+  };
 }
 
 export function resolveFrontSetback(district: DistrictFile, options: EnvelopeOptions): number | null {
@@ -192,6 +252,9 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
     case "bulk":
       return resolveBulk(rule, ctx);
 
+    case "local_program":
+      return resolveLocalProgram(rule, ctx);
+
     case "far": {
       const { ratio } = rule.params;
       const budgetSqFt = ratio * ctx.lotAreaSqFt;
@@ -295,6 +358,62 @@ function resolveHeightBySlope(rule: Extract<Rule, { kind: "height_by_slope" }>, 
     nearest === undefined ? `${rule.title}: ${where}, so ${ft(baseFeet)}.` : `${rule.title}: ${where}, less than ${ft(nearest)}, so ${ft(baseFeet)}.`,
     numbers,
   );
+}
+
+function resolveLocalProgram(rule: Extract<Rule, { kind: "local_program" }>, ctx: ResolveContext): Resolved {
+  const program = ctx.program;
+  const none = { type: "none" as const };
+  if (!program?.eligible) {
+    return {
+      status: "not_applicable",
+      sentence: `${rule.title}: doesn't apply, because no part of this lot has a local-program height.`,
+      numbers: {},
+      cut: none,
+    };
+  }
+  const { minHeight, assumes, notDrawn } = rule.params;
+  const on = program.active;
+  const covered = ctx.zones.flatMap((zone, i) => {
+    const height = program.heights[i];
+    return height === null || height === undefined ? [] : [{ zone, height }];
+  });
+  const heights = covered.map(({ zone, height }) => {
+    const base = zone.baseHeightFt;
+    const where = covered.length > 1 || ctx.zones.length > 1 ? ` in ${zone.label}` : "";
+    if (base === height) return `${on ? "stays" : "would stay"} ${ft(height)}${where}`;
+    return `${on ? "is" : "would be"} ${ft(height)}${where} instead of ${base === null ? "an unreadable base height" : ft(base)}`;
+  });
+  const why = [program.cornerLot && minHeight.onCornerLot ? "a corner lot" : null, program.largeLot ? `larger than ${sqft(minHeight.lotAreaOverSqFt)}` : null].filter(
+    (w): w is string => w !== null,
+  );
+  const floor = program.minHeightApplies ? ` (at least ${ft(minHeight.feet)}, because this lot is ${why.join(" and ")})` : "";
+  const parts = [`the height limit ${heights.join("; ")}${floor}`];
+  const waived = [...program.waived.values()];
+  if (waived.length) {
+    const verb = on ? (waived.length > 1 ? "don't apply" : "doesn't apply") : "wouldn't apply";
+    parts.push(`${list(waived.map((w) => titleInSentence(w.title)))} ${verb} (${unique(waived.map((w) => w.citation)).join(", ")})`);
+  }
+  const replaced = [...program.replaced.values()];
+  if (replaced.length) {
+    const verb = on ? (replaced.length > 1 ? "follow" : "follows") : "would follow";
+    parts.push(`${list(replaced.map((r) => titleInSentence(r.title)))} ${verb} the program's own rule (${unique(replaced.map((r) => r.citation)).join(", ")})`);
+  }
+  const changes = parts.join("; ");
+  const top = Math.max(...covered.map((c) => c.height));
+  const bases = covered.map((c) => c.zone.baseHeightFt).filter((h): h is number => h !== null);
+  const numbers = {
+    programHeightFt: top,
+    ...(bases.length ? { baseHeightFt: Math.max(...bases) } : {}),
+    ...(program.minHeightApplies ? { minHeightFt: minHeight.feet } : {}),
+  };
+  return {
+    status: "info",
+    sentence: on
+      ? `${rule.title}: on. Under it, ${changes}. This assumes ${assumes}. Not drawn: ${notDrawn}.`
+      : `${rule.title}: off. Under it, ${changes}. Turn it on to see that envelope.`,
+    numbers,
+    cut: none,
+  };
 }
 
 function resolveBulk(rule: Extract<Rule, { kind: "bulk" }>, ctx: ResolveContext): Resolved {
@@ -420,11 +539,16 @@ function resolveMappedHeight(rule: Rule, ctx: ResolveContext): Resolved {
     };
   }
 
+  const program = ctx.program?.title ?? "the local program";
   const describe = (z: ZoneContext) => {
     if (z.heightFt === null) return `${z.label} isn't modeled, so that part isn't cut`;
+    if (z.inProgram) {
+      const without = z.baseHeightFt === z.heightFt ? "the same without it" : `${z.baseHeightFt === null ? "unreadable" : ft(z.baseHeightFt)} without it`;
+      return `${ft(z.heightFt)} under ${program} (${z.label}; ${without})`;
+    }
     const local =
       z.localProgramHeightFt !== null && z.localProgramHeightFt > z.heightFt
-        ? `; up to ${ft(z.localProgramHeightFt)} only through the Housing Choice SF local program, not shown`
+        ? `; up to ${ft(z.localProgramHeightFt)} under ${program}, which isn't switched on`
         : "";
     return `${ft(z.heightFt)} (${z.label}${local})`;
   };
@@ -439,7 +563,11 @@ function resolveMappedHeight(rule: Rule, ctx: ResolveContext): Resolved {
     return {
       status: "cut",
       sentence: `${rule.title}: ${describe(zone)}.`,
-      numbers: { heightFt: zone.heightFt!, ...(zone.localProgramHeightFt ? { localProgramHeightFt: zone.localProgramHeightFt } : {}) },
+      numbers: {
+        heightFt: zone.heightFt!,
+        ...(zone.localProgramHeightFt ? { localProgramHeightFt: zone.localProgramHeightFt } : {}),
+        ...(zone.inProgram && zone.baseHeightFt !== null ? { baseHeightFt: zone.baseHeightFt } : {}),
+      },
       cut: { type: "uniform_height", heightFt: zone.heightFt! },
     };
   }
@@ -459,6 +587,19 @@ export function ft(value: number): string {
 
 function sqft(value: number): string {
   return `${Math.round(value).toLocaleString("en-US")} sq ft`;
+}
+
+function list(items: string[]): string {
+  return items.length <= 2 ? items.join(" and ") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+/** A card title inside a sentence: "the front height plane", "the RH-2 dwelling cap". */
+function titleInSentence(title: string): string {
+  return `the ${/^[A-Z][a-z]/.test(title) ? title.charAt(0).toLowerCase() + title.slice(1) : title}`;
+}
+
+function unique(items: string[]): string[] {
+  return [...new Set(items)];
 }
 
 function pct(fraction: number): string {

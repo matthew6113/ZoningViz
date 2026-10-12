@@ -22,6 +22,7 @@ describe("district schema", () => {
     expect(rh2.rules.map((r) => r.id)).toEqual([
       "use",
       "height-reference",
+      "local-program",
       "mapped-height",
       "rh-dwelling-height",
       "rear-yard",

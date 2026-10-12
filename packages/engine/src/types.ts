@@ -7,9 +7,9 @@ import type { Rule } from "./rules/schema";
 export interface HeightZoneInput {
   /** The mapped district label, e.g. "40-X" or "40//50-R-4". */
   label: string;
-  /** Height limit that governs here (for R-4, the base height). Null when the label can't be read. */
+  /** Height limit that governs here without a local program (for R-4, the base height). Null when the label can't be read. */
   heightFt: number | null;
-  /** R-4 only: the higher height available through the local program. Shown, never cut to. */
+  /** The height a local program allows here (SF: R-4's second number), used only when `EnvelopeOptions.localProgram` is on. */
   localProgramHeightFt?: number | null;
   /** The bulk district as mapped (the letter after the height, e.g. "A" in "65-A", or "R-4"); null when the label can't be read. */
   bulk?: string | null;
@@ -63,6 +63,8 @@ export interface EnvelopeOptions {
   disabledRuleIds?: string[];
   /** Floor-to-floor height for slicing the final envelope. Default 10 ft. */
   floorToFloorFeet?: number;
+  /** Draw the envelope under the district's local_program rule, where the lot has a local-program height. */
+  localProgram?: boolean;
 }
 
 // ---------- Output ----------

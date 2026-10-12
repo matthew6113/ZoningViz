@@ -19,6 +19,31 @@ describe("district files", () => {
     for (const { code, rule } of rest) expect(rule, `${code}'s ${id} differs`).toEqual(first!.rule);
   });
 
+  it("all carry Housing Choice-SF right after the height reference, with the same height floor and card text", () => {
+    const copies = shared("local-program");
+    for (const { code } of copies) {
+      const ids = loadDistrict(code)!.rules.map((r) => r.id);
+      expect(ids.indexOf("local-program"), code).toBe(ids.indexOf("height-reference") + 1);
+    }
+    const common = copies.map(({ rule }) => {
+      if (rule?.kind !== "local_program") throw new Error("not a local_program rule");
+      const { minHeight, assumes, notDrawn } = rule.params;
+      return { title: rule.title, url: rule.url, minHeight, assumes, notDrawn };
+    });
+    for (const copy of common) expect(copy).toEqual(common[0]);
+  });
+
+  it("waive exactly the §261(b) and §261(c) rules, and replace NC rear yards", () => {
+    for (const code of availableDistricts()) {
+      const rules = loadDistrict(code)!.rules;
+      const program = rules.find((r) => r.kind === "local_program");
+      if (program?.kind !== "local_program") throw new Error(`${code} has no local_program rule`);
+      const section261 = rules.filter((r) => /§261\((b|c)\)/.test(r.citation)).map((r) => r.id);
+      expect(program.params.waives.map((w) => w.ruleId), code).toEqual(section261);
+      expect(program.params.replaces.map((r) => r.ruleId), code).toEqual(code.startsWith("NC") ? ["rear-yard"] : []);
+    }
+  });
+
   it("put bulk after every yard, setback and plane, so its box is measured on what they leave", () => {
     for (const code of availableDistricts()) {
       const kinds = loadDistrict(code)!.rules.map((r) => r.kind);
@@ -51,5 +76,10 @@ describe("engine input", () => {
       [],
     );
     expect(input.heightZones.map((z) => z.bulk)).toEqual(["A", "R-4", null]);
+    expect(input.heightZones.map((z) => [z.heightFt, z.localProgramHeightFt])).toEqual([
+      [65, null],
+      [40, 65],
+      [null, null],
+    ]);
   });
 });

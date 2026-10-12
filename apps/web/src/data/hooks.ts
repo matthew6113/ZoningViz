@@ -35,15 +35,15 @@ export function useEngine(): Loadable<Engine> {
   return state;
 }
 
-/** Runs the engine for a lot; recomputes only when the inputs or options change. */
+/** Runs the engine for a lot; recomputes only when the inputs or options change. Null options skip the run. */
 export function useEnvelope(
   engine: Engine | null,
   lot: LoadedLot | null,
-  options: EnvelopeOptions,
+  options: EnvelopeOptions | null,
 ): Exclude<Loadable<EnvelopeResult>, { status: "loading" }> | null {
   const key = JSON.stringify(options);
   return useMemo(() => {
-    if (!engine || !lot?.input || !lot.district) return null;
+    if (!engine || !lot?.input || !lot.district || !options) return null;
     try {
       return { status: "ready", value: engine.computeEnvelope(lot.input, lot.district, options) };
     } catch (error) {

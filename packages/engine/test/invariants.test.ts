@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { EnvelopeOptions, EnvelopeResult, ParcelInput, Solid } from "../src";
+import { syntheticLot, type EnvelopeOptions, type EnvelopeResult, type ParcelInput, type Solid } from "../src";
 import { crossSection, loadManifold } from "../src/geometry/manifold";
 import { getEngine, loadDistrict, loadParcel, rectangularLot, slopedLot, toManifold, withHeightDistrict } from "./helpers";
 
 // SPEC.md invariants, checked on every fixture and recorded real lot, with the
-// default front setback, no setback, and one rule switched off.
+// default front setback, no setback, and one rule switched off; lots with a
+// local-program height (R-4) again with the program on.
 const NO_SETBACK = { overrides: { "front-setback": { feet: 0 } } };
+const r4 = (base: number, local: number) => ({ label: `${base}//${local}-R-4`, heightFt: base, localProgramHeightFt: local, bulk: "R-4" });
 
 const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["A 25x100", rectangularLot(25, 100), "RH-2", {}],
@@ -43,14 +45,23 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["N 25x100 65-N", withHeightDistrict(rectangularLot(25, 100), "65-N", 65, "N"), "RM-4", {}],
   ["50x150 65-A rising 25 ft", withHeightDistrict(slopedLot(50, 150, 25), "65-A", 65, "A"), "RM-4", {}],
   ["50x150 65-A falling 25 ft, NC-3", withHeightDistrict(slopedLot(50, 150, -25), "65-A", 65, "A"), "NC-3", {}],
+  ["R 100x100 40//40-R-4", syntheticLot(100, 100, r4(40, 40)), "RH-2", {}],
+  ["T corner 25x100 40//40-R-4", syntheticLot(25, 100, r4(40, 40), { streets: "front_and_left" }), "RH-2", { frontSide: 1 }],
+  ["NC-2 25x100 40//65-R-4 rising 20 ft", { ...slopedLot(25, 100, 20), heightZones: syntheticLot(25, 100, r4(40, 65)).heightZones }, "NC-2", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
   ["no setback", NO_SETBACK],
   ["rear yard off", { disabledRuleIds: ["rear-yard"] }],
 ];
+const programVariants: [string, EnvelopeOptions][] = [
+  ["Housing Choice-SF", { localProgram: true }],
+  ["Housing Choice-SF, no setback", { ...NO_SETBACK, localProgram: true }],
+];
 const cases = parcels.flatMap(([name, parcel, district, base]) =>
-  variants.map(([variant, opts]) => [`${name} ${district}, ${variant}`, parcel, district, { ...base, ...opts }] as const),
+  [...variants, ...(parcel.heightZones.some((z) => z.localProgramHeightFt) ? programVariants : [])].map(
+    ([variant, opts]) => [`${name} ${district}, ${variant}`, parcel, district, { ...base, ...opts }] as const,
+  ),
 );
 
 describe.each(cases)("%s", async (_, parcel, district, options) => {

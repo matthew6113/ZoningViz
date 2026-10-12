@@ -27,11 +27,14 @@ export interface RuleCardsProps {
   /** Rule ids switched off. */
   off: string[];
   onToggle: (ruleId: string) => void;
+  /** Whether the district's local program is switched on. */
+  program: boolean;
+  onProgram: (on: boolean) => void;
   /** The timeline reveals each card as it plays; every card stays mounted. */
   registerCard: (index: number, element: HTMLElement | null) => void;
 }
 
-export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onToggle, registerCard }: RuleCardsProps) {
+export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onToggle, program, onProgram, registerCard }: RuleCardsProps) {
   const currentRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     // Only where the card column scrolls on its own (desktop). On phones it
@@ -59,7 +62,7 @@ export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onTog
               <span className="rule-number">{i + 1}</span>
               <h3>{step.rule.title}</h3>
               <span className="chip">{STATUS_LABEL[step.status]}</span>
-              {TOGGLEABLE.has(step.rule.kind) && (
+              {TOGGLEABLE.has(step.rule.kind) && step.status !== "not_applicable" && (
                 <button
                   type="button"
                   className="eye"
@@ -73,6 +76,14 @@ export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onTog
               )}
             </header>
             <p className="sentence">{step.sentence}</p>
+            {step.rule.kind === "local_program" && step.status !== "not_applicable" && step.status !== "disabled" && (
+              <button type="button" role="switch" aria-checked={program} className="program-switch" onClick={() => onProgram(!program)}>
+                <span className="switch-track" aria-hidden>
+                  <span className="switch-knob" />
+                </span>
+                {step.rule.title}: {program ? "on" : "off"}
+              </button>
+            )}
             {step.rule.kind !== "info" && step.rule.kind !== "flag" && <p className="plain">{step.rule.plain}</p>}
             {step.measurements.removedVolume > 0 && (
               <p className="removed-line">

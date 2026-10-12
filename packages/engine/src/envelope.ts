@@ -1,5 +1,5 @@
 import type { Manifold, ManifoldToplevel } from "manifold-3d";
-import { centroidOf, findStreetSides, lotFrame, toPlanar, translate } from "./geometry/lot";
+import { centroidOf, findStreetSides, isCornerLot, lotFrame, toPlanar, translate } from "./geometry/lot";
 import {
   bottomOf,
   crossSection,
@@ -24,8 +24,16 @@ import {
   type HeightReference,
 } from "./geometry/terrain";
 import { applyCut, cutPlanesFor, dimensionsFor, planBulk, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
-import { describeBulkPlan, ft, resolveFirstStory, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
-import type { DistrictFile } from "./rules/schema";
+import {
+  describeBulkPlan,
+  ft,
+  planLocalProgram,
+  resolveFirstStory,
+  resolveFrontSetback,
+  resolveRule,
+  type ResolveContext,
+} from "./rules/resolve";
+import { withReplacedParams, type DistrictFile } from "./rules/schema";
 import type {
   EnvelopeOptions,
   EnvelopeResult,
@@ -109,12 +117,26 @@ function computeEnvelope(
     notes.push("No ground elevations for this lot, so it is treated as flat and slope-based limits use their flat-lot values.");
   }
 
-  const zones = parcel.heightZones.map((zone) => {
+  const mappedZones = parcel.heightZones.map((zone) => {
     const planar = translate(toPlanar(zone.geometry, parcel.projection), originPlanar);
     return { ...zone, planar, share: multiPolygonArea(planar) / lotAreaSqFt, center: centroidOf(planar) };
   });
 
-  // 4. Starting block: 2x the mapped height (or 2x the district's own cap when no mapped height is readable).
+  // 3c. Local program (when switched on): its heights replace the mapped ones where it applies.
+  const disabled = new Set(options.disabledRuleIds ?? []);
+  const program = planLocalProgram(
+    district,
+    mappedZones,
+    { cornerLot: isCornerLot(candidates), areaSqFt: lotAreaSqFt },
+    options.localProgram === true && !district.rules.some((r) => r.kind === "local_program" && disabled.has(r.id)),
+  );
+  const zones = mappedZones.map((zone, i) => {
+    const programHeight = program?.active ? program.heights[i] : null;
+    const inProgram = programHeight !== null && programHeight !== undefined;
+    return { ...zone, baseHeightFt: zone.heightFt, heightFt: inProgram ? programHeight : zone.heightFt, inProgram };
+  });
+
+  // 4. Starting block: 2x the mapped height (the program's where it's on; or 2x the district's own cap when no height is readable).
   const mapped = zones.map((z) => z.heightFt).filter((h): h is number => h !== null);
   let baseHeight = mapped.length ? Math.max(...mapped) : null;
   if (baseHeight === null) {
@@ -174,7 +196,9 @@ function computeEnvelope(
   const zoneContexts = zones.map((z) => ({
     label: z.label,
     heightFt: z.heightFt,
+    baseHeightFt: z.baseHeightFt,
     localProgramHeightFt: z.localProgramHeightFt ?? null,
+    inProgram: z.inProgram,
     share: z.share,
     bulk: z.bulk ?? null,
   }));
@@ -194,12 +218,12 @@ function computeEnvelope(
       : null,
     reference: reference.kind,
     firstStory,
+    program,
   };
-  const disabled = new Set(options.disabledRuleIds ?? []);
   const steps: Step[] = [];
   let currentSolid: Solid = start;
 
-  for (const rule of district.rules) {
+  for (const mappedRule of district.rules) {
     const before = currentSolid;
     const measure = (removedVolume: number) => ({
       volume: current.volume(),
@@ -207,6 +231,26 @@ function computeEnvelope(
       footprintSqFt: footprintArea(current),
       percentOfStart: (current.volume() / startVolume) * 100,
     });
+
+    // Under an active local program, waived rules don't apply and replaced ones take the program's params.
+    const waiver = program?.active ? program.waived.get(mappedRule.id) : undefined;
+    if (waiver) {
+      steps.push({
+        rule: mappedRule,
+        status: "not_applicable",
+        sentence: `${mappedRule.title}: doesn't apply under ${program!.title}. ${waiver.because} (${waiver.citation}).`,
+        numbers: {},
+        dimensions: [],
+        cutPlanes: [],
+        before,
+        removed: null,
+        after: before,
+        measurements: measure(0),
+      });
+      continue;
+    }
+    const replacement = program?.active ? program.replaced.get(mappedRule.id) : undefined;
+    const rule = replacement ? withReplacedParams(mappedRule, replacement.params, replacement.citation) : mappedRule;
 
     if (disabled.has(rule.id)) {
       steps.push({

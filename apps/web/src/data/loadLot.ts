@@ -143,7 +143,7 @@ function parcelFacts(parcel: SfParcel, buildingsAsOf: string | null): LotFacts {
         d.parsed.kind === "standard"
           ? `${d.parsed.heightFt} ft, bulk ${d.parsed.bulk}`
           : d.parsed.kind === "r4"
-            ? `base ${d.parsed.baseHeightFt} ft; local program ${d.parsed.localProgramHeightFt} ft`
+            ? `base ${d.parsed.baseHeightFt} ft; Housing Choice-SF ${d.parsed.localProgramHeightFt} ft`
             : "not modeled",
     })),
     lotAreaSqFt: parcel.lotAreaSqFt,

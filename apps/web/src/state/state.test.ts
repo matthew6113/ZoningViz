@@ -9,6 +9,7 @@ describe("URL state", () => {
       front: 1,
       setback: 2.5,
       off: ["rear-yard", "front-plane"],
+      program: true,
       at: { lon: -122.40779, lat: 37.76102, zoom: 18.5 },
     };
     expect(parseUrlState(toSearch(state))).toEqual(state);
@@ -20,7 +21,7 @@ describe("URL state", () => {
   });
 
   it("ignores malformed values", () => {
-    expect(parseUrlState("?parcel=%20&step=-1&front=x&setback=-3&off=,Bad%20Id&at=1,2")).toEqual(EMPTY_URL_STATE);
+    expect(parseUrlState("?parcel=%20&step=-1&front=x&setback=-3&off=,Bad%20Id&program=yes&at=1,2")).toEqual(EMPTY_URL_STATE);
     expect(parseUrlState("?at=-122.4,95,12").at).toBeNull();
     expect(parseUrlState("?at=-122.4,37.7,zoom").at).toBeNull();
   });

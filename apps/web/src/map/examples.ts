@@ -21,5 +21,6 @@ export const EXAMPLES: Example[] = [
   { id: "0065024", label: "619–621 Chestnut St", note: "RM-2: 30% rear yard; floor-area limit for shops only", at: [-122.41359, 37.80349] },
   { id: "3593008", label: "2385–2389 Folsom St", note: "NC-2: shops below, rear yard from the second story up", at: [-122.41441, 37.7592] },
   { id: "0243017", label: "800 Powell St", note: "RM-4, 65-A: bulk limits trim the upper floors to 110 ft", at: [-122.40902, 37.79234] },
+  { id: "1446048", label: "1345–1347 Clement St", note: "NC-1, 40//65-R-4: switch on Housing Choice-SF for 65 ft", at: [-122.47379, 37.78227] },
   { id: "fixture-a", label: "Fixture A", note: "synthetic 25 × 100 ft RH-2 lot (SPEC.md)" },
 ];

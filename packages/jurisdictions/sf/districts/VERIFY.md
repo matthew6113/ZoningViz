@@ -29,6 +29,8 @@ amlegal (the official codified Planning Code) blocks automated access, so the va
 | S11 | [gocodebook Art. 7](https://gocodebook.com/library/us/ca/san-francisco-planning/article-7-neighborhood-commercial-districts) (§§710–713, Tables 710–713) | Mirror, text as of 2026-09-23 |
 | S12 | gocodebook Art. 1.2: [§124](https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-124.-basic-floor-area-ratio), §132, §134, §135 (Table 135A), §144.1, §145.1 | Mirror, text as of 2026-09-23 |
 | S13 | gocodebook Art. 2.5: §261.1, §263.20, §270 | Mirror, text as of 2026-09-23 |
+| S14 | [gocodebook §206.10](https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program) (Housing Choice-SF) and §263.19, §334 | Mirror, text as of 2026-09-23; checked against Ord. 245-25 as amended in committee 12/1/2025 |
+| S15 | [Planning Director Bulletin No. 11](https://sfplanning.org/resource/planning-director-bulletin-no-11-housing-choice-sf-program), Housing Choice-SF | Official guidance, last updated 9/10/2026 (web page; the PDF couldn't be read). Secondary: where it differs from the code, the code was followed |
 
 The RM and NC rules shared with RH (`height-reference`, `mapped-height`, `front-setback` in RM, `narrow-street`, `cross-slope`) reuse the RH text and amlegal URLs. The new rules' URLs point at the gocodebook pages the values were read from, not at amlegal.
 
@@ -79,6 +81,22 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 | `use` | 3 units per lot, or 1 per 1,000 sq ft of lot area. Up to 4 (6 on corners) under the density exception, plus ADUs | §209.1, §207(c)(8) | S3, S4 |
 | *(absent)* | No §261 dwelling cap and no §261(c) front plane: the sources say both apply only in RH-1(D), RH-1, RH-1(S) and RH-2. The mapped height governs | §261(b), (c) | S2, S5 |
 
+## Housing Choice-SF (`local-program`, every district)
+
+The card is always shown. It applies only to lots with an R-4 height label (`base//program-R-4`), and only when the viewer switches it on (`?program=1`). The engine never treats it as the default envelope.
+
+| Param | Value in the files | Check | Drafted from | Likely effective date |
+|---|---|---|---|---|
+| height | The number after "//" ("the height limit for projects using the HCSF Program") | §263.19(b)(2), §206.10(d)(1)(C) | S14 | 1/12/2026 (Ord. 245-25) |
+| `minHeight` | 65 ft "on a Corner Lot or a Lot larger than 8,000 square feet", "unless a higher height limit is provided elsewhere". The app raises a lower program height to 65 ft on a lot whose street sides meet at a corner, or whose area (from the parcel shape) is over 8,000 sq ft | §206.10(d)(1)(C), §102 (Corner Lot) | S14 | 1/12/2026 |
+| `waives` (RH-1(D), RH-1, RH-1(S), RH-2) | `rh-dwelling-height` and `front-plane`: "Planning Code Section 261 shall not apply." Other districts have no §261 rule to waive | §206.10(d)(1)(C) | S14 | 1/12/2026 |
+| `replaces` (NC) | `rear-yard` becomes 18% of lot depth or 15 ft, whichever is greater, with "no rear yard ... required at the ground floor" in NC districts. RH and RM keep their rear yards: (E)(i) excludes "lots in Residential Districts other than ... RTO-C" | §206.10(d)(1)(E)(i)–(ii) | S14 | 1/12/2026 |
+| `assumes` | The project adds homes (2 or more units, a net increase), is at least two-thirds residential, takes no other density bonus, and doesn't demolish a listed historic building, a hotel, or rent-controlled units on a site with more than 2 units | §206.10(b)(1)–(10) | S14 | 1/12/2026 |
+| `notDrawn` | The (e) bonuses (up to +10 ft, or +30 ft combined), +20 ft for 100% affordable projects ((d)(2)(B)(iv)), §263.20's +5 ft, the up-to-15% adjustments ((d)(1)(M)) and the Citywide Design Standards | §206.10(d)(1)(M), (d)(2), (e), (e)(7); §263.20 | S14, S15 | 1/12/2026 |
+| card text | Open space (§135) and exposure (§140) don't apply; FAR doesn't limit residential uses (form-based density). None of these is drawn either way | §206.10(d)(1)(A), (F), (G) | S14 | 1/12/2026 |
+
+Unchanged under the program: front setbacks (except a 19th Avenue sidewalk option, (d)(1)(D)), side yards (except through the (e)(3)–(e)(4) bonuses), §270(i) bulk, §261.1 narrow streets, and the §260 height reference.
+
 ## Rules shared by every RM and NC district
 
 | Rule id | Value in the files | Check | Drafted from | Likely effective date |
@@ -113,9 +131,9 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 3. **Density figures.** Table 209.1's columns were garbled in both copies read. Confirm the units per lot and lot area per unit for each district.
 4. **§261(c)(2).** Next to taller neighbors, the front plane is raised to the average height of the adjacent buildings. That isn't modeled because neighbor heights aren't reliable enough.
 5. **§133(b) and (c).** Buildings 25 ft tall or less may shift width so that one side yard is 3 ft, and neighbors may agree to build to a shared line. Neither is modeled.
-6. **Overlays that change these rules for opted-in projects.** Neither is detected yet:
-   - The §249.94 Family and Senior Housing Opportunity SUD covers most RH lots. It changes height, the rear yard and the front plane for corner lots.
-   - Housing Choice-SF (§206.10) on R-4 lots: "Section 261 shall not apply."
+6. **Overlays that change these rules for opted-in projects.**
+   - The §249.94 Family and Senior Housing Opportunity SUD covers most RH lots. It changes height, the rear yard and the front plane for corner lots. Not detected yet.
+   - Housing Choice-SF (§206.10) on R-4 lots is modeled on request (the `local-program` card; questions 28–36).
 7. **URLs.** The `url`s point at amlegal section pages found by search (node ids from a dev mirror for §133, §260 and §261.1). None was opened, because amlegal blocks automated access.
 8. **"Average ground elevation" (§261(b), (c)).** The code doesn't define it. The engine averages the ground along each lot line from a 1 m LiDAR terrain model (USGS 3DEP, 2023). The 2590 Pacific Ave determination (S9) averaged surveyed spot elevations at the lot corners and let a retaining wall just inside the rear line stand in for it. Check which method the Planning Department uses, and whether existing or finished grade.
 9. **The curb.** §260 measures from the curb; there is no curb data, so the engine uses the ground at the middle of the front lot line. A sidewalk's cross-slope usually puts the curb a few inches lower.
@@ -136,4 +154,13 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 24. **Row T.** The mirror shows 80 / 110 / 125. Ord. 13-26 amended row T; the scanned page appears to strike "At setback height established pursuant to Section 132.2, but no higher then" and keep "80". Confirm.
 25. **Row V.** The height cell is blank in the code (it once pointed at the repealed §253.2), so V is not modeled.
 26. **§271 exceptions.** The Planning Commission may let a project exceed the limits (conditional use, or design review in the Eastern Neighborhoods). Not modeled; the envelope shows the limits as written.
-27. **R-4 above the podium.** §270(i): above 85 ft, 15 ft interior setbacks, a 12,000 sq ft average floor plate, 130 ft length and 160 ft diagonal, tower spacing, and top-third reductions. Covered lots' R-4 base heights don't reach 85 ft, so the card says the limits don't apply; a lot above the podium would say they aren't modeled.
+27. **R-4 above the podium.** §270(i): above 85 ft, 15 ft interior setbacks, a 12,000 sq ft average floor plate, 130 ft length and 160 ft diagonal, tower spacing, and top-third reductions. Covered lots' R-4 base heights don't reach 85 ft, so the card says the limits don't apply. With Housing Choice-SF on, some program heights do (70//140-R-4, 55//100-R-4); there the card says the limits aren't modeled.
+28. **"Large lots" in §206.10(d)(1)(E).** The 18% NC rear yard excludes "large lots subject to Section 134(d)(6)", but codified §134(d)(6) is C-district lot coverage; the two-acre rule is §134(l). The intended reference is probably §134(l). The app applies the 18% yard on every NC lot; NC-S lots of 2 acres or more already carry the `large-lot` flag.
+29. **8,000 sq ft.** The code says "a Lot larger than 8,000 square feet"; Bulletin No. 11 says "8,000 square feet and larger". The files follow the code (a lot of exactly 8,000 sq ft doesn't qualify). The app measures lot area from the parcel shape, which can differ from a survey.
+30. **Corner Lot.** §102: a corner lot is at the junction of two or more streets, and "no Corner Lot shall be considered wider or deeper than 125 feet". The app calls a lot a corner lot when two of its street sides (found from neighboring parcels) meet at an angle, and raises the whole lot to 65 ft. It doesn't apply the 125 ft limit, and a lot beside unparcelled land can be mistaken for a corner lot.
+31. **The first story under the program.** §145.1's 10 ft exception is for "40- and 50-ft height districts". On an R-4 lot under the program, the app reads the height district as the program height (14 ft on 40//65-R-4). Check which number Planning uses.
+32. **§260(a)(4) and §270(i).** §260(a)(4) applies the lateral-slope tables to R-4 parcels "at or below 85 feet" but excludes property subject to §§270–270.3, and §270(i) covers all of R-4. The cross-slope flag covers both readings.
+33. **§263.20 on R-4 lots.** It names "R-4 ... with a height limit of 40, 50, or 80 feet" without saying base or program height; "80" may be meant as 85. Not modeled (the `notDrawn` list).
+34. **§263.21 vertical elements.** (d)(1)(I) lets them exceed the height limit "consistent with" §263.21(c), which itself runs through §329, and (d)(3) switches §329 off. Not drawn.
+35. **§261.1.** §206.10 switches off "Section 261" only; §261.1 (narrow streets and alleys) still applies by its text. It stays a flag.
+36. **Citywide Design Standards.** Bulletin No. 11 says Design Standard C.6 limits many R-district HC-SF envelopes at the rear (side setbacks above the ground floor, 30 ft between 55% and 30% of lot depth). That's a design standard, not Planning Code, and wasn't read at its source; not drawn, and named in `notDrawn`.

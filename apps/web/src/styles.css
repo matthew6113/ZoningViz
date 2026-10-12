@@ -103,6 +103,15 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .hud strong { color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 4px; }
 .eye { border: none; background: none; padding: 2px; color: var(--muted); display: grid; place-items: center; }
 .eye[aria-pressed="false"] { color: var(--amber); }
+.program-switch { display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 4px 10px 4px 6px; border-radius: 999px; font-weight: 600; }
+.switch-track { position: relative; width: 30px; height: 16px; border-radius: 8px; background: var(--line); transition: background 0.2s; }
+.switch-knob { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: left 0.2s; }
+.program-switch[aria-checked="true"] { border-color: var(--accent); }
+.program-switch[aria-checked="true"] .switch-track { background: var(--accent); }
+.program-switch[aria-checked="true"] .switch-knob { left: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .switch-track, .switch-knob { transition: none; }
+}
 .summary { animation: rise-in 0.5s ease-out; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {

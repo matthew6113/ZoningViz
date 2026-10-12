@@ -141,6 +141,17 @@ export function findStreetSides(lot: PlanarMultiPolygon, neighbors: PlanarMultiP
     });
 }
 
+/**
+ * A corner lot has two street sides that meet at an angle: their outward
+ * directions are closer to perpendicular than to parallel. Street sides facing
+ * opposite ways (a through lot) or a bend in one street don't count.
+ */
+export function isCornerLot(sides: FrontCandidate[]): boolean {
+  return sides.some((a, i) =>
+    sides.slice(i + 1).some((b) => Math.abs(a.outward[0] * b.outward[0] + a.outward[1] * b.outward[1]) < Math.SQRT1_2),
+  );
+}
+
 function closedLoopFromSharpestCorner(ring: Ring): XY[] {
   let best = 0;
   let bestTurn = -1;
