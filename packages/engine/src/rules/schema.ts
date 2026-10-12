@@ -46,6 +46,34 @@ export const SkyPlaneParams = z
     fromLine: z.enum(["front_setback", "front_lot_line"]),
     startHeightFeet: z.number().min(0),
     angleDeg: z.number().gt(0).lt(90),
+    /** The plane doesn't apply when the rear lot line's average ground is this much higher than the front's. */
+    skipWhenRearHigherByFeet: z.number().gt(0).optional(),
+  })
+  .strict();
+
+/** Where heights are measured from (curb, or ground on upsloping lots). Sets the reference for every height rule after it. */
+export const HeightReferenceParams = z
+  .object({
+    /** On a lot level with or sloping down from the street, the curb is the reference this deep. */
+    downslopeCurbDepthFeet: z.number().gt(0),
+    /** On a lot sloping up from the street, the curb is the reference only this close to the street. */
+    upslopeCurbWithinFeet: z.number().min(0),
+  })
+  .strict();
+
+/** A height cap that depends on how much higher or lower the rear lot line is than the front. */
+export const HeightBySlopeParams = z
+  .object({
+    baseFeet: z.number().positive(),
+    steps: z.array(
+      z
+        .object({
+          rear: z.enum(["higher", "lower"]),
+          byAtLeastFeet: z.number().gt(0),
+          feet: z.number().positive(),
+        })
+        .strict(),
+    ),
   })
   .strict();
 
@@ -86,6 +114,8 @@ export const RuleSchema = z
     z.object({ ...common, kind: z.literal("front_setback"), params: FrontSetbackParams }).strict(),
     z.object({ ...common, kind: z.literal("sky_plane"), params: SkyPlaneParams }).strict(),
     z.object({ ...common, kind: z.literal("side_yard"), params: SideYardParams }).strict(),
+    z.object({ ...common, kind: z.literal("height_reference"), params: HeightReferenceParams }).strict(),
+    z.object({ ...common, kind: z.literal("height_by_slope"), params: HeightBySlopeParams }).strict(),
   ])
   .superRefine((rule, ctx) => {
     if (rule.verified && rule.effectiveDate === null) {

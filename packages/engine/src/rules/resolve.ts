@@ -18,6 +18,10 @@ export interface ResolveContext {
   zones: ZoneContext[];
   /** The front setback in force, for planes measured from the setback line. Null if the district has none. */
   frontSetbackFt: number | null;
+  /** Average ground along the front and rear lot lines (and the curb estimate), or null for a flat lot. */
+  ground: { curbFt: number; frontAverageFt: number; rearAverageFt: number } | null;
+  /** How heights are measured on this lot (from the height_reference rule and the ground). */
+  reference: "flat" | "curb" | "upslope";
 }
 
 export type Cut =
@@ -35,7 +39,7 @@ export type Cut =
   | { type: "side_strips"; leftFt: number; rightFt: number };
 
 export interface Resolved {
-  status: "cut" | "info" | "not_modeled";
+  status: "cut" | "info" | "not_applicable" | "not_modeled";
   sentence: string;
   numbers: Record<string, number>;
   cut: Cut;
@@ -111,8 +115,25 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
     case "side_yard":
       return resolveSideYard(rule, ctx);
 
+    case "height_reference":
+      return resolveHeightReference(rule, ctx);
+
+    case "height_by_slope":
+      return resolveHeightBySlope(rule, ctx);
+
     case "sky_plane": {
-      const { fromLine, startHeightFeet, angleDeg } = rule.params;
+      const { fromLine, startHeightFeet, angleDeg, skipWhenRearHigherByFeet: skip } = rule.params;
+      if (skip !== undefined && ctx.ground) {
+        const rise = ctx.ground.rearAverageFt - ctx.ground.frontAverageFt;
+        if (rise >= skip) {
+          return {
+            status: "not_applicable",
+            sentence: `${rule.title}: doesn't apply, because the rear lot line averages ${ft(rise)} higher than the front (${ft(skip)} or more).`,
+            numbers: { rearMinusFrontFt: rise },
+            cut: { type: "none" },
+          };
+        }
+      }
       const fromDepthFt = fromLine === "front_setback" ? (ctx.frontSetbackFt ?? 0) : 0;
       const where =
         fromLine === "front_setback"
@@ -128,6 +149,68 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
       };
     }
   }
+}
+
+function resolveHeightReference(rule: Extract<Rule, { kind: "height_reference" }>, ctx: ResolveContext): Resolved {
+  const { downslopeCurbDepthFeet, upslopeCurbWithinFeet } = rule.params;
+  const base = { status: "info" as const, cut: { type: "none" as const } };
+  if (!ctx.ground || ctx.reference === "flat") {
+    return { ...base, sentence: `${rule.title}: no ground elevations for this lot, so it is treated as flat.`, numbers: {} };
+  }
+  const curb = `the curb (estimated at ${ft(ctx.ground.curbFt)}, the ground at the middle of the front lot line)`;
+  if (ctx.reference === "upslope") {
+    return {
+      ...base,
+      sentence:
+        `${rule.title}: the lot slopes up from the street, so heights are measured from ${curb} within ${ft(upslopeCurbWithinFeet)} ` +
+        "of the front lot line and, farther back, from the average ground at the two side lot lines of each cross-section.",
+      numbers: { curbFt: ctx.ground.curbFt, curbWithinFt: upslopeCurbWithinFeet },
+    };
+  }
+  const deep =
+    ctx.depthFt > downslopeCurbDepthFeet
+      ? ` Past ${ft(downslopeCurbDepthFeet)} back, the code measures from the lower end of the lot instead; that part isn't modeled.`
+      : "";
+  return {
+    ...base,
+    sentence: `${rule.title}: the lot is level with or slopes down from the street, so heights are measured from ${curb}.${deep}`,
+    numbers: { curbFt: ctx.ground.curbFt },
+  };
+}
+
+function resolveHeightBySlope(rule: Extract<Rule, { kind: "height_by_slope" }>, ctx: ResolveContext): Resolved {
+  const { baseFeet, steps } = rule.params;
+  const cap = (heightFt: number, sentence: string, numbers: Record<string, number>): Resolved => ({
+    status: "cut",
+    sentence,
+    numbers: { baseFeet, heightFt, ...numbers },
+    cut: { type: "uniform_height", heightFt },
+  });
+  if (!ctx.ground) {
+    return cap(baseFeet, `${rule.title}: no ground elevations for this lot, so this assumes a flat lot: ${ft(baseFeet)}.`, {});
+  }
+  const { frontAverageFt: front, rearAverageFt: rear } = ctx.ground;
+  const rise = rear - front;
+  const direction = rise >= 0 ? "higher" : "lower";
+  const candidates = steps.filter((step) => step.rear === direction);
+  const matched = candidates
+    .filter((step) => Math.abs(rise) >= step.byAtLeastFeet)
+    .sort((a, b) => b.byAtLeastFeet - a.byAtLeastFeet)[0];
+  const where = `the rear lot line averages ${ft(Math.abs(rise))} ${direction} than the front (${ft(rear)} vs ${ft(front)})`;
+  const numbers = { rearMinusFrontFt: rise, frontAverageFt: front, rearAverageFt: rear };
+  if (matched) {
+    return cap(
+      matched.feet,
+      `${rule.title}: ${where}, ${ft(matched.byAtLeastFeet)} or more, so ${ft(matched.feet)} instead of ${ft(baseFeet)}.`,
+      numbers,
+    );
+  }
+  const nearest = candidates.map((step) => step.byAtLeastFeet).sort((a, b) => a - b)[0];
+  return cap(
+    baseFeet,
+    nearest === undefined ? `${rule.title}: ${where}, so ${ft(baseFeet)}.` : `${rule.title}: ${where}, less than ${ft(nearest)}, so ${ft(baseFeet)}.`,
+    numbers,
+  );
 }
 
 function resolveSideYard(rule: Extract<Rule, { kind: "side_yard" }>, ctx: ResolveContext): Resolved {
@@ -219,7 +302,7 @@ function resolveMappedHeight(rule: Rule, ctx: ResolveContext): Resolved {
 }
 
 export function ft(value: number): string {
-  return `${Number(value.toFixed(1)).toLocaleString("en-US")} ft`;
+  return `${(Number(value.toFixed(1)) || 0).toLocaleString("en-US")} ft`; // "|| 0" turns -0 into 0
 }
 
 function pct(fraction: number): string {

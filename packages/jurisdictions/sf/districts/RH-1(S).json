@@ -15,6 +15,20 @@
       "effectiveDate": null
     },
     {
+      "id": "height-reference",
+      "kind": "height_reference",
+      "title": "Where height is measured from",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet.",
+      "params": {
+        "downslopeCurbDepthFeet": 100,
+        "upslopeCurbWithinFeet": 10
+      },
+      "citation": "§260(a)(1)(A)–(C), §261(a)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
       "id": "mapped-height",
       "kind": "height_cap",
       "title": "Height limit",
@@ -29,11 +43,28 @@
     },
     {
       "id": "rh-dwelling-height",
-      "kind": "height_cap",
+      "kind": "height_by_slope",
       "title": "RH-1(S) dwelling cap",
-      "plain": "In RH-1(S), no part of a home may be taller than 35 feet, even where the mapped limit is higher.",
+      "plain": "In RH-1(S), no part of a home may be taller than 35 feet, even where the mapped limit is higher: 40 feet where the rear of the lot is 20 feet or more higher than the front, 30 feet where it is 20 feet or more lower, and 25 feet where it is 40 feet or more lower.",
       "params": {
-        "feet": 35
+        "baseFeet": 35,
+        "steps": [
+          {
+            "rear": "higher",
+            "byAtLeastFeet": 20,
+            "feet": 40
+          },
+          {
+            "rear": "lower",
+            "byAtLeastFeet": 20,
+            "feet": 30
+          },
+          {
+            "rear": "lower",
+            "byAtLeastFeet": 40,
+            "feet": 25
+          }
+        ]
       },
       "citation": "§261(b)(1)",
       "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
@@ -74,11 +105,12 @@
       "id": "front-plane",
       "kind": "sky_plane",
       "title": "Front height plane",
-      "plain": "Above 30 feet, the front of the building must slope back at 45 degrees from the front setback line. Next to taller neighbors the plane can start higher; that isn't shown.",
+      "plain": "Above 30 feet, the front of the building must slope back at 45 degrees from the front setback line. It doesn't apply where the rear of the lot is 20 feet or more higher than the front, and next to taller neighbors the plane can start higher; that isn't shown.",
       "params": {
         "fromLine": "front_setback",
         "startHeightFeet": 30,
-        "angleDeg": 45
+        "angleDeg": 45,
+        "skipWhenRearHigherByFeet": 20
       },
       "citation": "§261(c)(1), (c)(2)",
       "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
@@ -97,13 +129,13 @@
       "effectiveDate": null
     },
     {
-      "id": "slope",
+      "id": "cross-slope",
       "kind": "flag",
-      "title": "Slope changes the limit",
-      "plain": "On lots that rise or fall 20 feet or more from front to back the cap changes (40 feet uphill, 30 or 25 feet downhill); this view assumes a flat lot.",
+      "title": "Cross-slope",
+      "plain": "Where the street or the ground slopes across the lot by more than 5%, a wide building is measured from several points, each covering a limited width (65 feet or less, narrower on steeper slopes); this view measures from one point.",
       "params": {},
-      "citation": "§261(b)(1)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21499",
+      "citation": "§260(a)(3), Table 260-1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
       "verified": false,
       "effectiveDate": null
     }

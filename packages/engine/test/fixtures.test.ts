@@ -53,8 +53,8 @@ describe("fixture A: 25 x 100 ft RH-2 lot, 40-X, no front setback", async () => 
 
   it("shows info and flag rules as cards without geometry", () => {
     expect(step(r, "use").status).toBe("info");
-    expect(step(r, "slope").status).toBe("not_modeled");
-    expect(step(r, "slope").removed).toBeNull();
+    expect(step(r, "cross-slope").status).toBe("not_modeled");
+    expect(step(r, "cross-slope").removed).toBeNull();
   });
 });
 
@@ -160,9 +160,9 @@ describe("fixture E: 35 x 100 ft RH-1(D) lot, 40-X, no front setback", async () 
     expect(r.totals.grossFloorAreaSqFt).toBeCloseTo(6090, 3);
   });
 
-  it("flags narrow streets and slope without cutting", () => {
+  it("flags narrow streets and cross-slope without cutting", () => {
     expect(step(r, "narrow-street").status).toBe("not_modeled");
-    expect(step(r, "slope").status).toBe("not_modeled");
+    expect(step(r, "cross-slope").status).toBe("not_modeled");
   });
 });
 

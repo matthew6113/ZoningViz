@@ -9,6 +9,7 @@ const STATUS_LABEL: Record<Step["status"], string> = {
   cut: "Cuts",
   already_satisfied: "Already satisfied",
   info: "Info",
+  not_applicable: "Doesn't apply",
   not_modeled: "Not modeled",
   disabled: "Off",
 };

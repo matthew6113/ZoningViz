@@ -21,13 +21,14 @@ describe("district schema", () => {
   it("accepts RH-2.json with SPEC.md's rules in order, all unverified", () => {
     expect(rh2.rules.map((r) => r.id)).toEqual([
       "use",
+      "height-reference",
       "mapped-height",
       "rh-dwelling-height",
       "rear-yard",
       "front-setback",
       "front-plane",
       "narrow-street",
-      "slope",
+      "cross-slope",
     ]);
     expect(rh2.rules.every((r) => r.verified === false)).toBe(true);
     expect(rh2.rules.find((r) => r.id === "rear-yard")!.params).toEqual({

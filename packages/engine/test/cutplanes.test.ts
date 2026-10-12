@@ -47,7 +47,7 @@ describe("cut planes for the cutting-plane sweep", async () => {
 
   it("gives rules without geometry no planes", () => {
     expect(planes(a, "use")).toEqual([]);
-    expect(planes(a, "slope")).toEqual([]);
+    expect(planes(a, "cross-slope")).toEqual([]);
   });
 
   it("gives each height district on a split lot its own plane", () => {

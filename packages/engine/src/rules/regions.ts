@@ -1,7 +1,8 @@
 import type { CrossSection, Manifold, ManifoldToplevel } from "manifold-3d";
 import type { LotFrame } from "../geometry/lot";
-import { crossSection, keepHalfSpace } from "../geometry/manifold";
+import { crossSection, keepHalfSpace, profileSolid } from "../geometry/manifold";
 import type { PlanarMultiPolygon, XY } from "../geometry/projection";
+import type { Ground, HeightReference } from "../geometry/terrain";
 import type { CutPlane, Dimension, Vec3 } from "../types";
 import { ft, type Cut } from "./resolve";
 
@@ -22,8 +23,35 @@ export interface CutContext {
   zones: { planar: PlanarMultiPolygon }[];
   /** Comfortably larger than anything on the lot; used for "no limit here". */
   bigFt: number;
-  /** Top of the solid about to be cut, which bounds the cut planes. */
+  /** Top and bottom of the solid about to be cut, which bound the cut planes. */
   topFt: number;
+  bottomFt: number;
+  /** Where heights are measured from; only an upslope reference varies across the lot. */
+  reference: HeightReference;
+  /** Ground elevation (curb datum), or null for a flat lot at z = 0. */
+  ground: Ground | null;
+}
+
+/** Everything below `reference(d) + h(d)`, where d is depth behind the front line. */
+function belowSurface(ctx: CutContext, h: (d: number) => number): Manifold {
+  const { s0, s1 } = lotSpan(ctx);
+  const top = ctx.reference.samples.map(([d, z]): [number, number] => [d, z + h(d)]);
+  return profileSolid(ctx.wasm, ctx.frame, s0 - ctx.bigFt, s1 + ctx.bigFt, top, -ctx.bigFt, ctx.bigFt);
+}
+
+function keepBelowSurface(prev: Manifold, ctx: CutContext, h: (d: number) => number): Manifold {
+  const allowed = belowSurface(ctx, h);
+  const next = prev.intersect(allowed);
+  allowed.delete();
+  return next;
+}
+
+/** A prism over a plan section, from far below the lot to far above it. */
+function tallPrism(section: CrossSection, bigFt: number): Manifold {
+  const prism = section.extrude(2 * bigFt);
+  const placed = prism.translate([0, 0, -bigFt]);
+  prism.delete();
+  return placed;
 }
 
 export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
@@ -38,6 +66,7 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
     case "none":
       throw new Error("applyCut called for a rule without geometry");
     case "uniform_height":
+      if (ctx.reference.kind === "upslope") return keepBelowSurface(prev, ctx, () => cut.heightFt);
       return keepHalfSpace(prev, [0, 0, -1], [0, 0, cut.heightFt]);
     case "zone_heights":
       return intersectWithZones(prev, cut.heights, ctx);
@@ -46,8 +75,11 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
     case "min_depth":
       return keepHalfSpace(prev, n, at(0, cut.depthFt, 0));
     case "plane": {
-      // Keep z ≤ start + tan(angle)·(d − d₀).
+      // Keep z ≤ reference + start + tan(angle)·(d − d₀).
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);
+      if (ctx.reference.kind === "upslope") {
+        return keepBelowSurface(prev, ctx, (d) => cut.startHeightFt + t * (d - cut.fromDepthFt));
+      }
       return keepHalfSpace(prev, [t * n[0], t * n[1], -1], at(0, cut.fromDepthFt, cut.startHeightFt));
     }
     case "side_strips":
@@ -126,7 +158,7 @@ function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_st
   const band = wasm.CrossSection.union(bands);
   const lotSection = crossSection(wasm, ctx.lot);
   const allowedSection = lotSection.subtract(band);
-  const allowed = allowedSection.extrude(ctx.bigFt);
+  const allowed = tallPrism(allowedSection, ctx.bigFt);
   const next = prev.intersect(allowed);
   [...bands, band, lotSection, allowedSection, allowed].forEach((o) => o.delete());
   return next;
@@ -156,13 +188,21 @@ function intersectWithZones(prev: Manifold, heights: (number | null)[], ctx: Cut
     section.delete();
     return bigger;
   });
-  grown.forEach((section, i) => prisms.push(section.extrude(heights[i] ?? bigFt)));
+  grown.forEach((section, i) => {
+    const h = heights[i];
+    const prism = tallPrism(section, bigFt);
+    if (h === null || h === undefined) return prisms.push(prism);
+    const below = ctx.reference.kind === "upslope" ? belowSurface(ctx, () => h) : null;
+    const capped = below ? prism.intersect(below) : prism.trimByPlane([0, 0, -1], -h);
+    [prism, below].forEach((o) => o !== capped && o?.delete());
+    prisms.push(capped);
+  });
 
   // Any part of the lot outside every mapped zone has no known limit: leave it uncut.
   const lotSection = crossSection(wasm, lot);
   const covered = wasm.CrossSection.union(grown);
   const uncovered = lotSection.subtract(covered);
-  if (!uncovered.isEmpty()) prisms.push(uncovered.extrude(bigFt));
+  if (!uncovered.isEmpty()) prisms.push(tallPrism(uncovered, bigFt));
 
   const allowed = wasm.Manifold.union(prisms);
   const next = prev.intersect(allowed);
@@ -185,40 +225,48 @@ export function uncoveredArea(ctx: CutContext): number {
 
 /** Dimension lines for the scene, in world feet. */
 export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dimension[] {
-  const { frame } = ctx;
+  const { frame, reference } = ctx;
   const mid = frame.widthFt / 2;
-  const at = (s: number, d: number, z: number): Vec3 => {
+  const groundZ = (x: number, y: number) => (ctx.ground ? ctx.ground(x, y) : 0);
+  // Horizontal dimensions lie on the ground; height dimensions stand on the reference.
+  const at = (s: number, d: number, z: number | "ground"): Vec3 => {
     const [x, y] = frame.toWorld(s, d);
-    return [x, y, z];
+    return [x, y, z === "ground" ? groundZ(x, y) : z];
   };
   switch (cut.type) {
     case "none":
       return [];
-    case "uniform_height":
-      return [{ from: at(0, 0, 0), to: at(0, 0, cut.heightFt), label: ft(cut.heightFt) }];
+    case "uniform_height": {
+      const z0 = reference.at(0);
+      return [{ from: at(0, 0, z0), to: at(0, 0, z0 + cut.heightFt), label: ft(cut.heightFt) }];
+    }
     case "zone_heights":
       return cut.heights.flatMap((h, i) => {
         const c = zoneCenters[i];
-        return h === null || !c ? [] : [{ from: [c[0], c[1], 0] as Vec3, to: [c[0], c[1], h] as Vec3, label: ft(h) }];
+        if (h === null || !c) return [];
+        const z0 = reference.at(frame.toFrame(c)[1]);
+        return [{ from: [c[0], c[1], z0] as Vec3, to: [c[0], c[1], z0 + h] as Vec3, label: ft(h) }];
       });
     case "max_depth":
       return [
         {
-          from: at(mid, frame.depthFt, 0),
-          to: at(mid, cut.depthFt, 0),
+          from: at(mid, frame.depthFt, "ground"),
+          to: at(mid, cut.depthFt, "ground"),
           label: ft(frame.depthFt - cut.depthFt),
         },
       ];
     case "min_depth":
-      return cut.depthFt > 0 ? [{ from: at(mid, 0, 0), to: at(mid, cut.depthFt, 0), label: ft(cut.depthFt) }] : [];
-    case "plane":
+      return cut.depthFt > 0 ? [{ from: at(mid, 0, "ground"), to: at(mid, cut.depthFt, "ground"), label: ft(cut.depthFt) }] : [];
+    case "plane": {
+      const z0 = reference.at(cut.fromDepthFt);
       return [
         {
-          from: at(mid, cut.fromDepthFt, 0),
-          to: at(mid, cut.fromDepthFt, cut.startHeightFt),
+          from: at(mid, cut.fromDepthFt, z0),
+          to: at(mid, cut.fromDepthFt, z0 + cut.startHeightFt),
           label: `${ft(cut.startHeightFt)}, then ${cut.angleDeg}°`,
         },
       ];
+    }
     case "side_strips": {
       // Across each yard from the middle of its longest side line.
       const sides = longestSideEdges(ctx);
@@ -229,7 +277,8 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
       ] as const) {
         if (!edge || width <= 0) continue;
         const mid: XY = [(edge.a[0] + edge.b[0]) / 2, (edge.a[1] + edge.b[1]) / 2];
-        lines.push({ from: [mid[0], mid[1], 0], to: [mid[0] + edge.inward[0] * width, mid[1] + edge.inward[1] * width, 0], label: ft(width) });
+        const end: XY = [mid[0] + edge.inward[0] * width, mid[1] + edge.inward[1] * width];
+        lines.push({ from: [mid[0], mid[1], groundZ(...mid)], to: [end[0], end[1], groundZ(...end)], label: ft(width) });
       }
       return lines;
     }
@@ -238,7 +287,7 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
 
 /** Where each cut's boundary crosses the solid being cut, as flat parallelograms in world feet. */
 export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
-  const { frame, topFt: top } = ctx;
+  const { frame, topFt: top, bottomFt: bottom, reference } = ctx;
   const at = (s: number, d: number, z: number): Vec3 => {
     const [x, y] = frame.toWorld(s, d);
     return [x, y, z];
@@ -252,12 +301,13 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
   };
   const lot = lotSpan(ctx);
   const width = lot.s1 - lot.s0;
-  const horizontal = (b: ReturnType<typeof span>, z: number): CutPlane => ({
-    origin: at(b.s0, b.d0, z),
+  // A height limit: level on a flat or downslope lot, tilted with the reference on an upslope one.
+  const horizontal = (b: ReturnType<typeof span>, h: number): CutPlane => ({
+    origin: at(b.s0, b.d0, reference.at(b.d0) + h),
     u: along(b.s1 - b.s0, 0),
-    v: along(0, b.d1 - b.d0),
+    v: along(0, b.d1 - b.d0, reference.at(b.d1) - reference.at(b.d0)),
   });
-  const vertical = (d: number): CutPlane => ({ origin: at(lot.s0, d, 0), u: along(width, 0), v: [0, 0, top] });
+  const vertical = (d: number): CutPlane => ({ origin: at(lot.s0, d, bottom), u: along(width, 0), v: [0, 0, top - bottom] });
 
   switch (cut.type) {
     case "none":
@@ -282,9 +332,9 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
       ] as const) {
         if (!edge || width <= 0) continue;
         planes.push({
-          origin: [edge.a[0] + edge.inward[0] * width, edge.a[1] + edge.inward[1] * width, 0],
+          origin: [edge.a[0] + edge.inward[0] * width, edge.a[1] + edge.inward[1] * width, bottom],
           u: [edge.b[0] - edge.a[0], edge.b[1] - edge.a[1], 0],
-          v: [0, 0, top],
+          v: [0, 0, top - bottom],
         });
       }
       return planes;
@@ -292,13 +342,14 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
     case "plane": {
       // From the start line up to the top of the block, or to the back of the lot if that comes first.
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);
-      let rise = Math.max(top - cut.startHeightFt, 0);
+      let rise = Math.max(top - (reference.at(cut.fromDepthFt) + cut.startHeightFt), 0);
       let run = rise / t;
       if (cut.fromDepthFt + run > lot.d1) {
         run = Math.max(lot.d1 - cut.fromDepthFt, 0);
         rise = run * t;
       }
-      return [{ origin: at(lot.s0, cut.fromDepthFt, cut.startHeightFt), u: along(width, 0), v: along(0, run, rise) }];
+      const z0 = reference.at(cut.fromDepthFt) + cut.startHeightFt;
+      return [{ origin: at(lot.s0, cut.fromDepthFt, z0), u: along(width, 0), v: along(0, run, rise) }];
     }
   }
 }

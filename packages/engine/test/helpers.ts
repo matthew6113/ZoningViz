@@ -28,6 +28,26 @@ export function rectangularLot(width: number, depth: number): ParcelInput {
   return syntheticLot(width, depth, { label: "40-X", heightFt: 40 });
 }
 
+/**
+ * A rectangular lot (street to the south, as in rectangularLot) on ground that
+ * rises `riseFt` from the front lot line to the rear one, evenly, with no
+ * cross-slope. Negative `riseFt` falls toward the rear.
+ */
+export function slopedLot(width: number, depth: number, riseFt: number): ParcelInput {
+  const lot = rectangularLot(width, depth);
+  const spacing = 5;
+  const [x0, y0] = [-10, -10];
+  const nx = Math.round((width + 20) / spacing) + 1;
+  const ny = Math.round((depth + 20) / spacing) + 1;
+  const elevationsFt: number[] = [];
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) elevationsFt.push((riseFt * (y0 + j * spacing)) / depth);
+  return {
+    ...lot,
+    id: `${lot.id}-rise${riseFt}`,
+    terrain: { fine: { x0, y0, spacingFt: spacing, nx, ny, elevationsFt }, context: null, source: "synthetic plane", asOf: null },
+  };
+}
+
 /** Rebuilds a WASM solid from an exported mesh, for geometric assertions in tests. */
 export async function toManifold(solid: { positions: Float32Array; indices: Uint32Array }) {
   const wasm = await loadManifold();

@@ -15,6 +15,20 @@
       "effectiveDate": null
     },
     {
+      "id": "height-reference",
+      "kind": "height_reference",
+      "title": "Where height is measured from",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet.",
+      "params": {
+        "downslopeCurbDepthFeet": 100,
+        "upslopeCurbWithinFeet": 10
+      },
+      "citation": "§260(a)(1)(A)–(C), §261(a)",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
       "id": "mapped-height",
       "kind": "height_cap",
       "title": "Height limit",
@@ -65,6 +79,17 @@
       "params": {},
       "citation": "§261.1",
       "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21519",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "cross-slope",
+      "kind": "flag",
+      "title": "Cross-slope",
+      "plain": "Where the street or the ground slopes across the lot by more than 5%, a wide building is measured from several points, each covering a limited width (65 feet or less, narrower on steeper slopes); this view measures from one point.",
+      "params": {},
+      "citation": "§260(a)(3), Table 260-1",
+      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
       "verified": false,
       "effectiveDate": null
     }

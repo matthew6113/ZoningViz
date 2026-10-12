@@ -1,7 +1,28 @@
 import type { Manifold, ManifoldToplevel } from "manifold-3d";
 import { centroidOf, findStreetSides, lotFrame, toPlanar, translate } from "./geometry/lot";
-import { crossSection, loadManifold, sliceArea, sliceOutline, toSolid, topOf } from "./geometry/manifold";
+import {
+  bottomOf,
+  crossSection,
+  footprintArea,
+  heightfieldSolid,
+  loadManifold,
+  sliceArea,
+  sliceOutline,
+  toSolid,
+  topOf,
+} from "./geometry/manifold";
 import { multiPolygonArea, type XY } from "./geometry/projection";
+import {
+  CURB_REFERENCE,
+  FLAT_REFERENCE,
+  groundOf,
+  measureGround,
+  shiftGrid,
+  upslopeReference,
+  type Ground,
+  type GroundMeasurements,
+  type HeightReference,
+} from "./geometry/terrain";
 import { applyCut, cutPlanesFor, dimensionsFor, uncoveredArea, type CutContext } from "./rules/regions";
 import { ft, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
 import type { DistrictFile } from "./rules/schema";
@@ -10,6 +31,8 @@ import type {
   EnvelopeResult,
   Floor,
   FrontCandidate,
+  HeightGrid,
+  LotTerrain,
   ParcelInput,
   Solid,
   Step,
@@ -28,7 +51,8 @@ export const DEFAULT_FLOOR_TO_FLOOR_FT = 10;
 // Below these, a cut or a floor plate counts as nothing (floating-point noise).
 const EMPTY_VOLUME_FT3 = 1e-3;
 const EMPTY_AREA_FT2 = 0.5;
-const GRADE_SLICE_FT = 1e-3;
+// The lot prism starts this far below the lowest ground, so the ground cut is never flush with it.
+const BELOW_GROUND_FT = 10;
 
 export interface Engine {
   computeEnvelope(parcel: ParcelInput, district: DistrictFile, options?: EnvelopeOptions): EnvelopeResult;
@@ -69,6 +93,19 @@ function computeEnvelope(
     notes.push("Approximate geometry: this lot isn't a simple rectangle, so its width, depth and yard lines are approximations.");
   }
 
+  // 3b. Ground: measure it on the lot, and put the curb estimate at z = 0.
+  const terrain = parcel.terrain ? measureTerrain(parcel.terrain, originPlanar, lot, front, frame) : null;
+  const referenceRule = district.rules.find((r) => r.kind === "height_reference");
+  let reference: HeightReference = FLAT_REFERENCE;
+  if (terrain) {
+    reference =
+      referenceRule && terrain.measured.centerlineRiseFt > 0
+        ? upslopeReference(lot, frame, terrain.ground, referenceRule.params.upslopeCurbWithinFeet)
+        : CURB_REFERENCE;
+  } else if (district.rules.some((r) => r.kind === "height_by_slope" || r.kind === "height_reference")) {
+    notes.push("No ground elevations for this lot, so it is treated as flat and slope-based limits use their flat-lot values.");
+  }
+
   const zones = parcel.heightZones.map((zone) => {
     const planar = translate(toPlanar(zone.geometry, parcel.projection), originPlanar);
     return { ...zone, planar, share: multiPolygonArea(planar) / lotAreaSqFt, center: centroidOf(planar) };
@@ -78,7 +115,9 @@ function computeEnvelope(
   const mapped = zones.map((z) => z.heightFt).filter((h): h is number => h !== null);
   let baseHeight = mapped.length ? Math.max(...mapped) : null;
   if (baseHeight === null) {
-    const caps = district.rules.flatMap((r) => (r.kind === "height_cap" && "feet" in r.params ? [r.params.feet] : []));
+    const caps = district.rules.flatMap((r) =>
+      r.kind === "height_cap" && "feet" in r.params ? [r.params.feet] : r.kind === "height_by_slope" ? [r.params.baseFeet] : [],
+    );
     if (!caps.length) throw new Error(`No readable height limit for parcel ${parcel.id}`);
     baseHeight = Math.max(...caps);
     notes.push(`The mapped height can't be read, so the starting block uses ${START_HEIGHT_MULTIPLE}× the district's ${ft(baseHeight)} cap.`);
@@ -86,7 +125,18 @@ function computeEnvelope(
   const startHeightFt = START_HEIGHT_MULTIPLE * baseHeight;
 
   const radius = Math.max(...lot.flat(2).map(([x, y]) => Math.hypot(x, y)));
-  const cutCtx: CutContext = { wasm, frame, lot, zones, bigFt: 10 * (radius + startHeightFt), topFt: startHeightFt };
+  const relief = terrain ? Math.max(...terrain.grids.fine.elevationsFt.map(Math.abs)) : 0;
+  const cutCtx: CutContext = {
+    wasm,
+    frame,
+    lot,
+    zones,
+    bigFt: 10 * (radius + startHeightFt + relief),
+    topFt: startHeightFt,
+    bottomFt: 0,
+    reference,
+    ground: terrain?.ground ?? null,
+  };
   if (zones.length > 1) {
     const gap = uncoveredArea(cutCtx);
     if (gap > EMPTY_AREA_FT2) {
@@ -94,8 +144,20 @@ function computeEnvelope(
     }
   }
 
+  // On sloping ground the block stands on the terrain and rises to 2x the height above the highest reference.
   const lotSection = crossSection(wasm, lot);
-  let current: Manifold = lotSection.extrude(startHeightFt);
+  let current: Manifold;
+  if (terrain) {
+    const fine = terrain.grids.fine;
+    const bottomZ = Math.min(...fine.elevationsFt) - BELOW_GROUND_FT;
+    const prism = lotSection.extrude(reference.maxFt + startHeightFt - bottomZ);
+    const raised = prism.translate([0, 0, bottomZ]);
+    const earth = heightfieldSolid(wasm, fine, bottomZ - BELOW_GROUND_FT);
+    current = raised.subtract(earth);
+    [prism, raised, earth].forEach((o) => o.delete());
+  } else {
+    current = lotSection.extrude(startHeightFt);
+  }
   lotSection.delete();
   const startVolume = current.volume();
   const start = { ...toSolid(current), heightFt: startHeightFt };
@@ -111,6 +173,14 @@ function computeEnvelope(
       share: z.share,
     })),
     frontSetbackFt: resolveFrontSetback(district, options),
+    ground: terrain
+      ? {
+          curbFt: terrain.measured.curbFt,
+          frontAverageFt: terrain.measured.frontAverageFt,
+          rearAverageFt: terrain.measured.rearAverageFt,
+        }
+      : null,
+    reference: reference.kind,
   };
   const disabled = new Set(options.disabledRuleIds ?? []);
   const steps: Step[] = [];
@@ -121,7 +191,7 @@ function computeEnvelope(
     const measure = (removedVolume: number) => ({
       volume: current.volume(),
       removedVolume,
-      footprintSqFt: sliceArea(current, GRADE_SLICE_FT),
+      footprintSqFt: footprintArea(current),
       percentOfStart: (current.volume() / startVolume) * 100,
     });
 
@@ -145,7 +215,7 @@ function computeEnvelope(
     if (resolved.cut.type === "none") {
       steps.push({
         rule,
-        status: resolved.status === "info" ? "info" : "not_modeled",
+        status: resolved.status === "cut" ? "not_modeled" : resolved.status,
         sentence: resolved.sentence,
         numbers: resolved.numbers,
         dimensions: [],
@@ -158,7 +228,7 @@ function computeEnvelope(
       continue;
     }
 
-    const cutPlanes = cutPlanesFor(resolved.cut, { ...cutCtx, topFt: topOf(current) });
+    const cutPlanes = cutPlanesFor(resolved.cut, { ...cutCtx, topFt: topOf(current), bottomFt: bottomOf(current) });
     const next = applyCut(current, resolved.cut, cutCtx);
     const removed = current.subtract(next);
     const removedVolume = removed.volume();
@@ -191,7 +261,7 @@ function computeEnvelope(
   if (finalVolume <= EMPTY_VOLUME_FT3) {
     notes.push("Nothing is left: together these limits cover the whole lot. On a corner lot, measuring from the other front may leave room.");
   }
-  const footprintSqFt = sliceArea(current, GRADE_SLICE_FT);
+  const footprintSqFt = footprintArea(current);
   current.delete();
 
   return {
@@ -206,6 +276,8 @@ function computeEnvelope(
       outline: lot,
       neighbors,
       originPlanar: originPlanar as XY,
+      terrain: terrain?.summary ?? null,
+      ground: terrain?.grids ?? null,
     },
     start,
     steps,
@@ -222,11 +294,42 @@ function computeEnvelope(
   };
 }
 
+/** Ground measurements and the terrain grids in world feet, with the curb estimate at z = 0. */
+function measureTerrain(
+  input: NonNullable<ParcelInput["terrain"]>,
+  originPlanar: XY,
+  lot: ReturnType<typeof translate>,
+  front: FrontCandidate,
+  frame: ReturnType<typeof lotFrame>,
+): { ground: Ground; grids: { fine: HeightGrid; context: HeightGrid | null }; measured: GroundMeasurements; summary: LotTerrain } {
+  const world = (grid: HeightGrid, datum: number) => shiftGrid(grid, originPlanar, datum);
+  const absolute = groundOf(world(input.fine, 0), input.context ? world(input.context, 0) : null);
+  const measured = measureGround(lot, front, frame, absolute);
+  const datum = measured.curbFt;
+  const grids = { fine: world(input.fine, datum), context: input.context ? world(input.context, datum) : null };
+  return {
+    ground: groundOf(grids.fine, grids.context),
+    grids,
+    measured,
+    summary: {
+      curbElevationFt: measured.curbFt,
+      frontAverageFt: measured.frontAverageFt,
+      rearAverageFt: measured.rearAverageFt,
+      rearMinusFrontFt: measured.rearAverageFt - measured.frontAverageFt,
+      upslope: measured.centerlineRiseFt > 0,
+      crossSlopePct: measured.crossSlopePct,
+      source: input.source,
+      asOf: input.asOf,
+    },
+  };
+}
+
+/** Floor plates every `floorToFloorFt`, counted from the curb datum; on downsloping lots some levels sit below it. */
 function sliceFloors(envelope: Manifold, floorToFloorFt: number): Floor[] {
   if (!(floorToFloorFt > 0)) throw new Error(`Floor-to-floor height must be positive, got ${floorToFloorFt}`);
   const top = topOf(envelope);
   const floors: Floor[] = [];
-  for (let i = 0; (i + 0.5) * floorToFloorFt < top; i++) {
+  for (let i = Math.floor(bottomOf(envelope) / floorToFloorFt); (i + 0.5) * floorToFloorFt < top; i++) {
     const mid = (i + 0.5) * floorToFloorFt;
     const plateSqFt = sliceArea(envelope, mid);
     if (plateSqFt <= EMPTY_AREA_FT2) continue;

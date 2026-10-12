@@ -15,6 +15,31 @@ export interface HeightZoneInput {
   geometry: MultiPolygon;
 }
 
+/**
+ * Ground elevations on a regular grid, in feet. In `ParcelInput` the grid is in
+ * the parcel's planar CRS; in results it is in world feet relative to the curb datum.
+ * Elevation (i, j) sits at (x0 + i·spacingFt, y0 + j·spacingFt), index j·nx + i.
+ */
+export interface HeightGrid {
+  x0: number;
+  y0: number;
+  spacingFt: number;
+  nx: number;
+  ny: number;
+  elevationsFt: number[];
+}
+
+export interface TerrainInput {
+  /** A fine grid covering the lot, used to measure it. */
+  fine: HeightGrid;
+  /** A coarser grid around the lot, for drawing the neighborhood (optional). */
+  context: HeightGrid | null;
+  /** Where the elevations come from, e.g. "USGS 3DEP 1 m LiDAR (CA_SanFrancisco_B23)". */
+  source: string;
+  /** Survey or publication date of the elevations. */
+  asOf: string | null;
+}
+
 export interface ParcelInput {
   id: string;
   /** proj4 definition for a planar CRS in feet, or null when coordinates are already planar feet. */
@@ -23,6 +48,8 @@ export interface ParcelInput {
   /** Adjacent land parcels; lot edges they don't touch are treated as street frontage. */
   neighbors: MultiPolygon[];
   heightZones: HeightZoneInput[];
+  /** Ground elevations. Without them the lot is treated as flat. */
+  terrain?: TerrainInput | null;
 }
 
 export interface EnvelopeOptions {
@@ -65,7 +92,7 @@ export interface CutPlane {
   v: Vec3;
 }
 
-export type StepStatus = "cut" | "already_satisfied" | "info" | "not_modeled" | "disabled";
+export type StepStatus = "cut" | "already_satisfied" | "info" | "not_applicable" | "not_modeled" | "disabled";
 
 export interface StepMeasurements {
   volume: number;
@@ -102,6 +129,26 @@ export interface FrontCandidate {
   outward: XY;
 }
 
+/** What the ground does across the lot, measured from the terrain grid. */
+export interface LotTerrain {
+  /**
+   * Estimated curb level, in the elevations' own datum: ground at the middle of
+   * the front lot line (no curb survey data). World z = 0 is this elevation.
+   */
+  curbElevationFt: number;
+  /** Average ground elevation along the front lot line and along the rear lot line. */
+  frontAverageFt: number;
+  rearAverageFt: number;
+  /** Rear minus front: positive when the lot rises away from the street. */
+  rearMinusFrontFt: number;
+  /** Whether the ground rises from the street along the lot's centerline (height is then measured from the ground, not the curb). */
+  upslope: boolean;
+  /** Fall across the front lot line, as a percentage of its length. */
+  crossSlopePct: number;
+  source: string;
+  asOf: string | null;
+}
+
 export interface LotInfo {
   areaSqFt: number;
   widthFt: number;
@@ -116,6 +163,10 @@ export interface LotInfo {
   neighbors: XY[][][][];
   /** The planar point (in the input CRS) that world coordinates are measured from. */
   originPlanar: XY;
+  /** Ground measurements, or null when the lot is treated as flat. */
+  terrain: LotTerrain | null;
+  /** The terrain grids in world feet, z relative to the curb datum, for drawing the ground. */
+  ground: { fine: HeightGrid; context: HeightGrid | null } | null;
 }
 
 export interface Floor {

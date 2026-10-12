@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EnvelopeOptions, EnvelopeResult, ParcelInput, Solid } from "../src";
 import { crossSection, loadManifold } from "../src/geometry/manifold";
-import { getEngine, loadDistrict, loadParcel, rectangularLot, toManifold } from "./helpers";
+import { getEngine, loadDistrict, loadParcel, rectangularLot, slopedLot, toManifold } from "./helpers";
 
 // SPEC.md invariants, checked on every fixture and recorded real lot, with the
 // default front setback, no setback, and one rule switched off.
@@ -12,6 +12,10 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["B 25x40", rectangularLot(25, 40), "RH-2", {}],
   ["E 35x100", rectangularLot(35, 100), "RH-1(D)", {}],
   ["30x100 one side yard", rectangularLot(30, 100), "RH-1(D)", {}],
+  ["F falling 25 ft", slopedLot(25, 100, -25), "RH-1", {}],
+  ["G rising 30 ft", slopedLot(25, 100, 30), "RH-1", {}],
+  ["35x120 falling 45 ft", slopedLot(35, 120, -45), "RH-1(D)", {}],
+  ["25x100 rising 12 ft", slopedLot(25, 100, 12), "RH-2", {}],
   ["667 Hampshire (4025007)", loadParcel("4025007"), "RH-2", {}],
   ["Francisco condo (0044030)", loadParcel("0044030"), "RH-2", {}],
   ["corner, front 0 (4025006)", loadParcel("4025006"), "RH-2", { frontSide: 0 }],
@@ -53,7 +57,8 @@ describe.each(cases)("%s", async (_, parcel, district, options) => {
   it("keeps every step inside the parcel prism", async () => {
     const wasm = await loadManifold();
     const section = crossSection(wasm, lot.outline);
-    const prism = section.extrude(10 * start.heightFt).translate([0, 0, -1]);
+    // Tall enough for any envelope, and reaching below the curb datum for sloping lots.
+    const prism = section.extrude(20 * start.heightFt).translate([0, 0, -10 * start.heightFt]);
     const solids = new Set<Solid>([start, ...steps.map((s) => s.after)]);
     for (const solid of solids) {
       const m = await toManifold(solid);
@@ -66,7 +71,7 @@ describe.each(cases)("%s", async (_, parcel, district, options) => {
 
   it("says 'already satisfied' exactly when a geometric rule removes nothing", () => {
     for (const step of steps) {
-      if (step.status === "info" || step.status === "not_modeled" || step.status === "disabled") {
+      if (step.status === "info" || step.status === "not_applicable" || step.status === "not_modeled" || step.status === "disabled") {
         expect(step.measurements.removedVolume).toBe(0);
         continue;
       }
