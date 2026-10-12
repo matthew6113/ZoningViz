@@ -130,16 +130,43 @@ describe("getTerrain", () => {
     expect(Math.max(...z)).toBeLessThan(80);
   });
 
-  it("returns null when the elevation service fails, so the lot is treated as flat", async () => {
+  const replay = withDiskCache(async (u) => {
+    throw new Error(`Not recorded: ${u}`);
+  }, FIXTURES);
+
+  it("returns null when the elevation service keeps failing, so the lot is treated as flat", async () => {
     const failing = createSfAdapter({
-      fetchJson: async (url) => {
-        if (url.includes("nationalmap")) throw new Error("offline");
-        return withDiskCache(async (u) => {
-          throw new Error(`Not recorded: ${u}`);
-        }, FIXTURES)(url);
+      terrainRetryDelaysMs: [0, 0],
+      fetchJson: async (url, body) => {
+        if (url.includes("nationalmap")) throw new Error("502 Bad Gateway");
+        return replay(url, body);
       },
     });
     const p = (await failing.getParcelByBlockLot("4025007"))!;
     expect(await failing.getTerrain(p)).toBeNull();
+  });
+
+  it("retries a transient failure, and keeps the fine grid when only the context grid fails", async () => {
+    const seen = new Map<string, number>();
+    const flaky = createSfAdapter({
+      terrainRetryDelaysMs: [0, 0],
+      fetchJson: async (url, body) => {
+        if (url.includes("getSamples")) {
+          const key = body!;
+          const count = (seen.get(key) ?? 0) + 1;
+          seen.set(key, count);
+          // Every grid fails once; the context grid (10 ft or coarser spacing) never recovers.
+          const [p0, p1] = JSON.parse(new URLSearchParams(body).get("geometry")!).points as [number, number][];
+          const isContext = p1![0] - p0![0] >= 10;
+          if (count === 1 || isContext) throw new Error("502 Bad Gateway");
+        }
+        return replay(url, body);
+      },
+    });
+    const p = (await flaky.getParcelByBlockLot("4025007"))!;
+    const t = await flaky.getTerrain(p);
+    expect(t).not.toBeNull();
+    expect(t!.fine.elevationsFt.length).toBeGreaterThan(0);
+    expect(t!.context).toBeNull();
   });
 });

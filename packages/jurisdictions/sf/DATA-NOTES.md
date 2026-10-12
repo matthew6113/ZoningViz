@@ -65,6 +65,23 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
    - Some corner lots measured from their long side are only about 25 ft deep, so the 15 ft rear yard plus the 10 ft maximum setback leave nothing. The engine adds a "Nothing is left" note.
    - A 5 sq ft sliver (`2716042`) had no side long enough to count as a street side, so the longest side is used.
 
+## Phase 6 findings: ground elevations (2026-10-12)
+
+1. **Source.** USGS 3DEP ImageServer, `https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer`.
+   - Over San Francisco it serves the 1 m bare-earth DEM from the LiDAR survey **CA_SanFrancisco_B23**, acquired 2023-04-20 and published 2024-08-26. Elevations are in meters, NAVD88.
+   - The catalog `query?objectIds=<rasterId>` gives the survey name and `AcquisitionDate`.
+2. **Access.**
+   - `getSamples` takes EPSG:2227 points directly (`spatialReference: {wkid: 2227}`), so nothing has to be reprojected.
+   - It returns at most **1,000 samples per request**. Requests go as POST, because a GET URL with 1,000 points is too long.
+   - CORS is open (`Access-Control-Allow-Origin: *`). A request takes about 0.7–1.2 s.
+3. **Reliability.** About 3% of requests answer 502 Bad Gateway. Each request is retried twice (0.4 s, then 1.2 s). If the context grid still fails, the lot keeps its fine grid; if the fine grid fails, the lot is treated as flat and says so.
+4. **Grids.** Both grids are in EPSG:2227 feet:
+   - **Fine:** the lot bbox + 10 ft, spaced 3 ft or more. The rules use this one.
+   - **Context:** the bbox + 150 ft, spaced 10 ft or more. The scene uses this one.
+   - Each grid is capped at 1,000 points.
+5. **Measuring.** Single samples at lot corners vary by ±5 ft near buildings. Averages along a whole lot line are stable: 667 Hampshire's front line averages 54.4 ft with the street at 53.5 ft.
+6. **Sweep (`pnpm sweep --per-district 50 --seed 3`, terrain on).** In RH-1(D) and RH-1, about 1 lot in 8 has its rear 20 ft or more higher than its front, and about 1 in 10 has it 20 ft or more lower. RH-2 and RH-3 are mostly within 20 ft.
+
 ## Height label parsing
 
 | Pattern | Result | Examples |

@@ -96,10 +96,26 @@ export function toElevations(response: SamplesResponse, grid: Omit<HeightGrid, "
   return { elevationsFt: values as number[], rasterIds };
 }
 
-async function fetchGrid(fetchJson: FetchJson, spec: Omit<HeightGrid, "elevationsFt">) {
-  const response = (await fetchJson(`${ELEVATION_SERVICE}/getSamples`, samplesBody(gridPoints(spec)))) as SamplesResponse;
-  const { elevationsFt, rasterIds } = toElevations(response, spec);
-  return { grid: { ...spec, elevationsFt }, rasterIds };
+// The service answers about 3% of requests with a transient 502; try again before giving up.
+const RETRY_DELAYS_MS = [400, 1200];
+
+async function withRetries<T>(attempt: () => Promise<T>, delays = RETRY_DELAYS_MS): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await attempt();
+    } catch (error) {
+      if (i >= delays.length) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delays[i]));
+    }
+  }
+}
+
+async function fetchGrid(fetchJson: FetchJson, spec: Omit<HeightGrid, "elevationsFt">, delays?: number[]) {
+  return withRetries(async () => {
+    const response = (await fetchJson(`${ELEVATION_SERVICE}/getSamples`, samplesBody(gridPoints(spec)))) as SamplesResponse;
+    const { elevationsFt, rasterIds } = toElevations(response, spec);
+    return { grid: { ...spec, elevationsFt }, rasterIds };
+  }, delays);
 }
 
 /** The survey behind the most-used raster: its name and acquisition date. */
@@ -121,20 +137,21 @@ async function surveyOf(fetchJson: FetchJson, rasterIds: number[]): Promise<{ na
  * Ground elevations around a parcel, in EPSG:2227 feet, for the engine.
  * Returns null when the service can't be reached: the lot is then treated as flat.
  */
-export async function getTerrain(fetchJson: FetchJson, parcel: SfParcel): Promise<TerrainInput | null> {
+export async function getTerrain(fetchJson: FetchJson, parcel: SfParcel, retryDelaysMs?: number[]): Promise<TerrainInput | null> {
   try {
     const points = projectMultiPolygon(parcel.geometry, EPSG_2227).flat(2);
     const xs = points.map((p) => p[0]);
     const ys = points.map((p) => p[1]);
     const bbox: Bbox = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+    // The fine grid is what the rules measure; the context grid only draws the neighborhood.
     const [fine, context] = await Promise.all([
-      fetchGrid(fetchJson, gridOver(bbox, FINE.padFt, FINE.minSpacingFt)),
-      fetchGrid(fetchJson, gridOver(bbox, CONTEXT.padFt, CONTEXT.minSpacingFt)),
+      fetchGrid(fetchJson, gridOver(bbox, FINE.padFt, FINE.minSpacingFt), retryDelaysMs),
+      fetchGrid(fetchJson, gridOver(bbox, CONTEXT.padFt, CONTEXT.minSpacingFt), retryDelaysMs).catch(() => null),
     ]);
     const survey = await surveyOf(fetchJson, fine.rasterIds).catch(() => ({ name: null, date: null }));
     return {
       fine: fine.grid,
-      context: context.grid,
+      context: context?.grid ?? null,
       source: `USGS 3DEP 1 m LiDAR${survey.name ? ` (${survey.name})` : ""}`,
       asOf: survey.date,
     };

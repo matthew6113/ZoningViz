@@ -283,3 +283,19 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   await expect(page.getByTestId("summary")).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/clarendon-slope-result.png` });
 });
+
+test("an uphill lot: 118 Dellbrook Ave rises 37 ft, so 40 ft and no front plane, stepping up the hill", async ({ page }) => {
+  await page.goto("/?parcel=2820020&step=8");
+  await expect(page.locator(".fact-card h2")).toHaveText("118 Dellbrook Ave");
+  await expect(page.getByTestId("ground")).toContainText(/Rear 3\d\.\d ft higher than front · slopes up from the street/);
+  await expect(label(page)).toHaveText("Rule 8 of 10: Front height plane");
+  await expect(page.locator("[aria-current=step] .chip")).toHaveText("Doesn't apply");
+  await expect(currentSentence(page)).toHaveText(/^Front height plane: doesn't apply, because the rear lot line averages 3\d\.\d ft higher than the front \(20 ft or more\)\.$/);
+  await expect(page.locator("[data-rule=rh-dwelling-height] .sentence")).toContainText("so 40 ft instead of 35 ft");
+  await expect(page.locator("[data-rule=height-reference] .sentence")).toContainText("the lot slopes up from the street");
+  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await expect(label(page)).toHaveText("Result");
+  await expect(page.getByTestId("summary")).toContainText("4 stories");
+  await expectSceneDrawn(page);
+  await page.screenshot({ path: `${SHOTS}/dellbrook-uphill-result.png` });
+});

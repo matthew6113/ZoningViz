@@ -20,7 +20,7 @@ Also:
 - Build one phase at a time (see SPEC.md "Build phases"). Don't start a phase until the previous phase's "done when" is true and the user has approved its plan.
 - A rule with `verified: false` always shows an "unverified" tag in the UI.
 - Red is reserved for removed volume. Never use it for anything else.
-- Overlays the app can't model (special use districts, Family Zoning Plan R-4 heights, SB 9, state density bonus, slope) are detected and flagged, never silently ignored.
+- Overlays the app can't model (special use districts, Family Zoning Plan R-4 heights, SB 9, state density bonus, cross-slope strips) are detected and flagged, never silently ignored. Slope itself is modeled since Phase 6 (§260/§261 from 3DEP ground).
 
 ## Stack
 
@@ -114,6 +114,7 @@ Base: `https://data.sf.gov/resource/<id>.json` or `.geojson` (formerly data.sfgo
 | Zoning Districts | `3i4a-hu95` | Map overlay; cross-check blank zoning |
 | Height and Bulk Districts | `h9wh-cg3m` | `height` label, `gen_hght`, geometry in **`the_geom`** (not `shape`); parcels straddling two districts keep both and split the envelope |
 | Building Footprints | `ynuv-fyni` | Scene context only: outlines with LiDAR `hgt_median_m` (2010 survey); the app shows buildings on the lot's own block |
+| USGS 3DEP elevation | ImageServer `getSamples` | Ground for the slope rules and the drawn terrain: 1 m bare-earth LiDAR (survey `CA_SanFrancisco_B23`, 2023-04-20), meters → US survey feet. Takes EPSG:2227 points, ≤ 1,000 per POST, CORS open; about 3% of requests 502, so they're retried. Not DataSF: `elevation.nationalmap.gov` |
 | Addresses (EAS) | `ramy-di5m` | Address search: `starts_with(address, …) AND unit_number IS NULL`; numbered streets are zero-padded (`752 04TH AVE`) |
 
 Verified facts (details in `packages/jurisdictions/sf/DATA-NOTES.md`):
@@ -157,7 +158,9 @@ Decided with the user: missing fields in SPEC.md's RH-2 example are filled as un
 | `rear_yard` | vertical cut parallel to rear line | `{ pctOfLotDepth, minFeet, appliesAt }` |
 | `front_setback` | vertical cut parallel to front line | `{ method: "shallowest_adjacent", maxFeet, userOverride }` (SPEC.md says `block_average`; renamed in Phase 5 with the user's approval because §132(a) since 2024 uses the shallowest adjacent setback) |
 | `side_yard` | removes bands along the side lot lines (RH-1(D)) | `{ byLotWidth: [{ minWidthFeet, eachSideFeet } \| { minWidthFeet, totalLotWidthMinusFeet, layout: "one_side" }] }` |
-| `sky_plane` | angled cut rising from a line | `{ fromLine: "front_setback" \| "front_lot_line", startHeightFeet, angleDeg }` |
+| `sky_plane` | angled cut rising from a line | `{ fromLine: "front_setback" \| "front_lot_line", startHeightFeet, angleDeg, skipWhenRearHigherByFeet? }` (step status `not_applicable` when skipped) |
+| `height_reference` | none itself; sets where every height rule measures from (§260) | `{ downslopeCurbDepthFeet, upslopeCurbWithinFeet }` (info card) |
+| `height_by_slope` | horizontal cut (on the reference) whose height depends on rear − front ground | `{ baseFeet, steps: [{ rear: "higher" \| "lower", byAtLeastFeet, feet }] }` |
 | `bulk` | caps plan dimensions above a height | Phase 6 (not in the schema yet) |
 | `far` | volume budget, shown as a gauge | Phase 6 (not in the schema yet) |
 | `flag` | not modeled; card says what's missing and why | `{}` |
@@ -175,6 +178,8 @@ Project parcel to EPSG:2227 feet, recentered on centroid → find front lot line
 - **Front setback:** `options.overrides[ruleId].feet` (clamped to the rule's max) when the rule allows it; otherwise the rule's maximum (neighbors' setbacks aren't in city data).
 - **Side yards:** lot edges that run more front-to-back than across are side lot lines, assigned left/right (seen from the street) by their midpoint. Everything within the yard width of them is removed (a sliver grown with round joins), so bent and angled side lines are followed. The lot width (front chord) picks the row of the district's table. Corner lots get yards on a street side too (open question in VERIFY.md).
 - **Heights:** each zone is cut to its own height (R-4 uses the base). A zone with no readable height is not cut and its card says it isn't modeled.
+- **Terrain (Phase 6):** `ParcelInput.terrain` holds a fine grid over the lot and a coarse one around it (planar CRS, feet). The engine averages the ground along the front and rear lot lines, puts the curb estimate (ground at the middle of the front line) at z = 0, and builds the `height_reference`: the curb on level/downslope lots; on upslope lots the curb within 10 ft, then the average ground at the two side lot lines of each cross-section. Height cuts are profile solids (depth, z) extruded across the lot when the reference varies; half-spaces otherwise. The starting block is the lot prism minus a heightfield ground solid, up to max(reference) + 2× the mapped height. Footprint is the plan projection. Floors: level slices from the curb (below it too, on downslope lots); on upslope lots stories follow the reference (stepped plates). No terrain → flat, and slope rules use their base values with a note.
+- Cuts return `[next, removed]` from one `split` against the allowed region. Never compute removed as prev − next: on terrain both share the ground surface and the subtraction leaves slivers.
 - `options.disabledRuleIds` skips rules (Phase 4's toggles).
 
 Output (`EnvelopeResult`): ordered steps, each with the rule, status (`cut | already_satisfied | info | not_modeled | disabled`), resolved sentence and numbers, dimension lines, solids before/removed/after (plain `{ volume, positions, indices }` in world feet), and measurements; plus lot info, floors, totals and notes. All solids are computed up front; the animation only replays them.
@@ -195,8 +200,10 @@ Fixtures (hand-checked):
 | C | Real RH-2 corner parcel | Front prompt appears; invariants pass; no NaN volumes |
 | D | Parcel crossing two height districts | Two height cuts, each on its own part of the lot |
 | E | 35 x 100 ft, RH-1(D), 40-X, no front setback | 40 ft then 35 ft caps; 3 ft side yards; footprint 29 x 70 = 2,030 sq ft; front plane removes 362.5 cu ft; envelope 70,687.5 cu ft; 3 stories, 6,090 sq ft |
+| F | 25 x 100 ft, RH-1, 40-X, no setback, ground falling 25 ft to the rear | 30 ft cap (rear 20+ ft lower); measured from the curb; 67,812.5 cu ft; levels −20…30: 250, 1,250, 1,750 ×3 = 6,750 sq ft |
+| G | Same, ground rising 30 ft to the rear | 40 ft cap; front plane doesn't apply; curb within 10 ft, then side-line ground; 69,625 cu ft; 4 stepped stories × 1,750 = 7,000 sq ft |
 
-Real lots recorded for the invariants: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3).
+Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane).
 
 ## Phase status
 
@@ -207,6 +214,8 @@ Real lots recorded for the invariants: 4025007, 4025006, 4276045, 0044030 (RH-2)
 - [x] Phase 4 — Animation (one GSAP timeline, scrubber, 1×/2×, per-rule toggles, reduced motion)
 - [x] Phase 5 — Map and coverage (PMTiles, map screen, RH-1(D)/RH-1/RH-1(S)/RH-3 drafts, side_yard; `pnpm sweep` over random RH lots)
 - [ ] Phase 6 — Depth (one item per session)
+  - [x] Terrain and slope: §260 height reference and §261 slope caps from USGS 3DEP ground; drawn terrain; fixtures F and G
+  - [ ] Bulk letters · FAR districts (RM, NC) · Family Zoning Plan local-program unlock · share images
 
 ## Web app notes
 

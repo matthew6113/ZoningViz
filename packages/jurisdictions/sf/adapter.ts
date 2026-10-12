@@ -76,7 +76,7 @@ export interface SfAdapter {
   getTerrain(parcel: SfParcel): Promise<TerrainInput | null>;
 }
 
-export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdapter {
+export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDelaysMs?: number[] } = {}): SfAdapter {
   const get = options.fetchJson ?? defaultFetchJson;
   const rows = async <T>(url: string) => (await get(url)) as T[];
 
@@ -346,7 +346,7 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     getNeighbors,
     getBuildings,
     searchAddresses,
-    getTerrain: (parcel) => getTerrain(get, parcel),
+    getTerrain: (parcel) => getTerrain(get, parcel, options.terrainRetryDelaysMs),
   };
 }
 
