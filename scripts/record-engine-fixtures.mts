@@ -15,8 +15,14 @@ await mkdir(OUT, { recursive: true });
 for (const blklot of process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT) {
   const parcel = await adapter.getParcelByBlockLot(blklot);
   if (!parcel) throw new Error(`No parcel ${blklot}`);
-  const input = toParcelInput(parcel, await adapter.getNeighbors(parcel));
-  const meta = { source: "DataSF acdm-wktn + h9wh-cg3m via scripts/record-engine-fixtures.ts", address: parcel.address.label, zoning: parcel.zoning.code, asOf: parcel.asOf };
+  const [neighbors, terrain] = await Promise.all([adapter.getNeighbors(parcel), adapter.getTerrain(parcel)]);
+  const input = toParcelInput(parcel, neighbors, terrain);
+  const meta = {
+    source: "DataSF acdm-wktn + h9wh-cg3m, USGS 3DEP elevations, via scripts/record-engine-fixtures.mts",
+    address: parcel.address.label,
+    zoning: parcel.zoning.code,
+    asOf: { ...parcel.asOf, terrain: terrain?.asOf ?? null },
+  };
   await writeFile(join(OUT, `${blklot}.json`), JSON.stringify({ _meta: meta, ...input }));
   console.log(`${blklot}  ${parcel.address.label}  ${input.neighbors.length} neighbors  ${input.heightZones.map((z) => z.label).join(", ")}`);
 }

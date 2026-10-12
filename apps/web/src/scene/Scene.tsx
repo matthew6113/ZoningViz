@@ -1,9 +1,9 @@
 import { Edges, Line, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { projectMultiPolygon, type FrontCandidate, type XY } from "@zoningviz/engine";
+import { groundOf, projectMultiPolygon, type FrontCandidate, type Ground, type HeightGrid, type XY } from "@zoningviz/engine";
 import type { SfBuilding } from "@zoningviz/jurisdictions/sf";
 import { useEffect, useMemo, useRef } from "react";
-import { ExtrudeGeometry } from "three";
+import { BufferAttribute, BufferGeometry, ExtrudeGeometry } from "three";
 import type { AnimState } from "../anim/timeline";
 import type { OkResult } from "../state/steps";
 import { AnimatedDimensions, AnimatedEnvelope, AnimatedFloors, CuttingPlanes } from "./Animated";
@@ -41,7 +41,14 @@ export interface Handoff {
 
 export function Scene(props: SceneProps) {
   const { outline, frameHeightFt, front, result, anim } = props;
-  const framing = useMemo(() => frame(outline, front?.outward ?? null, frameHeightFt), [outline, front, frameHeightFt]);
+  const grids = result?.lot.ground ?? null;
+  // Ground elevation anywhere in the scene (curb datum), or null for a flat lot.
+  const ground = useMemo(() => (grids ? groundOf(grids.fine, grids.context) : null), [grids]);
+  const groundZ = ground ? ground(0, 0) : 0;
+  const framing = useMemo(
+    () => frame(outline, front?.outward ?? null, frameHeightFt, groundZ),
+    [outline, front, frameHeightFt, groundZ],
+  );
   const labels = useRef<HTMLDivElement>(null);
 
   return (
@@ -53,9 +60,9 @@ export function Scene(props: SceneProps) {
           <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
           <CameraRig key={framing.key} framing={framing} anim={anim} handoff={props.handoff ?? null} />
           <group rotation={ENGINE_TO_THREE}>
-            <Ground radius={framing.distance * 3} />
-            <LotLines outline={outline} neighbors={props.neighborLots} front={front} />
-            <Buildings buildings={props.buildings} projection={props.projection} origin={props.originPlanar} />
+            {grids && ground ? <Terrain grids={grids} ground={ground} radius={framing.distance * 3} /> : <Ground radius={framing.distance * 3} />}
+            <LotLines outline={outline} neighbors={props.neighborLots} front={front} ground={ground} />
+            <Buildings buildings={props.buildings} projection={props.projection} origin={props.originPlanar} ground={ground} />
             {props.candidates && <FrontSides candidates={props.candidates} />}
             {result && anim && (
               <>
@@ -102,7 +109,7 @@ function CameraRig({ framing, anim, handoff }: { framing: Framing; anim: AnimSta
   // Coming from the map: start where the camera shows the ground at the map's scale.
   // Camera height above the ground = ft/px × canvas height / (2 tan(fov/2)).
   const start = handoff
-    ? { distance: Math.max(handoff.ftPerPx * height / (2 * Math.tan((FOV_DEG * Math.PI) / 360)) - framing.targetEngine[2], 10) }
+    ? { distance: Math.max(handoff.ftPerPx * height / (2 * Math.tan((FOV_DEG * Math.PI) / 360)) - framing.liftFt, 10) }
     : null;
 
   // During the arrival the timeline flies the camera; afterwards the viewer can orbit freely.
@@ -131,16 +138,18 @@ function CameraRig({ framing, anim, handoff }: { framing: Framing; anim: AnimSta
 }
 
 /** A three-quarter view from the street side, far enough back to see the whole block. */
-function frame(outline: XY[][][], outward: XY | null, heightFt: number) {
+function frame(outline: XY[][][], outward: XY | null, heightFt: number, groundZ = 0) {
   const radius = Math.max(10, ...outline.flat(2).map(([x, y]) => Math.hypot(x, y)));
   const [ox, oy] = outward ?? [0, -1];
   const turn = (35 * Math.PI) / 180;
   return {
-    key: `${radius.toFixed(1)}:${heightFt}:${ox.toFixed(3)}:${oy.toFixed(3)}`,
+    key: `${radius.toFixed(1)}:${heightFt}:${ox.toFixed(3)}:${oy.toFixed(3)}:${groundZ.toFixed(1)}`,
     distance: Math.max(radius * 3.4, heightFt * 2.2, 80),
     azimuth: [ox * Math.cos(turn) - oy * Math.sin(turn), ox * Math.sin(turn) + oy * Math.cos(turn)] as XY,
-    targetEngine: [0, 0, heightFt * 0.3] as [number, number, number],
-    target: engineToThree([0, 0, heightFt * 0.3]),
+    /** How far the look-at point sits above the ground at the lot's center. */
+    liftFt: heightFt * 0.3,
+    targetEngine: [0, 0, groundZ + heightFt * 0.3] as [number, number, number],
+    target: engineToThree([0, 0, groundZ + heightFt * 0.3]),
   };
 }
 
@@ -176,40 +185,138 @@ function Ground({ radius }: { radius: number }) {
   );
 }
 
-function LotLines({ outline, neighbors, front }: { outline: XY[][][]; neighbors: XY[][][][]; front: FrontCandidate | null }) {
+function LotLines({
+  outline,
+  neighbors,
+  front,
+  ground,
+}: {
+  outline: XY[][][];
+  neighbors: XY[][][][];
+  front: FrontCandidate | null;
+  ground: Ground | null;
+}) {
+  const lines = useMemo(
+    () => ({
+      neighbors: neighbors.flatMap((polygons) => polygons.map((rings) => drape(ringToPoints(rings[0] ?? []), ground, 0.15))),
+      lot: outline.map((rings) => drape(ringToPoints(rings[0] ?? []), ground, 0.3)),
+      front: front ? drape(front.path.map(([x, y]) => [x, y, 0] as [number, number, number]), ground, 0.45) : null,
+    }),
+    [outline, neighbors, front, ground],
+  );
   return (
     <group>
-      {neighbors.flatMap((polygons, i) =>
-        polygons.map((rings, j) => (
-          <Line key={`n${i}-${j}`} points={ringToPoints(rings[0] ?? [], 0.02)} color={COLORS.neighborLotLine} lineWidth={1} />
-        )),
-      )}
-      {outline.map((rings, i) => (
-        <Line key={`l${i}`} points={ringToPoints(rings[0] ?? [], 0.04)} color={COLORS.lotLine} lineWidth={2} />
+      {lines.neighbors.map((points, i) => (
+        <Line key={`n${i}`} points={points} color={COLORS.neighborLotLine} lineWidth={1} />
       ))}
-      {front && (
-        <Line points={front.path.map(([x, y]) => [x, y, 0.06] as [number, number, number])} color={COLORS.front} lineWidth={4} />
-      )}
+      {lines.lot.map((points, i) => (
+        <Line key={`l${i}`} points={points} color={COLORS.lotLine} lineWidth={2} />
+      ))}
+      {lines.front && <Line points={lines.front} color={COLORS.front} lineWidth={4} />}
     </group>
   );
 }
 
-function Buildings({ buildings, projection, origin }: { buildings: SfBuilding[]; projection: string | null; origin: XY }) {
+/** Lays a line on the ground: split into short pieces, each point lifted to the ground plus `lift`. */
+function drape(points: [number, number, number][], ground: Ground | null, lift: number): [number, number, number][] {
+  if (!ground) return points.map(([x, y]) => [x, y, lift / 6]);
+  const out: [number, number, number][] = [];
+  points.forEach(([x, y], i) => {
+    const next = points[i + 1];
+    out.push([x, y, ground(x, y) + lift]);
+    if (!next) return;
+    const steps = Math.floor(Math.hypot(next[0] - x, next[1] - y) / DRAPE_STEP_FT);
+    for (let k = 1; k <= steps; k++) {
+      const t = k / (steps + 1);
+      const px = x + (next[0] - x) * t;
+      const py = y + (next[1] - y) * t;
+      out.push([px, py, ground(px, py) + lift]);
+    }
+  });
+  return out;
+}
+
+const DRAPE_STEP_FT = 2;
+// The drawn ground is resampled this finely (the envelope sits on the fine grid; the mesh just has to match it closely).
+const TERRAIN_MESH_STEP_FT = 3;
+
+/** The ground as a mesh over the terrain grids, on a flat apron that runs out to the horizon. */
+function Terrain({ grids, ground, radius }: { grids: { fine: HeightGrid; context: HeightGrid | null }; ground: Ground; radius: number }) {
+  const { geometry, apronZ } = useMemo(() => {
+    const extent = grids.context ?? grids.fine;
+    const width = (extent.nx - 1) * extent.spacingFt;
+    const height = (extent.ny - 1) * extent.spacingFt;
+    const nx = Math.max(2, Math.round(width / TERRAIN_MESH_STEP_FT) + 1);
+    const ny = Math.max(2, Math.round(height / TERRAIN_MESH_STEP_FT) + 1);
+    const positions = new Float32Array(nx * ny * 3);
+    let apron = Infinity;
+    for (let j = 0; j < ny; j++) {
+      for (let i = 0; i < nx; i++) {
+        const x = extent.x0 + (i * width) / (nx - 1);
+        const y = extent.y0 + (j * height) / (ny - 1);
+        const z = ground(x, y) - 0.05;
+        positions.set([x, y, z], (j * nx + i) * 3);
+        if (i === 0 || j === 0 || i === nx - 1 || j === ny - 1) apron = Math.min(apron, z);
+      }
+    }
+    const index: number[] = [];
+    for (let j = 0; j + 1 < ny; j++) {
+      for (let i = 0; i + 1 < nx; i++) {
+        const a = j * nx + i;
+        index.push(a, a + 1, a + nx + 1, a, a + nx + 1, a + nx);
+      }
+    }
+    const g = new BufferGeometry();
+    g.setAttribute("position", new BufferAttribute(positions, 3));
+    g.setIndex(index);
+    g.computeVertexNormals();
+    return { geometry: g, apronZ: apron };
+  }, [grids, ground]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <group>
+      <mesh geometry={geometry} data-testid="terrain">
+        <meshStandardMaterial color={COLORS.ground} />
+      </mesh>
+      <mesh position={[0, 0, apronZ - 0.1]}>
+        <planeGeometry args={[radius * 2, radius * 2]} />
+        <meshStandardMaterial color={COLORS.ground} />
+      </mesh>
+    </group>
+  );
+}
+
+function Buildings({
+  buildings,
+  projection,
+  origin,
+  ground,
+}: {
+  buildings: SfBuilding[];
+  projection: string | null;
+  origin: XY;
+  ground: Ground | null;
+}) {
   const shapes = useMemo(() => {
     if (!projection) return [];
     return buildings.flatMap((b) =>
-      projectMultiPolygon(b.geometry, projection).map((polygon) => ({
-        id: b.id,
-        heightFt: b.heightFt,
-        rings: polygon.map((ring) => ring.map(([x, y]) => [x - origin[0], y - origin[1]] as [number, number])),
-      })),
+      projectMultiPolygon(b.geometry, projection).map((polygon) => {
+        const rings = polygon.map((ring) => ring.map(([x, y]) => [x - origin[0], y - origin[1]] as [number, number]));
+        // On a slope a building stands on its lowest ground; its LiDAR height is measured from the ground around it.
+        const zs = ground ? (rings[0] ?? []).map(([x, y]) => ground(x, y)) : [0];
+        const base = Math.min(...zs);
+        const mean = zs.reduce((sum, z) => sum + z, 0) / zs.length;
+        return { id: b.id, heightFt: b.heightFt, rings, base, rise: mean - base };
+      }),
     );
-  }, [buildings, projection, origin]);
+  }, [buildings, projection, origin, ground]);
 
   const geometries = useMemo(
     () =>
       shapes.map((s) =>
-        s.heightFt && s.heightFt > 0 ? new ExtrudeGeometry(ringsToShape(s.rings), { depth: s.heightFt, bevelEnabled: false }) : null,
+        s.heightFt && s.heightFt > 0
+          ? new ExtrudeGeometry(ringsToShape(s.rings), { depth: s.heightFt + s.rise, bevelEnabled: false })
+          : null,
       ),
     [shapes],
   );
@@ -220,12 +327,12 @@ function Buildings({ buildings, projection, origin }: { buildings: SfBuilding[];
       {shapes.map((s, i) => {
         const geometry = geometries[i];
         return geometry ? (
-          <mesh key={`${s.id}-${i}`} geometry={geometry}>
+          <mesh key={`${s.id}-${i}`} geometry={geometry} position={[0, 0, s.base]}>
             <meshStandardMaterial color={COLORS.building} transparent opacity={0.55} depthWrite={false} />
             <Edges threshold={30} color={COLORS.buildingEdge} />
           </mesh>
         ) : (
-          <Line key={`${s.id}-${i}`} points={ringToPoints(s.rings[0] ?? [], 0.03)} color={COLORS.buildingEdge} lineWidth={1} />
+          <Line key={`${s.id}-${i}`} points={ringToPoints(s.rings[0] ?? [], s.base + 0.03)} color={COLORS.buildingEdge} lineWidth={1} />
         );
       })}
     </group>

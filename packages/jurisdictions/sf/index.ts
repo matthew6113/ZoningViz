@@ -7,5 +7,6 @@ export { DATASETS, DataSfError, EPSG_2227, fetchJson, type FetchJson } from "./d
 export { parseHeightLabel, type ParsedHeightLabel } from "./heightLabel";
 export type * from "./types";
 export { toParcelInput } from "./engineInput";
+export { ELEVATION_SERVICE, getTerrain } from "./terrain";
 export { availableDistricts, loadDistrict } from "./districts";
 export { coverageNote, zoningCodes, zoningCoverage, type ZoningCoverage } from "./zoning";

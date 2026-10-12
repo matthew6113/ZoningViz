@@ -1,4 +1,4 @@
-import type { LotInfo } from "@zoningviz/engine";
+import type { LotInfo, LotTerrain } from "@zoningviz/engine";
 import type { LotFacts } from "../data/loadLot";
 import { num } from "./format";
 
@@ -38,6 +38,18 @@ export function FactCard({ facts, lot, notes }: { facts: LotFacts; lot: LotInfo 
           )}
           {lot?.approximate && <span className="badge">approximate geometry</span>}
         </dd>
+        {lot?.terrain && (
+          <>
+            <dt>Ground</dt>
+            <dd data-testid="ground">
+              {groundSummary(lot.terrain)}
+              <span className="muted">
+                {" "}
+                · curb est. {num(lot.terrain.curbElevationFt, 1)} ft · cross-slope {num(lot.terrain.crossSlopePct, 1)}%
+              </span>
+            </dd>
+          </>
+        )}
         {facts.unitCount > 0 && (
           <>
             <dt>Condo units</dt>
@@ -69,4 +81,11 @@ export function FactCard({ facts, lot, notes }: { facts: LotFacts; lot: LotInfo 
       )}
     </section>
   );
+}
+
+/** "Rear 35.5 ft lower than front · slopes down from the street" */
+function groundSummary(t: LotTerrain): string {
+  const rise = t.rearMinusFrontFt;
+  const amount = Math.abs(rise) < 0.05 ? "Rear level with front" : `Rear ${num(Math.abs(rise), 1)} ft ${rise > 0 ? "higher" : "lower"} than front`;
+  return `${amount} · ${t.upslope ? "slopes up from the street" : "level with or below the street"}`;
 }

@@ -41,6 +41,12 @@ interface SolidGeometry {
 }
 
 export function AnimatedEnvelope({ result, anim }: { result: OkResult; anim: AnimState }) {
+  const startBottom = useMemo(() => {
+    const p = result.start.positions;
+    let min = Infinity;
+    for (let i = 2; i < p.length; i += 3) min = Math.min(min, p[i]!);
+    return Number.isFinite(min) ? min : 0;
+  }, [result]);
   // One geometry pair per distinct solid (steps that cut nothing share their neighbor's solid).
   const geometries = useMemo(() => {
     const cache = new Map<Solid, SolidGeometry>();
@@ -92,7 +98,10 @@ export function AnimatedEnvelope({ result, anim }: { result: OkResult; anim: Ani
     const rule = Math.max(anim.rule, 0);
 
     start.current!.visible = startEdges.current!.visible = onStart;
-    start.current!.scale.z = startEdges.current!.scale.z = Math.max(anim.rise, 1e-3);
+    // Rise from the block's lowest point (below the curb datum on a downsloping lot).
+    const rise = Math.max(anim.rise, 1e-3);
+    start.current!.scale.z = startEdges.current!.scale.z = rise;
+    start.current!.position.z = startEdges.current!.position.z = startBottom * (1 - rise);
     materials.start.opacity = anim.startOpacity;
 
     const shown = inFinale ? geometries.final : onStart ? null : geometries.after[rule]!;
@@ -249,7 +258,8 @@ export function AnimatedFloors({ floors, anim }: { floors: Floor[]; anim: AnimSt
     () =>
       floors.map((f) => ({
         floor: f,
-        geometry: new ShapeGeometry(f.outline.map((ring) => ringsToShape([ring]))),
+        // Level floors are flat plates; stories that step up a hill come with their own slab.
+        geometry: f.plate ? solidToGeometry(f.plate) : new ShapeGeometry(f.outline.map((ring) => ringsToShape([ring]))),
         material: new MeshStandardMaterial({ color: COLORS.floor, transparent: true, depthWrite: false, opacity: 0 }),
       })),
     [floors],
@@ -276,9 +286,14 @@ export function AnimatedFloors({ floors, anim }: { floors: Floor[]; anim: AnimSt
   return (
     <group>
       {plates.map(({ floor, geometry, material }, i) => (
-        <group key={floor.index} ref={(g) => void (groups.current[i] = g)} position={[0, 0, floor.bottomFt + 0.15]} visible={false}>
+        <group
+          key={floor.index}
+          ref={(g) => void (groups.current[i] = g)}
+          position={[0, 0, floor.plate ? 0 : floor.bottomFt + 0.15]}
+          visible={false}
+        >
           <mesh geometry={geometry} material={material} />
-          {floor.outline.map((ring, j) => (
+          {!floor.plate && floor.outline.map((ring, j) => (
             <Line
               key={j}
               ref={(l) => {

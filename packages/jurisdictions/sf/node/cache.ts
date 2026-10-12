@@ -7,27 +7,33 @@ import { fetchJson, type FetchJson } from "../datasf";
 
 interface CacheEntry {
   url: string;
+  /** The POST body, for requests that have one. */
+  request?: string;
   fetchedAt: string;
   body: unknown;
 }
 
-export function cacheKey(url: string): string {
-  return createHash("sha256").update(url).digest("hex").slice(0, 32);
+/** File name for a response: the URL's hash, plus the POST body's when there is one. */
+export function cacheKey(url: string, body?: string): string {
+  return createHash("sha256")
+    .update(body === undefined ? url : `${url}\n${body}`)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 /** Wraps a fetcher so each URL is fetched once and then served from `dir`. */
 export function withDiskCache(fetchJson: FetchJson, dir: string): FetchJson {
-  return async (url) => {
-    const file = join(dir, `${cacheKey(url)}.json`);
+  return async (url, request) => {
+    const file = join(dir, `${cacheKey(url, request)}.json`);
     try {
       const entry = JSON.parse(await readFile(file, "utf8")) as CacheEntry;
       return entry.body;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
-    const body = await fetchJson(url);
+    const body = await fetchJson(url, request);
     await mkdir(dir, { recursive: true });
-    const entry: CacheEntry = { url, fetchedAt: new Date().toISOString(), body };
+    const entry: CacheEntry = { url, ...(request === undefined ? {} : { request }), fetchedAt: new Date().toISOString(), body };
     await writeFile(file, JSON.stringify(entry));
     return body;
   };

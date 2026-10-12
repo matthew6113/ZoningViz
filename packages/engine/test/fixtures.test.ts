@@ -103,7 +103,8 @@ describe("fixture C: real RH-2 corner lot (2550 19th St, 4025006)", async () => 
 
 describe("fixture D: real lot across two height districts (1391 Hampshire St, 4276045)", async () => {
   const engine = await getEngine();
-  const r = ok(engine.computeEnvelope(loadParcel("4276045"), RH2));
+  // Flat here (terrain dropped), so the zone heights can be checked as plain numbers; terrain.test.ts covers slopes.
+  const r = ok(engine.computeEnvelope({ ...loadParcel("4276045"), terrain: null }, RH2));
   const height = step(r, "mapped-height");
   const piece55 = 0.329369 * r.lot.areaSqFt; // 55-X share measured independently (DATA-NOTES.md)
 

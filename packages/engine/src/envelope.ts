@@ -23,7 +23,7 @@ import {
   type GroundMeasurements,
   type HeightReference,
 } from "./geometry/terrain";
-import { applyCut, cutPlanesFor, dimensionsFor, uncoveredArea, type CutContext } from "./rules/regions";
+import { applyCut, cutPlanesFor, dimensionsFor, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
 import { ft, resolveFrontSetback, resolveRule, type ResolveContext } from "./rules/resolve";
 import type { DistrictFile } from "./rules/schema";
 import type {
@@ -229,8 +229,7 @@ function computeEnvelope(
     }
 
     const cutPlanes = cutPlanesFor(resolved.cut, { ...cutCtx, topFt: topOf(current), bottomFt: bottomOf(current) });
-    const next = applyCut(current, resolved.cut, cutCtx);
-    const removed = current.subtract(next);
+    const [next, removed] = applyCut(current, resolved.cut, cutCtx);
     const removedVolume = removed.volume();
     const hasEffect = removedVolume > EMPTY_VOLUME_FT3;
     const removedSolid = hasEffect ? toSolid(removed) : null;
@@ -256,7 +255,9 @@ function computeEnvelope(
   }
 
   // 8. Slice floors.
-  const floors = sliceFloors(current, options.floorToFloorFeet ?? DEFAULT_FLOOR_TO_FLOOR_FT);
+  const floorToFloor = options.floorToFloorFeet ?? DEFAULT_FLOOR_TO_FLOOR_FT;
+  const floors =
+    reference.kind === "upslope" ? referenceFloors(current, floorToFloor, cutCtx) : sliceFloors(current, floorToFloor);
   const finalVolume = current.volume();
   if (finalVolume <= EMPTY_VOLUME_FT3) {
     notes.push("Nothing is left: together these limits cover the whole lot. On a corner lot, measuring from the other front may leave room.");
@@ -339,7 +340,50 @@ function sliceFloors(envelope: Manifold, floorToFloorFt: number): Floor[] {
       topFt: (i + 1) * floorToFloorFt,
       plateSqFt,
       outline: sliceOutline(envelope, mid),
+      plate: null,
     });
   }
   return floors;
 }
+
+// Thickness of the slab used to measure a stepped plate (area = volume / thickness),
+// and of the slab drawn at each stepped story's base.
+const PLATE_MEASURE_FT = 0.1;
+const PLATE_DRAW_FT = 0.3;
+
+/**
+ * Stories that follow the height reference on an upsloping lot: story k runs
+ * from reference + k·f to reference + (k + 1)·f, so the building steps up the
+ * hill the way its height is measured.
+ */
+function referenceFloors(envelope: Manifold, floorToFloorFt: number, ctx: CutContext): Floor[] {
+  if (!(floorToFloorFt > 0)) throw new Error(`Floor-to-floor height must be positive, got ${floorToFloorFt}`);
+  const floors: Floor[] = [];
+  const first = Math.floor((bottomOf(envelope) - ctx.reference.maxFt) / floorToFloorFt);
+  const last = Math.ceil(topOf(envelope) / floorToFloorFt);
+  for (let k = first; k <= last; k++) {
+    const mid = (k + 0.5) * floorToFloorFt;
+    const band = referenceBand(ctx, mid - PLATE_MEASURE_FT / 2, mid + PLATE_MEASURE_FT / 2);
+    const piece = envelope.intersect(band);
+    const plateSqFt = piece.volume() / PLATE_MEASURE_FT;
+    if (plateSqFt > EMPTY_AREA_FT2) {
+      const shadow = piece.project();
+      const outline = shadow.toPolygons().map((ring) => ring.map(([x, y]) => [x, y] as XY));
+      shadow.delete();
+      const base = referenceBand(ctx, k * floorToFloorFt, k * floorToFloorFt + PLATE_DRAW_FT);
+      const slab = envelope.intersect(base);
+      floors.push({
+        index: floors.length,
+        bottomFt: k * floorToFloorFt,
+        topFt: (k + 1) * floorToFloorFt,
+        plateSqFt,
+        outline,
+        plate: slab.isEmpty() ? null : toSolid(slab),
+      });
+      [base, slab].forEach((o) => o.delete());
+    }
+    [band, piece].forEach((o) => o.delete());
+  }
+  return floors;
+}
+

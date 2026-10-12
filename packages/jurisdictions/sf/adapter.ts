@@ -1,5 +1,5 @@
 import type { MultiPolygon, Polygon } from "geojson";
-import { multiPolygonArea, projectMultiPolygon } from "@zoningviz/engine";
+import { multiPolygonArea, projectMultiPolygon, type TerrainInput } from "@zoningviz/engine";
 import polygonClipping, { type MultiPolygon as ClipMultiPolygon } from "polygon-clipping";
 import {
   bboxWkt,
@@ -16,6 +16,7 @@ import {
 import { parseHeightLabel } from "./heightLabel";
 import type { SfAddressMatch, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
 import { addressOf, displayAddress, normalizeAddressQuery } from "./address";
+import { getTerrain } from "./terrain";
 import { zoningCodes } from "./zoning";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
@@ -71,6 +72,8 @@ export interface SfAdapter {
   getBuildings(parcel: SfParcel, padFt?: number): Promise<SfBuildings>;
   /** Street addresses starting with what was typed (house number first), from the city's address list. */
   searchAddresses(text: string, limit?: number): Promise<SfAddressMatch[]>;
+  /** Ground elevations around the lot (USGS 3DEP), or null when they can't be loaded. */
+  getTerrain(parcel: SfParcel): Promise<TerrainInput | null>;
 }
 
 export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdapter {
@@ -337,7 +340,14 @@ export function createSfAdapter(options: { fetchJson?: FetchJson } = {}): SfAdap
     return matches.slice(0, limit);
   }
 
-  return { getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses };
+  return {
+    getParcelByBlockLot,
+    getParcelAt,
+    getNeighbors,
+    getBuildings,
+    searchAddresses,
+    getTerrain: (parcel) => getTerrain(get, parcel),
+  };
 }
 
 function paddedBboxWkt(parcel: SfParcel, padFt: number): string {

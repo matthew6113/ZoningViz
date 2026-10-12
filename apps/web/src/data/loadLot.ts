@@ -85,15 +85,21 @@ async function fetchLot(id: string): Promise<LoadedLot> {
   if (!parcel) throw new LotNotFoundError(`No San Francisco parcel has block/lot ${id}.`);
   // Split-zoned lots ("RH-1|RH-2") get no district: they aren't modeled yet.
   const district = parcel.zoning.codes.length === 1 ? loadDistrict(parcel.zoning.codes[0]!) : null;
-  const [neighbors, buildings] = await Promise.all([
+  const [neighbors, buildings, terrain] = await Promise.all([
     district ? adapter().getNeighbors(parcel) : Promise.resolve([]),
     adapter().getBuildings(parcel),
+    district ? adapter().getTerrain(parcel) : Promise.resolve(null),
   ]);
+  const facts = parcelFacts(parcel, buildings.asOf);
+  if (district) {
+    facts.asOf.push({ label: terrain?.source ?? "Ground elevations", date: terrain ? terrain.asOf : "couldn't be loaded" });
+    if (!terrain) facts.warnings.push("Ground elevations couldn't be loaded, so the lot is treated as flat.");
+  }
   return {
     id,
-    facts: parcelFacts(parcel, buildings.asOf),
+    facts,
     district,
-    input: district ? toParcelInput(parcel, neighbors) : null,
+    input: district ? toParcelInput(parcel, neighbors, terrain) : null,
     // Only buildings on the lot's own block: across-the-street buildings would
     // stand between the street-side camera and the lot.
     buildings: buildings.buildings.filter((b) => b.block !== null && b.block === blockOf(parcel.blklot)),

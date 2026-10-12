@@ -83,7 +83,8 @@ async function run(blklot: string): Promise<Outcome> {
     const coverage = zoningCoverage(parcel.zoning.code);
     if (coverage.kind !== "covered") return { kind: "not_modeled", note: coverageNote(coverage)! };
     const district = loadDistrict(coverage.code)!;
-    const input = toParcelInput(parcel, await adapter.getNeighbors(parcel));
+    const [neighbors, terrain] = await Promise.all([adapter.getNeighbors(parcel), adapter.getTerrain(parcel)]);
+    const input = toParcelInput(parcel, neighbors, terrain);
     const first = engine.computeEnvelope(input, district);
     // Every street side must work, since the viewer may pick any of them.
     const fronts = first.status === "needs_front_choice" ? first.candidates.map((_, i) => i) : [null];

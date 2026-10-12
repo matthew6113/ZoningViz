@@ -51,7 +51,7 @@ describe("cut planes for the cutting-plane sweep", async () => {
   });
 
   it("gives each height district on a split lot its own plane", () => {
-    const d = engine.computeEnvelope(loadParcel("4276045"), rh2);
+    const d = engine.computeEnvelope({ ...loadParcel("4276045"), terrain: null }, rh2); // flat: see fixture D
     const heights = planes(d, "mapped-height").map((p) => p.origin[2]).sort();
     expect(heights).toEqual([40, 55]);
   });

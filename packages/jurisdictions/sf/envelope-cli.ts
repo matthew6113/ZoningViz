@@ -57,8 +57,8 @@ async function main(): Promise<number> {
   if (values.has("--off")) options.disabledRuleIds = values.get("--off")!.split(",");
 
   const engine = await createEngine();
-  const neighbors = await adapter.getNeighbors(parcel);
-  const result = engine.computeEnvelope(toParcelInput(parcel, neighbors), district, options);
+  const [neighbors, terrain] = await Promise.all([adapter.getNeighbors(parcel), adapter.getTerrain(parcel)]);
+  const result = engine.computeEnvelope(toParcelInput(parcel, neighbors, terrain), district, options);
 
   if (flags.has("--json")) {
     console.log(JSON.stringify(result, (_, v) => (ArrayBuffer.isView(v) ? `[${(v as Float32Array).length} values]` : v), 2));

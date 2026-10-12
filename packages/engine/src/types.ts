@@ -171,11 +171,19 @@ export interface LotInfo {
 
 export interface Floor {
   index: number;
+  /**
+   * Bottom and top of the story. Level floors are measured from the curb datum;
+   * on an upsloping lot the stories follow the height reference instead (a
+   * stepped building), and these are heights above it.
+   */
   bottomFt: number;
   topFt: number;
   /** Plate area at mid-story. */
   plateSqFt: number;
+  /** Plan outline of the plate. */
   outline: XY[][];
+  /** For stories that follow a sloping reference: a thin slab at the story's base, to draw. */
+  plate: Solid | null;
 }
 
 export interface EnvelopeTotals {

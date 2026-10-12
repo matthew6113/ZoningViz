@@ -114,3 +114,32 @@ describe("searchAddresses", () => {
     expect(await adapter.searchAddresses("66")).toEqual([]);
   });
 });
+
+describe("getTerrain", () => {
+  it("samples the ground around 667 Hampshire St from USGS 3DEP, in feet", async () => {
+    const p = (await adapter.getParcelByBlockLot("4025007"))!;
+    const t = (await adapter.getTerrain(p))!;
+    expect(t.source).toBe("USGS 3DEP 1 m LiDAR (CA_SanFrancisco_B23)");
+    expect(t.asOf).toBe("2023-04-20");
+    expect(t.fine.nx * t.fine.ny).toBeLessThanOrEqual(1000);
+    expect(t.context!.nx * t.context!.ny).toBeLessThanOrEqual(1000);
+    expect(t.fine.elevationsFt).toHaveLength(t.fine.nx * t.fine.ny);
+    // The Mission flats: tens of feet above sea level, a few feet of relief across the lot.
+    const z = t.fine.elevationsFt;
+    expect(Math.min(...z)).toBeGreaterThan(40);
+    expect(Math.max(...z)).toBeLessThan(80);
+  });
+
+  it("returns null when the elevation service fails, so the lot is treated as flat", async () => {
+    const failing = createSfAdapter({
+      fetchJson: async (url) => {
+        if (url.includes("nationalmap")) throw new Error("offline");
+        return withDiskCache(async (u) => {
+          throw new Error(`Not recorded: ${u}`);
+        }, FIXTURES)(url);
+      },
+    });
+    const p = (await failing.getParcelByBlockLot("4025007"))!;
+    expect(await failing.getTerrain(p)).toBeNull();
+  });
+});

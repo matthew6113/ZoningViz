@@ -30,6 +30,14 @@ export function keepHalfSpace(m: Manifold, normal: Vec3, through: Vec3): Manifol
   return m.trimByPlane(unit, offset);
 }
 
+/** Splits `m` by a plane: [the part `normal` points to, the rest]. */
+export function splitHalfSpace(m: Manifold, normal: Vec3, through: Vec3): [Manifold, Manifold] {
+  const length = Math.hypot(...normal);
+  const unit: Vec3 = [normal[0] / length, normal[1] / length, normal[2] / length];
+  const offset = unit[0] * through[0] + unit[1] * through[1] + unit[2] * through[2];
+  return m.splitByPlane(unit, offset);
+}
+
 export function toSolid(m: Manifold): Solid {
   const mesh = m.getMesh();
   const vertexCount = mesh.vertProperties.length / mesh.numProp;

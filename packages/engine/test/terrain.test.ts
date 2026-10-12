@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EnvelopeResult, Step } from "../src";
-import { getEngine, loadDistrict, slopedLot } from "./helpers";
+import { getEngine, loadDistrict, loadParcel, slopedLot } from "./helpers";
 
 // Sloping ground (SPEC.md Phase 6: terrain and slope). Values come from the
 // RH-1 draft: §260 height reference, §261(b)(1) slope caps, §261(c) front plane.
@@ -87,6 +87,17 @@ describe("fixture G: 25 x 100 ft RH-1 lot rising 30 ft to the rear, 40-X, no fro
     expect(r.totals.volume).toBeCloseTo(69_625, 1);
     expect(r.totals.footprintSqFt).toBeCloseTo(1750, 3);
   });
+
+  it("steps its 4 stories up the hill with the height reference: 4 x 1,750 sq ft", () => {
+    expect(r.floors.map((f) => [f.bottomFt, Math.round(f.plateSqFt)])).toEqual([
+      [0, 1750],
+      [10, 1750],
+      [20, 1750],
+      [30, 1750],
+    ]);
+    expect(r.totals.grossFloorAreaSqFt).toBeCloseTo(7000, 0);
+    expect(r.floors.every((f) => f.plate !== null)).toBe(true);
+  });
 });
 
 describe("RH-2 on slopes", async () => {
@@ -120,5 +131,28 @@ describe("without ground data", async () => {
     expect(step(r, "rh-dwelling-height").sentence).toBe("RH-1 dwelling cap: no ground elevations for this lot, so this assumes a flat lot: 35 ft.");
     expect(step(r, "height-reference").sentence).toMatch(/no ground elevations/);
     expect(r.notes.some((n) => n.startsWith("No ground elevations"))).toBe(true);
+  });
+});
+
+describe("real lots on their recorded terrain (USGS 3DEP)", async () => {
+  const engine = await getEngine();
+  const RH1D = loadDistrict("RH-1(D)");
+
+  it("124 Clarendon Ave falls about 35 ft from the street: 30 ft cap, measured from the curb", () => {
+    const r = ok(engine.computeEnvelope(loadParcel("2687029"), RH1D));
+    expect(r.lot.terrain!.upslope).toBe(false);
+    expect(r.lot.terrain!.rearMinusFrontFt).toBeLessThan(-20);
+    expect(r.lot.terrain!.rearMinusFrontFt).toBeGreaterThan(-40);
+    expect(step(r, "rh-dwelling-height").numbers.heightFt).toBe(30);
+    expect(step(r, "height-reference").sentence).toMatch(/Past 100 ft back, the code measures from the lower end/);
+    // The envelope reaches below the curb toward the low rear of the lot.
+    expect(r.floors[0]!.bottomFt).toBeLessThan(0);
+  });
+
+  it("1391 Hampshire St rises gently: the 55 ft district is measured from the rising ground", () => {
+    const r = ok(engine.computeEnvelope(loadParcel("4276045"), RH2));
+    expect(r.lot.terrain!.upslope).toBe(true);
+    expect(step(r, "rh-dwelling-height").numbers.heightFt).toBe(40); // under 20 ft of rise: no change
+    expect(step(r, "front-plane").status).not.toBe("not_applicable");
   });
 });

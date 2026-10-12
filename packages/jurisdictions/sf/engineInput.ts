@@ -1,9 +1,9 @@
-import type { HeightZoneInput, ParcelInput } from "@zoningviz/engine";
+import type { HeightZoneInput, ParcelInput, TerrainInput } from "@zoningviz/engine";
 import { EPSG_2227 } from "./datasf";
 import type { SfNeighbor, SfParcel } from "./types";
 
 /** Builds the engine's city-agnostic input from an SF parcel and its neighbors. */
-export function toParcelInput(parcel: SfParcel, neighbors: SfNeighbor[]): ParcelInput {
+export function toParcelInput(parcel: SfParcel, neighbors: SfNeighbor[], terrain: TerrainInput | null = null): ParcelInput {
   const heightZones = parcel.heightDistricts.flatMap((d): HeightZoneInput[] => {
     if (!d.geometry) return [];
     const { parsed } = d;
@@ -23,5 +23,6 @@ export function toParcelInput(parcel: SfParcel, neighbors: SfNeighbor[]): Parcel
     footprint: parcel.geometry,
     neighbors: neighbors.map((n) => n.geometry),
     heightZones,
+    terrain,
   };
 }

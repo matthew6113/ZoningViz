@@ -1,13 +1,15 @@
 import type { CrossSection, Manifold, ManifoldToplevel } from "manifold-3d";
 import type { LotFrame } from "../geometry/lot";
-import { crossSection, keepHalfSpace, profileSolid } from "../geometry/manifold";
+import { crossSection, profileSolid, splitHalfSpace } from "../geometry/manifold";
 import type { PlanarMultiPolygon, XY } from "../geometry/projection";
 import type { Ground, HeightReference } from "../geometry/terrain";
 import type { CutPlane, Dimension, Vec3 } from "../types";
 import { ft, type Cut } from "./resolve";
 
-// Builds the allowed region for each kind of cut and applies it:
-// next = prev ∩ allowed. The caller computes removed = prev − next.
+// Builds the allowed region for each kind of cut and applies it, returning
+// [next, removed] = [prev ∩ allowed, prev − allowed]. Removed is cut against the
+// allowed region itself, never as prev − next: on sloping ground both share the
+// terrain surface, and subtracting coincident surfaces leaves slivers.
 
 // Zone pieces are grown by this much before they are unioned, so hairline gaps
 // between adjacent pieces (floating-point noise) don't become cuts.
@@ -39,11 +41,24 @@ function belowSurface(ctx: CutContext, h: (d: number) => number): Manifold {
   return profileSolid(ctx.wasm, ctx.frame, s0 - ctx.bigFt, s1 + ctx.bigFt, top, -ctx.bigFt, ctx.bigFt);
 }
 
-function keepBelowSurface(prev: Manifold, ctx: CutContext, h: (d: number) => number): Manifold {
-  const allowed = belowSurface(ctx, h);
-  const next = prev.intersect(allowed);
+/** The slab between `lo` and `hi` above the reference (heights measured the §260 way). */
+export function referenceBand(ctx: CutContext, lo: number, hi: number): Manifold {
+  const below = belowSurface(ctx, () => hi);
+  const under = belowSurface(ctx, () => lo);
+  const band = below.subtract(under);
+  [below, under].forEach((o) => o.delete());
+  return band;
+}
+
+/** [prev ∩ allowed, prev − allowed], deleting `allowed`. */
+function splitBy(prev: Manifold, allowed: Manifold): [Manifold, Manifold] {
+  const parts = prev.split(allowed);
   allowed.delete();
-  return next;
+  return parts;
+}
+
+function splitBelowSurface(prev: Manifold, ctx: CutContext, h: (d: number) => number): [Manifold, Manifold] {
+  return splitBy(prev, belowSurface(ctx, h));
 }
 
 /** A prism over a plan section, from far below the lot to far above it. */
@@ -54,7 +69,7 @@ function tallPrism(section: CrossSection, bigFt: number): Manifold {
   return placed;
 }
 
-export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
+export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): [Manifold, Manifold] {
   const { frame } = ctx;
   const at = (s: number, d: number, z: number): Vec3 => {
     const [x, y] = frame.toWorld(s, d);
@@ -66,21 +81,21 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): Manifold {
     case "none":
       throw new Error("applyCut called for a rule without geometry");
     case "uniform_height":
-      if (ctx.reference.kind === "upslope") return keepBelowSurface(prev, ctx, () => cut.heightFt);
-      return keepHalfSpace(prev, [0, 0, -1], [0, 0, cut.heightFt]);
+      if (ctx.reference.kind === "upslope") return splitBelowSurface(prev, ctx, () => cut.heightFt);
+      return splitHalfSpace(prev, [0, 0, -1], [0, 0, cut.heightFt]);
     case "zone_heights":
-      return intersectWithZones(prev, cut.heights, ctx);
+      return splitBy(prev, zonesAllowed(cut.heights, ctx));
     case "max_depth":
-      return keepHalfSpace(prev, [-n[0], -n[1], 0], at(0, cut.depthFt, 0));
+      return splitHalfSpace(prev, [-n[0], -n[1], 0], at(0, cut.depthFt, 0));
     case "min_depth":
-      return keepHalfSpace(prev, n, at(0, cut.depthFt, 0));
+      return splitHalfSpace(prev, n, at(0, cut.depthFt, 0));
     case "plane": {
       // Keep z ≤ reference + start + tan(angle)·(d − d₀).
       const t = Math.tan((cut.angleDeg * Math.PI) / 180);
       if (ctx.reference.kind === "upslope") {
-        return keepBelowSurface(prev, ctx, (d) => cut.startHeightFt + t * (d - cut.fromDepthFt));
+        return splitBelowSurface(prev, ctx, (d) => cut.startHeightFt + t * (d - cut.fromDepthFt));
       }
-      return keepHalfSpace(prev, [t * n[0], t * n[1], -1], at(0, cut.fromDepthFt, cut.startHeightFt));
+      return splitHalfSpace(prev, [t * n[0], t * n[1], -1], at(0, cut.fromDepthFt, cut.startHeightFt));
     }
     case "side_strips":
       return keepOutsideSideYards(prev, cut, ctx);
@@ -126,7 +141,7 @@ export function sideEdges(ctx: Pick<CutContext, "frame" | "lot">): { left: SideE
 }
 
 /** Removes everything within `leftFt` of the left side lot lines and `rightFt` of the right ones. */
-function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_strips" }>, ctx: CutContext): Manifold {
+function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_strips" }>, ctx: CutContext): [Manifold, Manifold] {
   const { wasm } = ctx;
   const edges = sideEdges(ctx);
   const bands: CrossSection[] = [];
@@ -154,14 +169,14 @@ function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_st
       sliver.delete();
     }
   }
-  if (bands.length === 0) return prev.translate([0, 0, 0]); // the caller deletes `prev`
+  // Nothing to remove: a copy of prev (the caller deletes prev) and an empty piece.
+  if (bands.length === 0) return [prev.translate([0, 0, 0]), prev.trimByPlane([0, 0, 1], ctx.bigFt * 10)];
   const band = wasm.CrossSection.union(bands);
   const lotSection = crossSection(wasm, ctx.lot);
   const allowedSection = lotSection.subtract(band);
   const allowed = tallPrism(allowedSection, ctx.bigFt);
-  const next = prev.intersect(allowed);
-  [...bands, band, lotSection, allowedSection, allowed].forEach((o) => o.delete());
-  return next;
+  [...bands, band, lotSection, allowedSection].forEach((o) => o.delete());
+  return splitBy(prev, allowed);
 }
 
 /** The longest edge on each side, for dimension lines and cut planes. */
@@ -179,7 +194,8 @@ function lotSpan(ctx: Pick<CutContext, "frame" | "lot">) {
   return { s0: Math.min(...ss), s1: Math.max(...ss), d0: Math.min(...ds), d1: Math.max(...ds) };
 }
 
-function intersectWithZones(prev: Manifold, heights: (number | null)[], ctx: CutContext): Manifold {
+/** Where each height zone allows building: each zone's prism up to its own height. */
+function zonesAllowed(heights: (number | null)[], ctx: CutContext): Manifold {
   const { wasm, lot, bigFt } = ctx;
   const prisms: Manifold[] = [];
   const grown = ctx.zones.map((zone) => {
@@ -205,9 +221,8 @@ function intersectWithZones(prev: Manifold, heights: (number | null)[], ctx: Cut
   if (!uncovered.isEmpty()) prisms.push(tallPrism(uncovered, bigFt));
 
   const allowed = wasm.Manifold.union(prisms);
-  const next = prev.intersect(allowed);
-  [...grown, lotSection, covered, uncovered, allowed, ...prisms].forEach((o) => o.delete());
-  return next;
+  [...grown, lotSection, covered, uncovered, ...prisms].forEach((o) => o.delete());
+  return allowed;
 }
 
 /** The part of the lot no height zone covers, in square feet. */
