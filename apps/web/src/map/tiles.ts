@@ -1,12 +1,14 @@
 import { addProtocol, setWorkerUrl } from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { PMTiles, Protocol } from "pmtiles";
+import { DEMO } from "../demo/demo";
+import { ChunkedSource } from "../demo/tiles";
 
 // Where the map's data comes from. The parcel tiles are one static PMTiles file
 // built by `pnpm build-tiles`; the basemap is a keyless public style.
 
 export const TILES_URL = new URL(import.meta.env.VITE_SF_TILES ?? "tiles/sf.pmtiles", document.baseURI).href;
-export const BASEMAP_STYLE = import.meta.env.VITE_BASEMAP_STYLE ?? "https://tiles.openfreemap.org/styles/positron";
+export const BASEMAP_STYLE = new URL(import.meta.env.VITE_BASEMAP_STYLE ?? "https://tiles.openfreemap.org/styles/positron", document.baseURI).href;
 
 let protocol: Protocol | null = null;
 
@@ -28,7 +30,7 @@ export type TilesStatus = { ok: true; attribution: string | null } | { ok: false
  * file with index.html) and reads its attribution, which carries the data dates.
  */
 export async function checkTiles(): Promise<TilesStatus> {
-  const archive = new PMTiles(TILES_URL);
+  const archive = new PMTiles(DEMO ? new ChunkedSource(TILES_URL) : TILES_URL);
   setUpMapLibre().add(archive);
   try {
     await archive.getHeader();

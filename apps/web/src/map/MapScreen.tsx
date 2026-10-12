@@ -1,14 +1,16 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import { coverageNote, loadDistrict, zoningCoverage, type ParcelTileProps } from "@zoningviz/jurisdictions/sf";
 import type { Geometry } from "geojson";
-import { LngLatBounds, Map as MapLibreMap, type MapGeoJSONFeature, type PaddingOptions } from "maplibre-gl";
+import { LngLatBounds, Map as MapLibreMap, Marker, type MapGeoJSONFeature, type PaddingOptions } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { prefetchLot } from "../data/loadLot";
+import { canOpen, DEMO, NOT_IN_DEMO } from "../demo/demo";
 import type { Handoff } from "../scene/Scene";
 import type { MapView } from "../state/url";
+import { EXAMPLES } from "./examples";
 import { feetPerPixel } from "./geo";
 import { SearchBox, type SearchHit } from "./search";
-import { LAYER, legend, lotFilter, mapLayers, SOURCE } from "./style";
+import { LAYER, legend, lotFilter, mapLayers, SELECTED_LINE, SOURCE } from "./style";
 import { BASEMAP_STYLE, checkTiles, setUpMapLibre, TILES_URL, type TilesStatus } from "./tiles";
 
 // Map screen: pick a lot by hovering, clicking or searching; the map flies to it
@@ -18,26 +20,6 @@ const CITY_VIEW: MapView = { lon: -122.4425, lat: 37.7598, zoom: 12.3 };
 const LOT_ZOOM = 19; // when only a point is known (search results, examples)
 const MAX_FLY_ZOOM = 19.5;
 const FLIGHT_MS = 1200;
-
-export interface Example {
-  id: string;
-  label: string;
-  note: string;
-  /** Lot centroid; absent for synthetic fixtures, which open without a flight. */
-  at?: [number, number];
-}
-
-export const EXAMPLES: Example[] = [
-  { id: "4025007", label: "667 Hampshire St", note: "RH-2, mid-block", at: [-122.40779, 37.76102] },
-  { id: "4025006", label: "2550 19th St", note: "RH-2 corner lot: you pick the front", at: [-122.40787, 37.76079] },
-  { id: "4276045", label: "1391 Hampshire St", note: "RH-2 across two height districts", at: [-122.40674, 37.75021] },
-  { id: "0044030", label: "766–772 Francisco St", note: "RH-2 condo lot in an R-4 district", at: [-122.41787, 37.80438] },
-  { id: "2687029", label: "124 Clarendon Ave", note: "RH-1(D) falling 35 ft from the street: 30 ft cap", at: [-122.45195, 37.75864] },
-  { id: "2820020", label: "118 Dellbrook Ave", note: "RH-1(D) rising 37 ft: 40 ft cap, no front plane", at: [-122.45381, 37.74876] },
-  { id: "1646023", label: "752 4th Ave", note: "RH-1", at: [-122.46134, 37.77465] },
-  { id: "0982019", label: "2120 Lyon St", note: "RH-3: no front height plane", at: [-122.44576, 37.79064] },
-  { id: "fixture-a", label: "Fixture A", note: "synthetic 25 × 100 ft RH-2 lot (SPEC.md)" },
-];
 
 interface Props {
   /** True while a lot is open on top of the map. */
@@ -61,8 +43,8 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
   const mapRef = useRef<MapLibreMap | null>(null);
   const hovered = useRef<string | null>(null);
   const flying = useRef(false);
-  const latest = useRef({ onMove, onOpen, reducedMotion, view });
-  latest.current = { onMove, onOpen, reducedMotion, view };
+  const latest = useRef({ onMove, onOpen, reducedMotion, view, select });
+  latest.current = { onMove, onOpen, reducedMotion, view, select };
 
   const [tiles, setTiles] = useState<TilesStatus | null>(null);
   const [tint, setTint] = useState(true);
@@ -107,6 +89,19 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
       map.once("idle", () => container.current?.setAttribute("data-ready", "true"));
     });
 
+    // The demo opens only the example lots, so it marks where they are.
+    if (DEMO) {
+      for (const example of EXAMPLES) {
+        if (!example.at) continue;
+        const marker = new Marker({ color: SELECTED_LINE, scale: 0.7 }).setLngLat(example.at).addTo(map);
+        marker.getElement().setAttribute("title", `${example.label}: ${example.note}`);
+        marker.getElement().addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (!flying.current) latest.current.select(example.id, { center: example.at });
+        });
+      }
+    }
+
     map.on("mousemove", LAYER.fill, (e) => {
       const feature = e.features?.[0];
       if (!feature || flying.current) return;
@@ -126,13 +121,16 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
       map.getCanvas().style.cursor = "";
     });
     map.on("click", (e) => {
+      if ((e.originalEvent.target as Element | null)?.closest?.(".maplibregl-marker")) return;
       const feature = map.getLayer(LAYER.fill) ? map.queryRenderedFeatures(e.point, { layers: [LAYER.fill] })[0] : undefined;
       if (!feature || flying.current) return setPopup(null);
       const props = feature.properties as ParcelTileProps;
       const coverage = zoningCoverage(props.zoning);
       // Lots with no zoning on the parcel record are looked up from the zoning layer when they open.
-      if (coverage.kind === "covered" || coverage.kind === "unknown") {
-        select(props.blklot, { bounds: boundsOf(feature) });
+      if (!canOpen(props.blklot)) {
+        setPopup({ x: e.point.x, y: e.point.y, title: props.address ?? `Block/lot ${props.blklot}`, text: NOT_IN_DEMO });
+      } else if (coverage.kind === "covered" || coverage.kind === "unknown") {
+        latest.current.select(props.blklot, { bounds: boundsOf(feature) });
       } else {
         setPopup({ x: e.point.x, y: e.point.y, title: props.address ?? `Block/lot ${props.blklot}`, text: coverageNote(coverage)! });
       }
@@ -194,7 +192,10 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
   }
 
   function onSearch(hit: SearchHit) {
-    if (hit.kind === "blklot") return select(hit.blklot, {});
+    if (hit.kind === "blklot") {
+      if (!canOpen(hit.blklot)) return setPopup({ x: 24, y: 24, title: hit.label, text: NOT_IN_DEMO });
+      return select(hit.blklot, {});
+    }
     const { match } = hit;
     if (!match.blklot) {
       setPopup({ x: 24, y: 24, title: match.label, text: "The address list has no block/lot for this address." });
@@ -216,7 +217,9 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
               {hoverCoverage?.kind === "covered" && <> · {loadDistrict(hoverCoverage.code)?.name}</>}
             </span>
             <em>
-              {hoverCoverage?.kind === "covered"
+              {!canOpen(hover.blklot)
+                ? "Not in this demo"
+                : hoverCoverage?.kind === "covered"
                 ? "Click to see its envelope"
                 : hoverCoverage?.kind === "unknown"
                   ? "Click to look up its zoning"
@@ -237,6 +240,11 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
       <section className="map-panel" aria-label="Find a lot">
         <h1>Zoning Envelope Visualizer</h1>
         <p className="muted">Pick a San Francisco lot to watch each zoning rule carve the space above it down to what the code allows.</p>
+        {DEMO && (
+          <p className="notice" data-testid="demo-note">
+            Hosted demo: the lots marked on the map, listed under “Try one”, carry recorded city data and open fully. Live lookups and the street basemap need the full app.
+          </p>
+        )}
         <SearchBox onPick={onSearch} />
         {tiles && !tiles.ok && (
           <p className="notice" data-testid="tiles-missing">
@@ -257,7 +265,7 @@ export function MapScreen({ hidden, view, reducedMotion, onMove, onOpen }: Props
             ))}
           </ul>
         )}
-        <details className="examples">
+        <details className="examples" open={DEMO || undefined}>
           <summary>Try one</summary>
           <ul>
             {EXAMPLES.map((ex) => (

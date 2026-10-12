@@ -7,6 +7,9 @@ import {
   type SfBuilding,
   type SfParcel,
 } from "@zoningviz/jurisdictions/sf";
+import { demoAdapter } from "../demo/adapter";
+import { DEMO } from "../demo/demo";
+import { fetchLotData } from "./lotData";
 
 /** What the fact card shows, for real lots and synthetic fixtures alike. */
 export interface LotFacts {
@@ -55,7 +58,7 @@ export function blockOf(blklot: string): string | null {
 
 let sharedAdapter: SfAdapter | null = null;
 /** The one DataSF adapter the app uses (lot loading and address search). */
-export const sfAdapter = () => (sharedAdapter ??= createSfAdapter());
+export const sfAdapter = () => (sharedAdapter ??= DEMO ? demoAdapter() : createSfAdapter());
 const adapter = sfAdapter;
 
 // One load per lot per visit: the map starts loading while it flies in, and the
@@ -81,15 +84,9 @@ async function fetchLot(id: string): Promise<LoadedLot> {
   const fixture = FIXTURES[id];
   if (fixture) return loadFixture(id, fixture);
 
-  const parcel = await adapter().getParcelByBlockLot(id);
-  if (!parcel) throw new LotNotFoundError(`No San Francisco parcel has block/lot ${id}.`);
-  // Split-zoned lots ("RH-1|RH-2") get no district: they aren't modeled yet.
-  const district = parcel.zoning.codes.length === 1 ? loadDistrict(parcel.zoning.codes[0]!) : null;
-  const [neighbors, buildings, terrain] = await Promise.all([
-    district ? adapter().getNeighbors(parcel) : Promise.resolve([]),
-    adapter().getBuildings(parcel),
-    district ? adapter().getTerrain(parcel) : Promise.resolve(null),
-  ]);
+  const data = await fetchLotData(adapter(), id);
+  if (!data) throw new LotNotFoundError(`No San Francisco parcel has block/lot ${id}.`);
+  const { parcel, district, neighbors, buildings, terrain } = data;
   const facts = parcelFacts(parcel, buildings.asOf);
   if (district) {
     facts.asOf.push({ label: terrain?.source ?? "Ground elevations", date: terrain ? terrain.asOf : "couldn't be loaded" });

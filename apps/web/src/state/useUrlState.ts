@@ -15,8 +15,12 @@ export function useUrlState(): [UrlState, (patch: Partial<UrlState>, mode?: "rep
     setState((current) => {
       const next = { ...current, ...patch };
       const url = `${window.location.pathname}${toSearch(next)}`;
-      if (mode === "push") window.history.pushState(null, "", url);
-      else window.history.replaceState(null, "", url);
+      try {
+        if (mode === "push") window.history.pushState(null, "", url);
+        else window.history.replaceState(null, "", url);
+      } catch {
+        // Some embedding frames refuse history changes; the view still updates, without a link.
+      }
       return next;
     });
   }, []);

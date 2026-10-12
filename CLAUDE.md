@@ -46,6 +46,7 @@ pnpm test         # vitest run, all workspace projects
 pnpm typecheck    # tsc in every package
 pnpm dev          # web app dev server: the map (needs pnpm build-tiles once), or ?parcel=fixture-a / ?parcel=4025007
 pnpm build        # web app production build (copies public/tiles/sf.pmtiles if built)
+pnpm build-demo   # apps/web/dist-demo: hosted demo for static hosts with no outside network (claude.ai artifact): recorded data for the "Try one" lots, tiles as base64 chunks
 pnpm e2e          # Playwright browser tests (DataSF, basemap and tiles replayed; LIVE=1 records new DataSF responses)
 pnpm build-tiles                  # parcels + zoning -> apps/web/public/tiles/sf.pmtiles (needs tippecanoe; $TIPPECANOE overrides)
 pnpm build-tiles --fixture        # small tileset around the demo lots -> apps/web/e2e/fixtures/tiles (committed)
@@ -69,7 +70,8 @@ apps/web/                       # React app: map, scene, cards, controls
   src/map/                      # MapScreen (hover, click, search, zoning tint, fly-in), style.ts (layers, colors), tiles.ts (pmtiles + worker setup)
   src/state/                    # URL state (?parcel&step&front&setback&off&at)
   src/anim/                     # schedule (beat times), GSAP timeline over a plain state object, usePlayer
-  src/data/                     # loadLot (fixtures or DataSF), engine hooks
+  src/data/                     # loadLot (fixtures or DataSF), lotData (the requests a lot needs), engine hooks
+  src/demo/                     # VITE_DEMO build: replayed requests, example-lot search, chunked tiles
   src/scene/                    # react-three-fiber scene; palette.ts holds the only red
   src/ui/                       # fact card, rule cards (eye toggles), player controls + scrubber, HUD, summary
   e2e/                          # Playwright specs; fixtures/datasf = recorded responses, fixtures/tiles = demo-area tiles, map.ts = basemap/tiles routes
