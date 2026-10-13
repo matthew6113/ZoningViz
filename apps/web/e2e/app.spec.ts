@@ -94,7 +94,8 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await expect(summary).toContainText("6,875 sq ft");
   await expect(summary).toContainText("34.4% of the block survived.");
   await expect(page.locator(".rule-card")).toHaveCount(11);
-  await expect(page.locator(".tag-unverified")).toHaveCount(11);
+  await expect(page.locator(".tag-unverified")).toHaveCount(6);
+  await expect(page.locator(".rule-card").filter({ hasText: "RH-2 dwelling cap" })).toContainText("in effect since 2015-12-04");
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/fixture-a-result.png` });
 });

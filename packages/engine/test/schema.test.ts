@@ -18,7 +18,7 @@ const rule = (overrides: Record<string, unknown>) => ({
 const file = (rules: unknown[]) => ({ jurisdiction: "sf", district: "T", name: "Test", rules });
 
 describe("district schema", () => {
-  it("accepts RH-2.json with SPEC.md's rules in order, all unverified", () => {
+  it("accepts RH-2.json with SPEC.md's rules in order", () => {
     expect(rh2.rules.map((r) => r.id)).toEqual([
       "use",
       "height-reference",
@@ -32,7 +32,14 @@ describe("district schema", () => {
       "narrow-street",
       "cross-slope",
     ]);
-    expect(rh2.rules.every((r) => r.verified === false)).toBe(true);
+    // Checked against the code text in the verification pass (VERIFY.md); the rest are drafts.
+    expect(rh2.rules.filter((r) => r.verified).map((r) => r.id)).toEqual([
+      "height-reference",
+      "mapped-height",
+      "rh-dwelling-height",
+      "front-plane",
+      "cross-slope",
+    ]);
     expect(rh2.rules.find((r) => r.id === "rear-yard")!.params).toEqual({
       pctOfLotDepth: 0.3,
       minFeet: 15,
@@ -41,13 +48,14 @@ describe("district schema", () => {
   });
 
   const DRAFTS = ["RH-1(D)", "RH-1", "RH-1(S)", "RH-2", "RH-3", "RM-1", "RM-2", "RM-3", "RM-4", "NC-1", "NC-2", "NC-3", "NC-S"];
-  it.each(DRAFTS)("accepts the %s draft, every rule unverified and cited", (code) => {
+  it.each(DRAFTS)("accepts the %s file, every rule cited and dated only once verified", (code) => {
     const district = loadDistrict(code);
     expect(district.district).toBe(code);
     for (const r of district.rules) {
-      expect(r.verified).toBe(false);
-      expect(r.effectiveDate).toBeNull();
       expect(r.citation).toMatch(/§/);
+      expect(r.url).toMatch(/^https:\/\//);
+      if (r.verified) expect(r.effectiveDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      else expect(r.effectiveDate).toBeNull();
     }
   });
 

@@ -316,7 +316,7 @@ function resolveHeightReference(rule: Extract<Rule, { kind: "height_reference" }
   }
   const deep =
     ctx.depthFt > downslopeCurbDepthFeet
-      ? ` Past ${ft(downslopeCurbDepthFeet)} back, the code measures from the lower end of the lot instead; that part isn't modeled.`
+      ? ` The curb applies to the first ${ft(downslopeCurbDepthFeet)}, or halfway to the street behind if that's farther; beyond that, the code measures from the lower end of the lot. That isn't modeled: the curb is used for the whole lot.`
       : "";
   return {
     ...base,

@@ -54,7 +54,7 @@ describe("storyboard", () => {
       "Already satisfied: RH-2 dwelling cap, Front setback · Doesn't apply: Housing Choice-SF, Bulk limits · Not modeled: Narrow streets, Cross-slope",
     );
     expect(board.footer).toContain(HONESTY_LINE);
-    expect(board.footer).toContain("11 of 11 rules are unverified drafts.");
+    expect(board.footer).toContain("6 of 11 rules are unverified drafts.");
   });
 
   it("links to the lot from the start, keeping the options but not the map view", () => {

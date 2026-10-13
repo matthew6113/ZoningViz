@@ -18,15 +18,15 @@
       "id": "height-reference",
       "kind": "height_reference",
       "title": "Where height is measured from",
-      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet.",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet, or halfway to the street behind if that's farther.",
       "params": {
         "downslopeCurbDepthFeet": 100,
         "upslopeCurbWithinFeet": 10
       },
       "citation": "§260(a)(1)(A)–(C), §261(a)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "local-program",
@@ -58,9 +58,9 @@
         "source": "heightDistrict"
       },
       "citation": "§250",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21392",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#250",
+      "verified": true,
+      "effectiveDate": "2016-08-28"
     },
     {
       "id": "rear-yard",
@@ -216,12 +216,12 @@
       "id": "cross-slope",
       "kind": "flag",
       "title": "Cross-slope",
-      "plain": "Where the street or the ground slopes across the lot by more than 5%, a wide building is measured from several points, each covering a limited width (65 feet or less, narrower on steeper slopes); this view measures from one point.",
+      "plain": "Where the height limit is 65 feet or less and the street slopes along the lot's front, or the ground slopes across a lot that rises from the street, by more than 5%, a wide building is measured from several points, each covering at most 65 feet (35 to 55 on steeper slopes; on R-4 lots up to 85 feet tall, 55 to 85). It doesn't apply where §270 bulk limits apply. This view measures from one point.",
       "params": {},
-      "citation": "§260(a)(3), Table 260-1",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21453",
-      "verified": false,
-      "effectiveDate": null
+      "citation": "§260(a)(3)–(4), Tables 260-1 and 260-2",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "front-modulation",

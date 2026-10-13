@@ -1,15 +1,17 @@
-# Verification checklist for the RH district files
+# Verification checklist for the district files
 
-Every rule in the district files is an **unverified draft** (`verified: false`, `effectiveDate: null`):
+Every rule starts as an **unverified draft** (`verified: false`, `effectiveDate: null`) in:
 - RH: `RH-1(D).json`, `RH-1.json`, `RH-1(S).json`, `RH-2.json`, `RH-3.json`
 - RM: `RM-1.json` to `RM-4.json`
 - NC: `NC-1.json`, `NC-2.json`, `NC-3.json`, `NC-S.json`
 
-amlegal (the official codified Planning Code) blocks automated access, so the values were drafted from secondary sources. To verify a rule:
+The values were drafted from secondary sources. To verify a rule:
 
-1. Read the cited section on amlegal.
-2. Check the value against the code text.
-3. Set `verified: true` and set `effectiveDate` to the date the current text took effect. The schema refuses `verified: true` without a date.
+1. Read the cited section's text.
+2. Check the value against it.
+3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
+
+The rules checked so far are listed in the verification log at the end of this file.
 
 ## Sources used for the drafts (October 2026)
 
@@ -40,22 +42,22 @@ Sections 133 and 261.1 were also read directly on gocodebook. Pages: [§133](htt
 
 | Rule id | Value in the files | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
-| `height-reference` | Height is measured from the curb at the building's centerline. Level or downslope lots: the curb, for the first 100 ft of depth. Upslope lots: the curb within 10 ft of the street, then the average of the ground at either side of each cross-section | §260(a)(1)(A)–(C), §261(a) | S8 | §260: 1/12/2026 (Ord. 245-25) |
-| `mapped-height` | The height and bulk district's mapped height (from DataSF) | §250, and the height map | — | — |
+| `height-reference` | Height is measured from the curb at the building's centerline. Level or downslope lots: the curb, for the first 100 ft of depth or halfway to the street behind, whichever is greater. Upslope lots: the curb within 10 ft of the street, then the average of the ground at either side of each cross-section | §260(a)(1)(A)–(C), §261(a) | S8 | **Verified** (log, batch 1) |
+| `mapped-height` | The height and bulk district's mapped height (from DataSF) | §250, and the height map | — | **Verified** (log, batch 1) |
 | `rear-yard` | 30% of lot depth, never less than 15 ft, at grade and every story | §134(c)(1), §134(d)(1) | S1, S5, S7 | Text 1/14/2024 (Ord. 248-23); reworded 1/12/2026 (Ord. 245-25) |
 | `front-setback` | As deep as the adjacent building with the shallowest setback, up to 10 ft. The 15 ft exception for some block faces isn't modeled | §132(a), (c)(1), (d) | S1, S5 | §132(a) 1/19/2025 (Ord. 297-24); §132(d) 1/14/2024 |
 | `narrow-street` (flag) | Frontages on streets 40 ft wide or narrower step back upper stories; not modeled | §261.1 | S2 | 5/17/2021 (Ord. 47-21) |
 | `bulk` (every district) | Table 270 by the bulk letter mapped for each height zone: above the listed height, every floor's length and diagonal stay within the limits. A 40/110/125, B 50/110/125, C 80/110/125, D 40/110/140, E 65/110/140, F 80/110/140, G 80/170/200, H 100/170/200, I 150/170/200, J 40/250/300, K 60/250/300, L 80/250/300, M 100/250/300, N 40/50/100, T 80/110/125 (height / length / diagonal, ft). X: no limits. R-4: limits start above the 85 ft podium (§270(i)); not modeled above it. Other letters (R, R-2, R-3, S, S-2, CS, V, TB, CP, HP, PM, TI, EP, IB, PY, OS) are governed elsewhere and not modeled. Where the envelope is too big, the app keeps one box (widest allowed street front, then the depth the diagonal allows, at the front and centered) | §270(a)–(c), Table 270, §102 (Plan Dimensions), §270(i) | S13 | Table 270 amended by Ord. 245-25 (1/12/2026; R-3, R-4 rows) and Ord. 13-26 (3/16/2026; row T) |
-| `cross-slope` (flag) | Where the street or ground slopes across the lot by more than 5%, the building is measured from several points, each covering a width of 65 ft or less (Table 260-1: 65 / 55 / 45 / 35 ft for slopes over 5 / 15 / 20 / 25%); not modeled | §260(a)(3), Table 260-1 | S8 | 1/12/2026 |
+| `cross-slope` (flag) | Where the height limit is 65 ft or less and the street slopes along the front, or the ground slopes across a lot that rises from the street, by more than 5%, the building is measured from several points, each covering a limited width (Table 260-1: 65 / 55 / 45 / 35 ft for slopes over 5 / 15 / 20 / 25%; R-4 parcels up to 85 ft, Table 260-2: 85 / 75 / 65 / 55 ft). Not where §270 bulk limits apply; not modeled | §260(a)(3)–(4), Tables 260-1 and 260-2 | S8 | **Verified** (log, batch 1) |
 
 ## RH-1(D)
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
 | `use` | 1 unit per lot, or 1 per 3,000 sq ft of lot area, up to 3. Up to 4 units (6 on corner lots) under the density exception, plus ADUs | §209.1 (Table 209.1), §207(c)(8) | S3, S4 | Check |
-| `rh-dwelling-height` (`height_by_slope`) | 35 ft; 40 ft when the rear lot line's average ground is 20 ft or more higher than the front's; 30 ft when 20 ft or more lower; 25 ft when 40 ft or more lower | §261(b)(1)(A)–(C) | S2, S5, S8 | 12/4/2015 (Ord. 188-15) |
+| `rh-dwelling-height` (`height_by_slope`) | 35 ft; 40 ft when the rear lot line's average ground is 20 ft or more higher than the front's; 30 ft when 20 ft or more lower; 25 ft when 40 ft or more lower | §261(b)(1)(A)–(C) | S2, S5, S8 | **Verified** (log, batch 1) |
 | `side-yards` | Lots under 28 ft wide: none. 28 to under 31 ft: one yard of lot width − 25 ft. 31 to under 40 ft: 3 ft each side. 40 to under 50 ft: 4 ft each side. 50 ft or more: 5 ft each side | §133(a)–(c), Table 209.1 | S1, S3, S5 | 1978 (Ord. 443-78) |
-| `front-plane` | 30 ft at the front setback line, rising at 45° toward the rear; doesn't apply when the rear is 20 ft or more higher | §261(c), (c)(1), (c)(2) | S2, S5, S8 | 12/4/2015 |
+| `front-plane` | 30 ft at the front lot line (or the required front setback), rising at 45° toward the rear; doesn't apply when the rear is 20 ft or more higher | §261(c), (c)(1), (c)(2) | S2, S5, S8 | **Verified** (log, batch 1) |
 
 ## RH-1 and RH-1(S)
 
@@ -71,8 +73,8 @@ The rules are the same as RH-1(D), without side yards. Only the `use` cards diff
 | Rule id | Value | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
 | `use` | 2 units per lot, or 1 per 1,500 sq ft of lot area. Up to 4 (6 on corners) under the density exception, plus ADUs | §209.1, §207(c)(8) | S3, S4 | Check |
-| `rh-dwelling-height` (`height_by_slope`) | 40 ft; 35 ft when the rear lot line's average ground is 20 ft or more lower than the front's (no uphill increase) | §261(b)(2) | S2, S5, S8 | 12/4/2015 |
-| `front-plane` | 30 ft at the front setback line, then 45°; doesn't apply when the rear is 20 ft or more higher | §261(c), (c)(1), (c)(2) | S2, S5, S8 | 12/4/2015 |
+| `rh-dwelling-height` (`height_by_slope`) | 40 ft; 35 ft when the rear lot line's average ground is 20 ft or more lower than the front's (no uphill increase) | §261(b)(2) | S2, S5, S8 | **Verified** (log, batch 1) |
+| `front-plane` | 30 ft at the front lot line (or the required front setback), then 45°; doesn't apply when the rear is 20 ft or more higher | §261(c), (c)(1), (c)(2) | S2, S5, S8 | **Verified** (log, batch 1) |
 
 ## RH-3
 
@@ -134,12 +136,12 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 6. **Overlays that change these rules for opted-in projects.**
    - The §249.94 Family and Senior Housing Opportunity SUD covers most RH lots. It changes height, the rear yard and the front plane for corner lots. Not detected yet.
    - Housing Choice-SF (§206.10) on R-4 lots is modeled on request (the `local-program` card; questions 28–36).
-7. **URLs.** The `url`s point at amlegal section pages found by search (node ids from a dev mirror for §133, §260 and §261.1). None was opened, because amlegal blocks automated access.
+7. **URLs.** The drafts' `url`s point at amlegal section pages found by search (node ids from a dev mirror for §133, §260 and §261.1). None was opened, because amlegal blocks automated access. *Settled for verified rules:* they link to the gocodebook page their text was checked against.
 8. **"Average ground elevation" (§261(b), (c)).** The code doesn't define it. The engine averages the ground along each lot line from a 1 m LiDAR terrain model (USGS 3DEP, 2023). The 2590 Pacific Ave determination (S9) averaged surveyed spot elevations at the lot corners and let a retaining wall just inside the rear line stand in for it. Check which method the Planning Department uses, and whether existing or finished grade.
 9. **The curb.** §260 measures from the curb; there is no curb data, so the engine uses the ground at the middle of the front lot line. A sidewalk's cross-slope usually puts the curb a few inches lower.
-10. **"As measured at curb" in §261(b)(1)(A).** On an upslope lot, the 40 ft limit is described as measured at curb, but §260(a)(1)(C) measures upslope lots from the ground at the sides beyond 10 ft of the street. The engine follows §260 for every height rule. Confirm.
+10. **"As measured at curb" in §261(b)(1)(A).** On an upslope lot, the 40 ft limit is described as measured at curb, but §260(a)(1)(C) measures upslope lots from the ground at the sides beyond 10 ft of the street. The engine follows §260 for every height rule. Confirm. *Settled (batch 1):* "per Section 260" defers to §260, so the engine's reading stands.
 11. **Which way a lot slopes (§260(a)(1)(B)–(C)).** The engine calls a lot upsloping when the ground along its centerline averages higher than the curb. The code speaks of the slope "at the centerline of the building or building step"; check how small a rise still counts.
-12. **Deep downslope lots.** Past 100 ft (or the mid-block line), §260(a)(1)(B) measures from the lower end of the lot. The card says so; it isn't modeled.
+12. **Deep downslope lots.** Past 100 ft or the line halfway to the street behind, whichever is deeper, §260(a)(1)(B) measures from the lower end of the lot. On most SF blocks the halfway line is at or behind the rear lot line, so the curb covers the whole lot. The engine uses the curb for the whole lot; on lots deeper than 100 ft the card says what the code does and that it isn't modeled. *Card text corrected in batch 1* (it used to say the lower end governs past 100 ft).
 13. **FAR on mixed-use buildings.** §124(b) exempts residential uses, so the app shows FAR as a budget for non-residential floor area against the envelope's total floor area. Check how Planning counts shared areas (lobbies, circulation, parking) in a mixed-use building.
 14. **The first story's height.** §134(d)(2)–(3) start the NC rear yard at the second story, but the code doesn't cap how tall a first story can be. The app draws it at the §145.1 minimum (14 ft, or 10 ft in 40- and 50-ft districts); a taller ground floor would fill more of the yard. Check how the ZA treats the first story's height in the rear yard.
 15. **§263.20 conflicts with the tables.** As amended by Ord. 245-25, §263.20 lists no districts or parcels, so any NC project in a 30/40/50-X district with a ground floor over 10 ft clear could seem to qualify. Tables 710–712 still say "P(1) in some districts" with area notes, and §263.20(a) still refers to "specific districts listed below". It's a flag until a ZA interpretation settles it.
@@ -159,8 +161,25 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 29. **8,000 sq ft.** The code says "a Lot larger than 8,000 square feet"; Bulletin No. 11 says "8,000 square feet and larger". The files follow the code (a lot of exactly 8,000 sq ft doesn't qualify). The app measures lot area from the parcel shape, which can differ from a survey.
 30. **Corner Lot.** §102: a corner lot is at the junction of two or more streets, and "no Corner Lot shall be considered wider or deeper than 125 feet". The app calls a lot a corner lot when two of its street sides (found from neighboring parcels) meet at an angle, and raises the whole lot to 65 ft. It doesn't apply the 125 ft limit. A lot beside unparcelled land, or at a sharp bend in one street (197–199 Graystone Ter, 2719020: street sides 54° apart), can be mistaken for a corner lot; the card says the corner was judged from the parcel map.
 31. **The first story under the program.** §145.1's 10 ft exception is for "40- and 50-ft height districts". On an R-4 lot under the program, the app reads the height district as the program height (14 ft on 40//65-R-4). Check which number Planning uses.
-32. **§260(a)(4) and §270(i).** §260(a)(4) applies the lateral-slope tables to R-4 parcels "at or below 85 feet" but excludes property subject to §§270–270.3, and §270(i) covers all of R-4. The cross-slope flag covers both readings.
+32. **§260(a)(4) and §270(i).** §260(a)(4) applies the lateral-slope tables to R-4 parcels "at or below 85 feet" but excludes property subject to §§270–270.3, and §270(i) covers all of R-4. The cross-slope flag covers both readings; since batch 1 it names Table 260-2 for R-4 lots.
 33. **§263.20 on R-4 lots.** It names "R-4 ... with a height limit of 40, 50, or 80 feet" without saying base or program height; "80" may be meant as 85. Not modeled (the `notDrawn` list).
 34. **§263.21 vertical elements.** (d)(1)(I) lets them exceed the height limit "consistent with" §263.21(c), which itself runs through §329, and (d)(3) switches §329 off. Not drawn.
 35. **§261.1.** §206.10 switches off "Section 261" only; §261.1 (narrow streets and alleys) still applies by its text. It stays a flag.
 36. **Citywide Design Standards.** Bulletin No. 11 says Design Standard C.6 limits many R-district HC-SF envelopes at the rear (side setbacks above the ground floor, 30 ft between 55% and 30% of lot depth). That's a design standard, not Planning Code, and wasn't read at its source; not drawn, and named in `notDrawn`.
+
+## Verification log
+
+**Method.** Each value was quoted in chat from the gocodebook mirror of the Planning Code ("2026-08 edition", text as of 2026-09-23) next to the value in the files, and the user confirmed it or gave a correction. amlegal can't be opened from the build sandbox. Verified rules link to the gocodebook page they were checked against.
+
+**Effective dates.** `effectiveDate` is the effective date of the latest ordinance that amended a cited subsection, from the section's amendment history. Where the history never names the subsection, it's the date of the section's latest amendment (the current text of the section has been in force since then).
+
+### Batch 1: height measurement and the RH height caps (§250, §260, §261), confirmed 2026-10-13
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `mapped-height` | all 13 | §250 | Matches §250(b) | 2016-08-28 (Ord. 143-16 amended (b)) |
+| `height-reference` | all 13 | §260(a)(1)(A)–(C), §261(a) | 100 ft and 10 ft match. The text and the card's deep-lot note now add "or halfway to the street behind, whichever is greater" from (a)(1)(B) | 2026-01-12 (Ord. 245-25 amended (a)(1)(A)–(B)) |
+| `rh-dwelling-height` | RH-1(D), RH-1, RH-1(S) | §261(b)(1) | Matches (35 / 40 / 30 / 25 ft at ±20 / 40 ft) | 2015-12-04 (Ord. 188-15 amended (b)(1)(A)) |
+| `rh-dwelling-height` | RH-2 | §261(b)(2) | Matches (40 ft, 35 ft at −20 ft) | 2015-12-04 (section's latest amendment) |
+| `front-plane` | RH-1(D), RH-1, RH-1(S), RH-2 | §261(c)(1), (c)(2) | Matches. Text now says the plane starts at the front lot line, or at the required setback where there is one | 2015-12-04 (section's latest amendment) |
+| `cross-slope` (flag) | all 13 | §260(a)(3)–(4), Tables 260-1 and 260-2 | Widths match. Text now adds the 65 ft height condition, the upslope condition for ground cross-slopes, the §270 exclusion and the R-4 table | 2026-01-12 (Ord. 245-25 amended Table 260 and added (a)(4)) |

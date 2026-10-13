@@ -152,7 +152,7 @@ type Rule = {
 };
 ```
 
-Decided with the user: missing fields in SPEC.md's RH-2 example are filled as unverified drafts. `effectiveDate` stays `null` until the verification pass because no amendment history could be read (amlegal blocks automated access), and the schema refuses `verified: true` without a date. The `url`s point at amlegal section pages found by search and haven't been opened.
+Decided with the user: missing fields in SPEC.md's RH-2 example are filled as unverified drafts with `effectiveDate: null`; the schema refuses `verified: true` without a date. The verification pass runs in chat, in batches: each value is quoted from the gocodebook mirror (amlegal blocks automated access) and the user confirms or corrects it. A verified rule links to the gocodebook text it was checked against and is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment); the card shows "in effect since" that date. VERIFY.md's log lists each batch. Unverified drafts still point at amlegal pages found by search that haven't been opened.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|

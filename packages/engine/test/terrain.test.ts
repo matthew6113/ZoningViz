@@ -144,7 +144,7 @@ describe("real lots on their recorded terrain (USGS 3DEP)", async () => {
     expect(r.lot.terrain!.rearMinusFrontFt).toBeLessThan(-20);
     expect(r.lot.terrain!.rearMinusFrontFt).toBeGreaterThan(-40);
     expect(step(r, "rh-dwelling-height").numbers.heightFt).toBe(30);
-    expect(step(r, "height-reference").sentence).toMatch(/Past 100 ft back, the code measures from the lower end/);
+    expect(step(r, "height-reference").sentence).toMatch(/first 100 ft, or halfway to the street behind if that.s farther/);
     // The envelope reaches below the curb toward the low rear of the lot.
     expect(r.floors[0]!.bottomFt).toBeLessThan(0);
   });

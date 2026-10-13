@@ -112,7 +112,11 @@ export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onTog
                 {step.rule.citation}
               </a>
               {!step.rule.verified && <span className="tag-unverified">unverified</span>}
-              {step.rule.effectiveDate === null && <span className="muted">effective date not checked</span>}
+              {step.rule.effectiveDate === null ? (
+                <span className="muted">effective date not checked</span>
+              ) : (
+                <span className="muted">in effect since {step.rule.effectiveDate}</span>
+              )}
             </footer>
           </li>
         ))}
