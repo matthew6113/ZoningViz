@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { expect, test, type Download, type Page } from "@playwright/test";
 import { replayDataSf } from "./datasf";
 import { serveMap } from "./map";
 
@@ -24,9 +25,13 @@ const currentSentence = (page: Page) => page.locator("[aria-current=step] .sente
 const next = (page: Page) => page.getByRole("button", { name: "Next →" });
 const fast = (page: Page) => page.getByRole("button", { name: "2×" }).click();
 
-/** The WebGL canvas drew a real scene, not a blank clear color (polls until the first frames land). */
-async function expectSceneDrawn(page: Page) {
-  await expect.poll(() => distinctColors(page), { timeout: 20_000 }).toBeGreaterThan(20);
+/**
+ * The WebGL canvas drew a real scene, not a blank clear color (polls until the first frames land).
+ * Reading the canvas waits for SwiftShader (software WebGL) to finish every queued frame, which after
+ * a heavy scene has been switched and scrubbed can take most of a minute; such tests pass a longer timeout.
+ */
+async function expectSceneDrawn(page: Page, timeout = 20_000) {
+  await expect.poll(() => distinctColors(page), { timeout }).toBeGreaterThan(20);
 }
 
 function distinctColors(page: Page): Promise<number> {
@@ -361,6 +366,7 @@ test("bulk limits: 800 Powell St (RM-4, 65-A) is trimmed to a 110 ft box above 4
 });
 
 test("Housing Choice-SF: 1345 Clement St (NC-1, 40//65-R-4) switches to 65 ft and an 18% rear yard", async ({ page }) => {
+  test.setTimeout(180_000); // see expectSceneDrawn: two engine runs and a scrub on a lot with buildings and terrain
   await page.goto("/?parcel=1446048&step=3");
   await expect(page.locator(".fact-card h2")).toHaveText("1345–1347 Clement St");
   await expect(label(page)).toHaveText("Rule 3 of 12: Housing Choice-SF");
@@ -388,7 +394,7 @@ test("Housing Choice-SF: 1345 Clement St (NC-1, 40//65-R-4) switches to 65 ft an
   await expect(summary).toContainText("6 stories");
   await expect(summary).toContainText("26,775 sq ft");
   await expect(page.getByTestId("program-compare")).toHaveText("15,750 sq ft in 4 stories (+11,025 sq ft, +2 stories with the program)");
-  await expectSceneDrawn(page);
+  await expectSceneDrawn(page, 120_000);
   await page.screenshot({ path: `${SHOTS}/clement-housing-choice.png` });
 
   // Off again: the URL forgets it and the comparison goes away.
@@ -414,4 +420,96 @@ test("Housing Choice-SF on a hillside: 124 Clarendon Ave drops its 30 ft slope c
   await expect(page.getByTestId("program-compare")).toContainText("with the program");
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/clarendon-housing-choice.png` });
+});
+
+/** Saves a download into e2e/screenshots and measures it in the page: size, plus red (removed volume) and dark (text) pixels per region. */
+async function measurePng(page: Page, download: Download, regions: [number, number, number, number][]) {
+  const path = `${SHOTS}/${download.suggestedFilename()}`;
+  await download.saveAs(path);
+  const data = (await readFile(path)).toString("base64");
+  return page.evaluate(
+    async ({ data, regions }) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const counts = regions.map(([x0, y0, x1, y1]) => {
+        const px = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+        let red = 0;
+        let dark = 0;
+        for (let i = 0; i < px.length; i += 4) {
+          const [r, g, b] = [px[i]!, px[i + 1]!, px[i + 2]!];
+          if (r - g > 60 && r - b > 60) red++;
+          if (r < 80 && g < 80 && b < 80) dark++;
+        }
+        return { red, dark };
+      });
+      return { width: img.width, height: img.height, counts };
+    },
+    { data, regions },
+  );
+}
+
+test("Save image: the rear-yard view as a PNG with its red piece, rule card and link, the page untouched", async ({ page }) => {
+  await page.goto("/?parcel=fixture-a&step=6");
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expectSceneDrawn(page);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save image" }).click()]);
+  expect(download.suggestedFilename()).toBe("zoningviz-fixture-a-synthetic-25-100-ft-lot-rule-6.png");
+  const png = await measurePng(page, download, [[0, 0, 1600, 900]]); // the scene
+  expect(png.width).toBe(1600);
+  expect(png.counts[0]!.red).toBeGreaterThan(2000);
+  // The caption band: dark heading and sentence text below the scene.
+  const caption = await measurePng(page, download, [[0, png.height - 420, 1600, png.height]]);
+  expect(caption.counts[0]!.dark).toBeGreaterThan(2000);
+  await expect(page).toHaveURL(/step=6/);
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expect(page.getByRole("button", { name: "Save image" })).toBeEnabled();
+});
+
+test("Storyboard: one tile per cut, red only where a rule removes volume, the playhead untouched", async ({ page }) => {
+  await page.goto("/?parcel=fixture-a&step=6");
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expectSceneDrawn(page);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Storyboard" }).click()]);
+  expect(download.suggestedFilename()).toBe("zoningviz-fixture-a-synthetic-25-100-ft-lot-storyboard.png");
+  // Start, height limit, rear yard, front plane, result: 3 columns of 640 px tiles, 2 rows.
+  const tile = (column: number, row: number): [number, number, number, number] => {
+    const x = 48 + column * 660;
+    const y = 200 + row * (480 + 84 + 20);
+    return [x, y, x + 640, y + 470];
+  };
+  const png = await measurePng(page, download, [tile(0, 0), tile(1, 0), tile(2, 0), tile(1, 1)]);
+  expect(png.width).toBe(48 * 2 + 3 * 640 + 2 * 20);
+  expect(png.height).toBeGreaterThan(2 * 480 + 200);
+  const [start, height, rear, result] = png.counts;
+  expect(start!.red).toBe(0);
+  expect(height!.red).toBeGreaterThan(2000);
+  expect(rear!.red).toBeGreaterThan(500);
+  expect(result!.red).toBe(0);
+  await expect(page).toHaveURL(/step=6/);
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expect(page.getByTestId("hud-volume")).toHaveText("100,000 cu ft");
+});
+
+test("share images work on a hillside lot and with Housing Choice-SF on", async ({ page }) => {
+  for (const [query, name] of [
+    ["parcel=2687029&step=99", "zoningviz-124-clarendon-ave-storyboard.png"],
+    ["parcel=1446048&program=1&step=99", "zoningviz-1345-1347-clement-st-storyboard.png"],
+  ] as const) {
+    await page.goto(`/?${query}`);
+    await expect(label(page)).toHaveText("Result");
+    await expectSceneDrawn(page);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Storyboard" }).click()]);
+    expect(download.suggestedFilename()).toBe(name);
+    const png = await measurePng(page, download, [[0, 0, 600, 200]]);
+    expect(png.counts[0]!.dark).toBeGreaterThan(500); // the heading
+  }
+  const [view] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save image" }).click()]);
+  expect(view.suggestedFilename()).toBe("zoningviz-1345-1347-clement-st-result.png");
+  await view.saveAs(`${SHOTS}/${view.suggestedFilename()}`);
 });

@@ -1,6 +1,6 @@
 import { Html, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type { Floor, Solid } from "@zoningviz/engine";
+import type { Dimension, Floor, Solid } from "@zoningviz/engine";
 import { useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
   BufferAttribute,
@@ -192,6 +192,11 @@ export function CuttingPlanes({ result, anim }: { result: OkResult; anim: AnimSt
 }
 
 /** Dimension lines that draw themselves, with their labels fading in at the end. */
+/** Where a dimension line's label sits (engine feet): the line's midpoint, just above it. Share images use the same spot. */
+export function dimensionLabelAnchor(d: Dimension): [number, number, number] {
+  return [(d.from[0] + d.to[0]) / 2, (d.from[1] + d.to[1]) / 2, (d.from[2] + d.to[2]) / 2 + 0.1];
+}
+
 export function AnimatedDimensions({ result, anim }: { result: OkResult; anim: AnimState }) {
   const slots = Math.max(0, ...result.steps.map((s) => s.dimensions.length));
   const lines = useRef<(Line2 | null)[]>([]);
@@ -220,7 +225,7 @@ export function AnimatedDimensions({ result, anim }: { result: OkResult; anim: A
         const visible = !!d && anim.labelOpacity > 0.001;
         text.style.opacity = visible ? String(anim.labelOpacity) : "0";
         if (d) {
-          group.position.set((d.from[0] + d.to[0]) / 2, (d.from[1] + d.to[1]) / 2, (d.from[2] + d.to[2]) / 2 + 0.1);
+          group.position.set(...dimensionLabelAnchor(d));
           if (text.textContent !== d.label) text.textContent = d.label;
         }
       }

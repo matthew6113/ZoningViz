@@ -7,6 +7,7 @@ import { BufferAttribute, BufferGeometry, ExtrudeGeometry } from "three";
 import type { AnimState } from "../anim/timeline";
 import type { OkResult } from "../state/steps";
 import { AnimatedDimensions, AnimatedEnvelope, AnimatedFloors, CuttingPlanes } from "./Animated";
+import { Capture, type SceneCapturer } from "./capture";
 import { ENGINE_TO_THREE, engineToThree } from "./coords";
 import { ringsToShape, ringToPoints } from "./geometry";
 import { Label, LabelLayer } from "./labels";
@@ -31,6 +32,8 @@ export interface SceneProps {
   frameHeightFt: number;
   /** Set when the lot was opened from the map: the arrival starts at the map's scale, north up. */
   handoff?: Handoff | null;
+  /** Receives the capturer that renders this scene into share images. */
+  onCapturer?: (capturer: SceneCapturer | null) => void;
 }
 
 /** The map's view at the moment it hands over to the scene. */
@@ -59,6 +62,7 @@ export function Scene(props: SceneProps) {
           <hemisphereLight args={["#ffffff", "#d9d3c4", 1.6]} />
           <directionalLight position={engineToThree([-0.6 * framing.distance, -0.8 * framing.distance, framing.distance])} intensity={1.6} />
           <CameraRig key={framing.key} framing={framing} anim={anim} handoff={props.handoff ?? null} />
+          {props.onCapturer && <Capture onCapturer={props.onCapturer} />}
           <group rotation={ENGINE_TO_THREE}>
             {grids && ground ? <Terrain grids={grids} ground={ground} radius={framing.distance * 3} /> : <Ground radius={framing.distance * 3} />}
             <LotLines outline={outline} neighbors={props.neighborLots} front={front} ground={ground} />

@@ -16,6 +16,8 @@ export interface Player {
   schedule: Schedule | null;
   /** Step position under the playhead: 0 = start, 1…N = rules, N + 1 = result. */
   position: number;
+  /** The same, read now (it updates before React re-renders). */
+  currentPosition(): number;
   playing: boolean;
   speed: 1 | 2;
   mode: MotionMode;
@@ -189,6 +191,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
       seek(s.labels[previousPosition(s, tl.time())]!);
     },
     goTo: (p: number) => s && seek(s.labels[p]!),
+    currentPosition: () => Math.max(positionRef.current, 0),
     seekProgress: (progress: number) => {
       const tl = timeline.current;
       if (!tl) return;

@@ -69,11 +69,12 @@ apps/web/                       # React app: map, scene, cards, controls
   src/App.tsx                   # URL state -> map, or lot -> engine -> scene + cards (lots open over the map)
   src/map/                      # MapScreen (hover, click, search, zoning tint, fly-in), style.ts (layers, colors), tiles.ts (pmtiles + worker setup)
   src/state/                    # URL state (?parcel&step&front&setback&off&program&at)
-  src/anim/                     # schedule (beat times), GSAP timeline over a plain state object, usePlayer
+  src/anim/                     # schedule (beat times), GSAP timeline over a plain state object, usePlayer, stills (storyboard steps)
   src/data/                     # loadLot (fixtures or DataSF), lotData (the requests a lot needs), engine hooks
   src/demo/                     # VITE_DEMO build: replayed requests, example-lot search, chunked tiles
-  src/scene/                    # react-three-fiber scene; palette.ts holds the only red
-  src/ui/                       # fact card, rule cards (eye toggles), player controls + scrubber, HUD, summary
+  src/scene/                    # react-three-fiber scene; palette.ts holds the only red; capture.tsx renders share images
+  src/share/                    # share images: content.ts (captions, links, file names; tested in Node), compose.ts (canvas layout)
+  src/ui/                       # fact card, rule cards (eye toggles), player controls + scrubber, HUD, summary, share buttons
   e2e/                          # Playwright specs; fixtures/datasf = recorded responses, fixtures/tiles = demo-area tiles, map.ts = basemap/tiles routes
 packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve rules, build solids, measure
   src/envelope.ts               # createEngine() -> computeEnvelope(parcel, district, options)
@@ -231,12 +232,12 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
 - [x] Phase 3 — Scene (Next/Back through fixture A and real lots; `pnpm e2e` covers it)
 - [x] Phase 4 — Animation (one GSAP timeline, scrubber, 1×/2×, per-rule toggles, reduced motion)
 - [x] Phase 5 — Map and coverage (PMTiles, map screen, RH-1(D)/RH-1/RH-1(S)/RH-3 drafts, side_yard; `pnpm sweep` over random RH lots)
-- [ ] Phase 6 — Depth (one item per session)
+- [x] Phase 6 — Depth (one item per session)
   - [x] Terrain and slope: §260 height reference and §261 slope caps from USGS 3DEP ground; drawn terrain; fixtures F and G
   - [x] FAR districts: RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S drafts, `far` gauge, `ground_story`, rear yards above the first story; fixtures H–J
   - [x] Bulk letters: Table 270 `bulk` rule in every district, one fitting box above the bulk height; fixtures K, L, N
   - [x] Family Zoning Plan local-program unlock: `local_program` rule (Housing Choice-SF, §206.10) in every district, `?program=1` switch on R-4 lots, summary comparison; fixtures O–T
-  - [ ] Share images
+  - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
 
 ## Web app notes
 
@@ -248,10 +249,12 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
 - e2e: `e2e/map.ts` routes the basemap style to a background-only style and serves the fixture tileset with HTTP 206 range answers; every spec calls `serveMap(page)`.
 - Rule cards: only rules that cut volume get the eye toggle (height caps, yards, setbacks, planes, bulk), and not while they don't apply; info, flag, `height_reference`, `ground_story`, `far` and `local_program` cards don't. The `far` card shows a gauge (budget against the final floor area) and the result adds a "Non-residential cap" row. The `local_program` card has a switch (`role="switch"`, `?program=1`) on lots it applies to; while it's on, App runs the engine a second time without it and the summary adds a "Without Housing Choice-SF" row.
 - Step positions: 0 = starting block, 1…N = rule N applied (envelope + red removed piece), N+1 = finale (floors + summary).
+- **Share images** (`ui/ShareButtons.tsx`, beside ← Map): "Save image" renders the scene as it is (any step, the viewer's camera) 1,600 px wide at the canvas's shape; "Storyboard" renders 640 × 480 tiles for the start, each step with status `cut` and the result, in up to 3 columns. `scene/capture.tsx` resizes the renderer, runs `advance()` (every `useFrame`) and copies the canvas in one task, then puts it back, so nothing flickers and `preserveDrawingBuffer` isn't needed; tiles widen the field of view 1.3× so tall starting blocks fit. `anim/stills.ts` drives the scene's state with a second, target-less timeline to each step's resting point and restores it, so the cards, HUD, scrubber and URL never move. The HTML dimension labels are redrawn on the image at `dimensionLabelAnchor` (shared with the scene), nudged apart when they collide. Captions (`share/content.ts`) carry the rule sentence and citation or the result totals, the "unverified" tag, the honesty line, the unverified count, data dates and a link without `at=` (the storyboard's also without `step=`). Phones (coarse pointer) get the share sheet; everything else downloads. Red appears only as the removed-volume swatch.
+- Each rule's state switches on 1 ms after its step begins, so a step that begins where the previous one rests (the opening, card-only rules) doesn't change what's on screen at that rest: the start rests on the pale starting block.
 - **Animation:** `anim/schedule.ts` sets the beats (arrival 1.5 s, rise 1.2 s; per rule announce 0.6 / measure 0.8 / cut 1.2 / remove 0.9; info/flag/off rules 1.5 s; "already satisfied" = announce + measure). Step *k* rests at the end of rule *k*'s cut, with the red piece showing. `anim/timeline.ts` builds one GSAP timeline that tweens a plain `AnimState`; the scene reads it in `useFrame` and the HUD/scrubber are written through refs. React re-renders only when the step changes. Keep it that way: no per-frame React state.
 - A fresh visit plays the arrival and pauses at the start; `?step=n` opens paused there; `?step` follows the playhead; `?off=` lists rules switched off (engine `disabledRuleIds`); `?program=1` switches the local program on (engine `localProgram`).
 - `prefers-reduced-motion` builds a shorter timeline with no camera flight, sweep or lift (crossfades). In Playwright set it with `test.use({ contextOptions: { reducedMotion: "reduce" } })`; a top-level `reducedMotion` option is silently ignored.
-- `preserveDrawingBuffer` is on only under automation (`navigator.webdriver`), for the tests' pixel checks.
+- `preserveDrawingBuffer` is on only under automation (`navigator.webdriver`), for the tests' pixel checks. Reading the canvas waits for SwiftShader to finish every queued frame; after switching and scrubbing a heavy lot (1345 Clement St with buildings and terrain) that took 45–65 s in a 4-core container, so `expectSceneDrawn` takes a timeout for such tests.
 - Performance: about 1 ms of script per frame during playback. Headless Chromium here renders with SwiftShader (software), so its fps falls with canvas size (60 fps at 640×420, about 16 at 1360×820); that's rasterization, not our code.
 - The scene sits in one group rotated from the engine's z-up to three's y-up (`scene/coords.ts`).
 - drei `<Html>` labels must go through the scene's `Label` component, which pins them to a stable `portal`. Without it, labels go blank when the canvas's event target changes.

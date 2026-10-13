@@ -39,6 +39,8 @@ export const ENVELOPE_OPACITY = 0.6;
 export const START_OPACITY = 0.35;
 /** How far the removed piece rises before it fades: "lifts a few feet". */
 export const LIFT_FT = 6;
+/** Seconds after a step begins that the scene switches to its rule (see buildTimeline). */
+const SWITCH_AFTER_REST = 1e-3;
 
 /** The state before anything plays. Reduced motion starts with the camera and block already in place. */
 export function initialState(result: OkResult, mode: Schedule["mode"] = "full"): AnimState {
@@ -93,10 +95,12 @@ export function buildTimeline(
 
   for (const seg of schedule.rules) {
     const step = result.steps[seg.index]!;
+    // A step can begin exactly where the one before rests (the opening, card-only rules); switching
+    // just after that instant keeps the resting step on screen when the playhead is parked there.
     tl.set(
       state,
       { rule: seg.index, tint: 0, sweep: 0, planeOpacity: 0, measure: 0, labelOpacity: 0, lift: 0, removedOpacity: ENVELOPE_OPACITY },
-      seg.start,
+      seg.start + SWITCH_AFTER_REST,
     );
 
     const card = targets?.cards[seg.index];

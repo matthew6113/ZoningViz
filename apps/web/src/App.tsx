@@ -6,17 +6,19 @@ import { usePlayer, useReducedMotion } from "./anim/usePlayer";
 import { useEngine, useEnvelope, useLot } from "./data/hooks";
 import type { LoadedLot } from "./data/loadLot";
 import { MapScreen } from "./map/MapScreen";
+import type { SceneCapturer } from "./scene/capture";
 import { Scene, type Handoff } from "./scene/Scene";
-import { lastPosition, type OkResult } from "./state/steps";
+import { farBudget, lastPosition, positionLabel, type OkResult } from "./state/steps";
 import { CLOSE_LOT, type MapView, type UrlState } from "./state/url";
 import { useUrlState } from "./state/useUrlState";
 import { FactCard } from "./ui/FactCard";
 import { FrontPrompt } from "./ui/FrontPrompt";
 import { HonestyStrip } from "./ui/HonestyStrip";
 import { RuleCards } from "./ui/RuleCards";
+import { ShareButtons } from "./ui/ShareButtons";
 import { Hud } from "./ui/Hud";
 import { PlayerControls } from "./ui/PlayerControls";
-import { Summary, type FarBudget, type ProgramComparison } from "./ui/Summary";
+import { Summary, type ProgramComparison } from "./ui/Summary";
 
 type SetUrl = (patch: Partial<UrlState>, mode?: "replace" | "push") => void;
 
@@ -173,19 +175,18 @@ function EnvelopeView({
   const { position } = player;
   const last = lastPosition(result);
   const current = position >= 1 && position <= result.steps.length ? result.steps[position - 1]! : null;
-  const label =
-    position === 0
-      ? `Start: everything up to ${result.start.heightFt} ft`
-      : position === last
-        ? "Result"
-        : `Rule ${position} of ${result.steps.length}: ${current!.rule.title}`;
+  const label = positionLabel(result, position);
   const setbackRule = lot.district!.rules.find((r) => r.kind === "front_setback");
+  const capturer = useRef<SceneCapturer | null>(null);
+  const onCapturer = useCallback((c: SceneCapturer | null) => void (capturer.current = c), []);
+  const program = programComparison(result.steps, url.program, baseTotals);
   const toggle = (ruleId: string) =>
     setUrl({ off: url.off.includes(ruleId) ? url.off.filter((id) => id !== ruleId) : [...url.off, ruleId] });
 
   return (
     <Layout
       back={back}
+      tools={<ShareButtons capturer={capturer} player={player} result={result} facts={lot.facts} program={program} />}
       motion={player.mode}
       scrollToTop={position === last}
       scene={
@@ -202,6 +203,7 @@ function EnvelopeView({
             anim={player.anim}
             frameHeightFt={result.start.heightFt}
             handoff={handoff}
+            onCapturer={onCapturer}
           />
           <Hud refs={player.hud} />
         </>
@@ -215,7 +217,7 @@ function EnvelopeView({
               floorToFloorFt={DEFAULT_FLOOR_TO_FLOOR_FT}
               firstStoryFt={result.steps.find((s) => s.rule.kind === "ground_story")?.numbers.firstStoryFt ?? null}
               far={farBudget(result.steps)}
-              program={programComparison(result.steps, url.program, baseTotals)}
+              program={program}
             />
           )}
           <FactCard facts={lot.facts} lot={result.lot} notes={result.notes} />
@@ -250,12 +252,6 @@ function EnvelopeView({
   );
 }
 
-/** The floor-area-ratio rule's budget, unless it's switched off or the district has none. */
-function farBudget(steps: Step[]): FarBudget | null {
-  const far = steps.find((s) => s.rule.kind === "far" && s.status !== "disabled");
-  return far ? { ratio: far.numbers.ratio!, budgetSqFt: far.numbers.budgetSqFt! } : null;
-}
-
 /** The envelope without the local program, while it's on and applies to this lot. */
 function programComparison(steps: Step[], on: boolean, baseTotals: EnvelopeTotals | null): ProgramComparison | null {
   const program = steps.find((s) => s.rule.kind === "local_program");
@@ -276,6 +272,7 @@ function envelopeOptions(lot: LoadedLot | null, url: UrlState): EnvelopeOptions 
 
 function Layout({
   back,
+  tools,
   scene,
   controls,
   side,
@@ -284,6 +281,8 @@ function Layout({
 }: {
   motion?: MotionMode;
   back: React.ReactNode;
+  /** Shown beside ← Map (the share buttons). */
+  tools?: React.ReactNode;
   scene: React.ReactNode;
   controls?: React.ReactNode;
   side: React.ReactNode;
@@ -297,7 +296,10 @@ function Layout({
   return (
     <main className="lot-view" data-motion={motion}>
       <div className="stage">
-        <div className="stage-top">{back}</div>
+        <div className="stage-top">
+          {back}
+          {tools}
+        </div>
         <div className="scene-wrap">{scene}</div>
         {controls}
       </div>

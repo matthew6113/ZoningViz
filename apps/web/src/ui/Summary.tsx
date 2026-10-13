@@ -1,17 +1,8 @@
 import type { EnvelopeTotals } from "@zoningviz/engine";
-import { num } from "./format";
+import type { FarBudget, ProgramComparison } from "../state/steps";
+import { gain, num } from "./format";
 
-export interface FarBudget {
-  ratio: number;
-  budgetSqFt: number;
-}
-
-export interface ProgramComparison {
-  /** The local program's name, e.g. "Housing Choice-SF". */
-  title: string;
-  /** The same lot without it. */
-  without: EnvelopeTotals;
-}
+export type { FarBudget, ProgramComparison } from "../state/steps";
 
 export interface SummaryProps {
   totals: EnvelopeTotals;
@@ -63,15 +54,4 @@ export function Summary({ totals, floorToFloorFt, firstStoryFt, far, program = n
       <p className="survived">{num(totals.percentSurvived, 1)}% of the block survived.</p>
     </section>
   );
-}
-
-/** What the program adds over the envelope without it, in floor area and stories. */
-function gain(withProgram: EnvelopeTotals, without: EnvelopeTotals): string {
-  const area = withProgram.grossFloorAreaSqFt - without.grossFloorAreaSqFt;
-  const stories = withProgram.stories - without.stories;
-  if (Math.abs(area) < 0.5 && stories === 0) return "the program adds nothing here";
-  const signed = (n: number, text: string) => `${n >= 0 ? "+" : "−"}${text}`;
-  const parts = [signed(area, `${num(Math.abs(area))} sq ft`)];
-  if (stories !== 0) parts.push(signed(stories, `${Math.abs(stories)} ${Math.abs(stories) === 1 ? "story" : "stories"}`));
-  return `${parts.join(", ")} with the program`;
 }
