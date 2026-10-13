@@ -37,6 +37,8 @@ describe("district schema", () => {
       "height-reference",
       "mapped-height",
       "rh-dwelling-height",
+      "rear-yard",
+      "front-setback",
       "front-plane",
       "cross-slope",
     ]);

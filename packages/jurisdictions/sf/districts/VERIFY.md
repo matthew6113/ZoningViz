@@ -44,8 +44,8 @@ Sections 133 and 261.1 were also read directly on gocodebook. Pages: [§133](htt
 |---|---|---|---|---|
 | `height-reference` | Height is measured from the curb at the building's centerline. Level or downslope lots: the curb, for the first 100 ft of depth or halfway to the street behind, whichever is greater. Upslope lots: the curb within 10 ft of the street, then the average of the ground at either side of each cross-section | §260(a)(1)(A)–(C), §261(a) | S8 | **Verified** (log, batch 1) |
 | `mapped-height` | The height and bulk district's mapped height (from DataSF) | §250, and the height map | — | **Verified** (log, batch 1) |
-| `rear-yard` | 30% of lot depth, never less than 15 ft, at grade and every story | §134(c)(1), §134(d)(1) | S1, S5, S7 | Text 1/14/2024 (Ord. 248-23); reworded 1/12/2026 (Ord. 245-25) |
-| `front-setback` | As deep as the adjacent building with the shallowest setback, up to 10 ft. The 15 ft exception for some block faces isn't modeled | §132(a), (c)(1), (d) | S1, S5 | §132(a) 1/19/2025 (Ord. 297-24); §132(d) 1/14/2024 |
+| `rear-yard` | 30% of lot depth, never less than 15 ft, at grade and every story | §134(c)(1), §134(d)(1) | S1, S5, S7 | **Verified** (log, batch 2) |
+| `front-setback` | As deep as the adjacent building with the shallowest setback (half a lone neighbor's setback, and half on a corner lot), up to 10 ft. The 15 ft exception for some block faces isn't modeled | §132(a), (c)(1), (d) | S1, S5 | **Verified** (log, batch 2) |
 | `narrow-street` (flag) | Frontages on streets 40 ft wide or narrower step back upper stories; not modeled | §261.1 | S2 | 5/17/2021 (Ord. 47-21) |
 | `bulk` (every district) | Table 270 by the bulk letter mapped for each height zone: above the listed height, every floor's length and diagonal stay within the limits. A 40/110/125, B 50/110/125, C 80/110/125, D 40/110/140, E 65/110/140, F 80/110/140, G 80/170/200, H 100/170/200, I 150/170/200, J 40/250/300, K 60/250/300, L 80/250/300, M 100/250/300, N 40/50/100, T 80/110/125 (height / length / diagonal, ft). X: no limits. R-4: limits start above the 85 ft podium (§270(i)); not modeled above it. Other letters (R, R-2, R-3, S, S-2, CS, V, TB, CP, HP, PM, TI, EP, IB, PY, OS) are governed elsewhere and not modeled. Where the envelope is too big, the app keeps one box (widest allowed street front, then the depth the diagonal allows, at the front and centered) | §270(a)–(c), Table 270, §102 (Plan Dimensions), §270(i) | S13 | Table 270 amended by Ord. 245-25 (1/12/2026; R-3, R-4 rows) and Ord. 13-26 (3/16/2026; row T) |
 | `cross-slope` (flag) | Where the height limit is 65 ft or less and the street slopes along the front, or the ground slopes across a lot that rises from the street, by more than 5%, the building is measured from several points, each covering a limited width (Table 260-1: 65 / 55 / 45 / 35 ft for slopes over 5 / 15 / 20 / 25%; R-4 parcels up to 85 ft, Table 260-2: 85 / 75 / 65 / 55 ft). Not where §270 bulk limits apply; not modeled | §260(a)(3)–(4), Tables 260-1 and 260-2 | S8 | **Verified** (log, batch 1) |
@@ -56,7 +56,7 @@ Sections 133 and 261.1 were also read directly on gocodebook. Pages: [§133](htt
 |---|---|---|---|---|
 | `use` | 1 unit per lot, or 1 per 3,000 sq ft of lot area, up to 3. Up to 4 units (6 on corner lots) under the density exception, plus ADUs | §209.1 (Table 209.1), §207(c)(8) | S3, S4 | Check |
 | `rh-dwelling-height` (`height_by_slope`) | 35 ft; 40 ft when the rear lot line's average ground is 20 ft or more higher than the front's; 30 ft when 20 ft or more lower; 25 ft when 40 ft or more lower | §261(b)(1)(A)–(C) | S2, S5, S8 | **Verified** (log, batch 1) |
-| `side-yards` | Lots under 28 ft wide: none. 28 to under 31 ft: one yard of lot width − 25 ft. 31 to under 40 ft: 3 ft each side. 40 to under 50 ft: 4 ft each side. 50 ft or more: 5 ft each side | §133(a)–(c), Table 209.1 | S1, S3, S5 | 1978 (Ord. 443-78) |
+| `side-yards` | Lots under 28 ft wide: none. 28 to under 31 ft: one yard of lot width − 25 ft. 31 to under 40 ft: 3 ft each side. 40 to under 50 ft: 4 ft each side. 50 ft or more: 5 ft each side | §133(a)–(c), Table 209.1 | S1, S3, S5 | **Verified** (log, batch 2) |
 | `front-plane` | 30 ft at the front lot line (or the required front setback), rising at 45° toward the rear; doesn't apply when the rear is 20 ft or more higher | §261(c), (c)(1), (c)(2) | S2, S5, S8 | **Verified** (log, batch 1) |
 
 ## RH-1 and RH-1(S)
@@ -110,8 +110,8 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 | Rule id | Value | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
 | `use` | Density: 1 unit per 800 / 600 / 400 / 200 sq ft of lot area (RM-4: a unit of 500 sq ft or less with one room plus kitchen and bath counts as ¾, note (8)). Open space per unit: 100 / 80 / 60 / 36 sq ft private, or 133 / 106 / 80 / 48 sq ft common | Table 209.2, §207, Table 135A | S10, S12 | Ord. 245-25 kept the lot-area limits and removed the Ord. 292-24 minimum-density text |
-| `rear-yard` | RM-1, RM-2: 30% of lot depth, at least 15 ft. RM-3, RM-4: 25%, at least 15 ft. At grade and every story | §134(c)(1), (c)(2), (d)(1) | S5, S12 | 1/14/2024 (Ord. 248-23 replaced the old 45% with averaging); Ord. 245-25 made no RM change except new (l) |
-| `front-setback` | Same rule as RH: the adjacent building with the shallowest setback, up to 10 ft (15 ft exception not modeled). Table 209.2 still says "no case greater than 10 feet" without the 15 ft exception | §132(a), (c), (d) | S5, S12 | 1/14/2024 (Ord. 248-23 changed RM from averaging) |
+| `rear-yard` | RM-1, RM-2: 30% of lot depth, at least 15 ft. RM-3, RM-4: 25%, at least 15 ft. At grade and every story | §134(c)(1), (c)(2), (d)(1) | S5, S12 | **Verified** (log, batch 2) |
+| `front-setback` | Same rule as RH: the adjacent building with the shallowest setback, up to 10 ft (15 ft exception not modeled). Table 209.2 still says "no case greater than 10 feet" without the 15 ft exception | §132(a), (c), (d) | S5, S12 | **Verified** (log, batch 2) |
 | `front-modulation` (flag, RM-1 and RM-2) | On lots wider than 35 ft, the front steps at least 2 ft in height or depth every 35 ft or less, or has a pedestrian entrance every 25 ft | §144.1 | S12 | Check |
 | *(absent)* | No side yards (Table 209.2: "Not Required"; §133 is RH-1(D) only). No §261 dwelling cap or front plane (RH only) | §133, §261 | S10, S13 | — |
 
@@ -121,15 +121,15 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 |---|---|---|---|---|
 | `use` | 1 home per 800 sq ft of lot area (NC-3: 600), or the nearest R district's density if greater (not compared in the app). Form-based density only on R-4 lots | Tables 710–713, §207(b)(6) | S11 | Ord. 245-25 kept the numbers and added the R-4 sentence |
 | `ground-floor` (`ground_story`) | Non-residential ground floors at least 14 ft floor to floor; 10 ft in 40- and 50-ft height districts. The app draws the first story at this minimum | §145.1(c)(4)(C) | S12 | Check |
-| `rear-yard` | 25% of lot depth, at least 15 ft. NC-1: at grade and every story ((d)(1)). NC-2 and NC-S: from the second story up, and at the first story if it has a dwelling ((d)(2)). NC-3: from the lowest story with a dwelling ((d)(3)). NC-2, NC-3 and NC-S are drawn with a non-residential first story | §134(c)(2), (d)(1)–(3) | S11, S12 | NC-S had no rear yard until Ord. 245-25 (1/12/2026); NC depths unchanged in substance by Ord. 248-23 |
-| `front-setback` (flag) | Required only where the sidewalk is narrower than the Better Streets Plan width, for frontages of 50 ft or more, corner lots and lots next to a set-back building, up to 15 ft above grade. Not modeled | §132(e) | S11, S12 | 1/12/2026 (Ord. 245-25) |
+| `rear-yard` | 25% of lot depth, at least 15 ft. NC-1: at grade and every story ((d)(1)). NC-2 and NC-S: from the second story up, and at the first story if it has a dwelling ((d)(2)). NC-3: from the lowest story with a dwelling ((d)(3)). NC-2, NC-3 and NC-S are drawn with a non-residential first story | §134(c)(2), (d)(1)–(3) | S11, S12 | **Verified** (log, batch 2) |
+| `front-setback` (flag) | Required only where the sidewalk is narrower than the Better Streets Plan width, for frontages of 50 ft or more, corner lots and lots next to a set-back building, up to 15 ft above grade. Not modeled | §132(e) | S11, S12 | **Verified** (log, batch 2) |
 | `ground-floor-bonus` (flag, not NC-S) | Up to 5 ft of extra height for a ground floor taller than 10 ft clear. NC-S: "NP" | §263.20 | S11, S13 | Amended by Ord. 245-25 |
-| `large-lot` (flag, NC-S) | On lots of 2 acres or more, 65% coverage from the second story up (35% unbuilt) replaces the rear yard | §134(l) | S12 | 1/12/2026 (Ord. 245-25) |
+| `large-lot` (flag, NC-S) | On lots of 2 acres or more, 65% coverage from the second story up (35% unbuilt) replaces the rear yard | §134(l) | S12 | **Verified** (log, batch 2) |
 
 ## Open questions to settle while verifying
 
 1. **Corner-lot side yards (RH-1(D)).** The engine puts side yards along every lot line that runs front to back, including a second street side. Does §133 require a side yard along a street side?
-2. **Corner-lot front setback.** §132(c) gives a corner lot half the adjacent setback, on the frontage the owner elects. That case isn't modeled; the user can set the setback with the slider.
+2. **Corner-lot front setback.** §132(c) gives a corner lot half the adjacent setback, on the frontage the owner elects. That case isn't modeled; the user can set the setback with the slider. Since batch 2 the card names it, with (a)'s half setback for a lot with one neighbor.
 3. **Density figures.** Table 209.1's columns were garbled in both copies read. Confirm the units per lot and lot area per unit for each district.
 4. **§261(c)(2).** Next to taller neighbors, the front plane is raised to the average height of the adjacent buildings. That isn't modeled because neighbor heights aren't reliable enough.
 5. **§133(b) and (c).** Buildings 25 ft tall or less may shift width so that one side yard is 3 ft, and neighbors may agree to build to a shared line. Neither is modeled.
@@ -183,3 +183,19 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 | `rh-dwelling-height` | RH-2 | §261(b)(2) | Matches (40 ft, 35 ft at −20 ft) | 2015-12-04 (section's latest amendment) |
 | `front-plane` | RH-1(D), RH-1, RH-1(S), RH-2 | §261(c)(1), (c)(2) | Matches. Text now says the plane starts at the front lot line, or at the required setback where there is one | 2015-12-04 (section's latest amendment) |
 | `cross-slope` (flag) | all 13 | §260(a)(3)–(4), Tables 260-1 and 260-2 | Widths match. Text now adds the 65 ft height condition, the upslope condition for ground cross-slopes, the §270 exclusion and the R-4 table | 2026-01-12 (Ord. 245-25 amended Table 260 and added (a)(4)) |
+
+### Batch 2: yards and setbacks (§132, §133, §134), confirmed 2026-10-13
+
+The NC tables (710–713) only restate §134's rear yards, and their history notes say just "Zoning Control Table amended" (latest Ord. 37-26, 4/11/2026), so NC rear yards are dated by §134 (decided with the user).
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `rear-yard` | RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1, RM-2 | §134(c)(1), (d)(1) | Matches (30%, at least 15 ft, at grade and every story) | 2026-01-12 (Ord. 245-25 amended (c)(1), (d)(1)) |
+| `rear-yard` | RM-3, RM-4 | §134(c)(2), (d)(1) | Matches (25%, at least 15 ft, every story) | 2026-01-12 ((d)(1)) |
+| `rear-yard` | NC-1 | §134(c)(2), (d)(1); Table 710 | Matches; the table row says the same | 2026-01-12 ((d)(1)) |
+| `rear-yard` | NC-2, NC-S | §134(c)(2), (d)(2); Tables 711, 713 | Matches (second story up, and the first story if it has a dwelling) | 2026-01-12 (Ord. 245-25 amended (d)(2)) |
+| `rear-yard` | NC-3 | §134(c)(2), (d)(3); Table 712 | Matches (lowest story with a dwelling up) | 2026-03-16 (Ord. 13-26 amended (d)(3)) |
+| `front-setback` | RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1 to RM-4 | §132(a), (c), (d) | Values match (shallowest adjacent setback; 10 ft, or 15 ft on qualifying block faces). Text now names (a)'s half setback for a lone neighbor and (c)(1)'s half setback on corner lots | 2025-01-19 (Ord. 297-24 amended (a)) |
+| `side-yards` | RH-1(D) | §133(a)–(c) | Matches (a)(1)–(5). Text now says lots under 31 ft get one strip | 1978-10-06: Ord. 443-78's approval date; the history records no effective date (decided with the user) |
+| `front-setback` (flag) | NC-1, NC-2, NC-3, NC-S | §132(e) | Matches | 2026-01-12 (Ord. 245-25 added (e)) |
+| `large-lot` (flag) | NC-S | §134(l) | Matches (65% coverage from the second story up, 35% unbuilt) | 2026-01-12 (Ord. 245-25 added (l)) |

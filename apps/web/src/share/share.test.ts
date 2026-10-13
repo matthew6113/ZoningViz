@@ -54,7 +54,7 @@ describe("storyboard", () => {
       "Already satisfied: RH-2 dwelling cap, Front setback · Doesn't apply: Housing Choice-SF, Bulk limits · Not modeled: Narrow streets, Cross-slope",
     );
     expect(board.footer).toContain(HONESTY_LINE);
-    expect(board.footer).toContain("6 of 11 rules are unverified drafts.");
+    expect(board.footer).toContain("4 of 11 rules are unverified drafts.");
   });
 
   it("links to the lot from the start, keeping the options but not the map view", () => {
@@ -71,7 +71,8 @@ describe("view caption", () => {
     expect(caption.body).toEqual(["Rear yard: 30% of 100 ft lot depth = 30 ft."]);
     expect(caption.removed?.cuFt).toBeCloseTo(30_000, 3);
     expect(caption.citation).toMatch(/§134/);
-    expect(caption.unverified).toBe(true);
+    expect(caption.unverified).toBe(false); // checked in the verification pass
+    expect(viewCaption(ctxA, 1).unverified).toBe(true); // the "use" card is still a draft
     expect(caption.link).toBe("https://example.test/ZoningViz/?parcel=fixture-a&step=6&off=front-plane,bulk");
   });
 

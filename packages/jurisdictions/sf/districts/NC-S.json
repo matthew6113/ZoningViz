@@ -105,9 +105,9 @@
         "appliesAt": "above_first_story"
       },
       "citation": "§134(c)(2), §134(d)(2); Table 713",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "bulk",
@@ -225,9 +225,9 @@
       "plain": "Where the sidewalk is narrower than the Better Streets Plan recommends, a lot with 50 feet or more of frontage, a corner lot or a lot next to a set-back building must set its first 15 feet of height back to widen the sidewalk; sidewalk widths aren't in this app's data.",
       "params": {},
       "citation": "§132(e)",
-      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-132.-front-setback-areas-in-rto-rh-and-rm-districts-and-for-required-setbacks-for-project",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "narrow-street",
@@ -258,9 +258,9 @@
       "plain": "On a lot of two acres or more, a limit of 65% lot coverage from the second story up, with 35% of the lot left unbuilt, replaces the rear yard; that isn't shown.",
       "params": {},
       "citation": "§134(l)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     }
   ]
 }

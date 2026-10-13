@@ -105,9 +105,9 @@
         "appliesAt": "above_first_story"
       },
       "citation": "§134(c)(2), §134(d)(2); Table 711",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "bulk",
@@ -225,9 +225,9 @@
       "plain": "Where the sidewalk is narrower than the Better Streets Plan recommends, a lot with 50 feet or more of frontage, a corner lot or a lot next to a set-back building must set its first 15 feet of height back to widen the sidewalk; sidewalk widths aren't in this app's data.",
       "params": {},
       "citation": "§132(e)",
-      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-132.-front-setback-areas-in-rto-rh-and-rm-districts-and-for-required-setbacks-for-project",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "ground-floor-bonus",

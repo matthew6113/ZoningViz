@@ -114,15 +114,15 @@
         "appliesAt": "grade_and_every_story"
       },
       "citation": "§134(c)(1), §134(d)(1)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18322",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "side-yards",
       "kind": "side_yard",
       "title": "Side yards",
-      "plain": "Detached-house lots 28 feet wide or more keep open strips along both sides, wider on wider lots. Not shown: buildings 25 feet tall or less may shift width from one side to the other, and neighbors may agree to build to a shared line.",
+      "plain": "Detached-house lots 28 feet wide or more keep open strips along their sides (one strip on lots under 31 feet), wider on wider lots. Not shown: buildings 25 feet tall or less may shift width from one side to the other, and neighbors may agree to build to a shared line.",
       "params": {
         "byLotWidth": [
           {
@@ -149,24 +149,24 @@
         ]
       },
       "citation": "§133(a)–(c)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18310",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#133",
+      "verified": true,
+      "effectiveDate": "1978-10-06"
     },
     {
       "id": "front-setback",
       "kind": "front_setback",
       "title": "Front setback",
-      "plain": "The building must step back from the front lot line as far as the neighboring building with the shallower setback, up to 10 feet (15 feet on some block faces, not shown).",
+      "plain": "The building must step back from the front lot line as far as the neighboring building with the shallower setback (half the neighbor's setback when there's only one neighbor, or on a corner lot), up to 10 feet (15 feet on some block faces, not shown).",
       "params": {
         "method": "shallowest_adjacent",
         "maxFeet": 10,
         "userOverride": true
       },
       "citation": "§132(a), (c), (d)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-18248",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
+      "verified": true,
+      "effectiveDate": "2025-01-19"
     },
     {
       "id": "front-plane",

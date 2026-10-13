@@ -123,7 +123,8 @@ test("an RH-1(D) lot shows its side yards", async ({ page }) => {
   const card = page.locator("[aria-current=step]");
   await expect(card.locator(".sentence")).toHaveText("Side yards: this lot is 50.6 ft wide (50 ft or more), so 5 ft on each side.");
   await expect(card.locator(".plain")).toContainText("Not shown: buildings 25 feet tall or less may shift width");
-  await expect(card.locator(".tag-unverified")).toBeVisible();
+  await expect(card.locator("footer")).toContainText("in effect since 1978-10-06");
+  await expect(card.locator(".tag-unverified")).toHaveCount(0);
   await expect(page.locator(".dimension-label").filter({ hasText: "5 ft" })).toHaveCount(2);
   await page.screenshot({ path: `${SHOTS}/clarendon-side-yards.png` });
 
