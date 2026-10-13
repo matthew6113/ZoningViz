@@ -26,6 +26,7 @@ const OUT = join(WEB, "dist-demo");
 const CITY_TILES = join(WEB, "public", "tiles", "sf.pmtiles");
 const TILES_PATH = "tiles/sf.pmtiles";
 const CHUNK_BYTES = 1 << 20;
+const FULL_APP = "https://matthew6113.github.io/ZoningViz/";
 // No basemap host is reachable, so the parcels draw over a plain ground and the streets show as the gaps between them.
 const BASEMAP = {
   version: 8,
@@ -44,7 +45,8 @@ if (!existsSync(CITY_TILES)) {
 execFileSync("pnpm", ["exec", "vite", "build", "--outDir", "dist-demo", "--emptyOutDir"], {
   cwd: WEB,
   stdio: "inherit",
-  env: { ...process.env, VITE_DEMO: "1", VITE_SF_TILES: TILES_PATH, VITE_BASEMAP_STYLE: "demo/basemap.json" },
+  // Links on share images point at the full app (GitHub Pages): the demo's own address isn't public.
+  env: { ...process.env, VITE_DEMO: "1", VITE_SF_TILES: TILES_PATH, VITE_BASEMAP_STYLE: "demo/basemap.json", VITE_SHARE_BASE: FULL_APP },
 });
 
 // 2. City data for the example lots: the same requests the lot view makes, recorded.

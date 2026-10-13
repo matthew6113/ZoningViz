@@ -30,7 +30,7 @@ export function ShareButtons({ capturer, player, result, facts, program }: Share
     try {
       player.pause();
       const position = player.currentPosition();
-      const ctx: ShareContext = { facts, result, href: window.location.href, program };
+      const ctx: ShareContext = { facts, result, href: pageLink(), program };
       const { canvas, link } = kind === "view" ? viewPicture(scene, ctx, player.anim, position) : storyboardPicture(scene, ctx, player);
       await deliver(await toPng(canvas), fileName(facts, result, kind, position), facts.title, link);
     } catch (e) {
@@ -55,6 +55,13 @@ export function ShareButtons({ capturer, player, result, facts, program }: Share
       )}
     </div>
   );
+}
+
+// The link printed on images. The hosted demo's own address can't be opened from outside its host,
+// so its build sets VITE_SHARE_BASE to the full app, which opens any lot from the same query.
+const SHARE_BASE: string | undefined = import.meta.env.VITE_SHARE_BASE;
+function pageLink(): string {
+  return SHARE_BASE ? new URL(window.location.search, SHARE_BASE).toString() : window.location.href;
 }
 
 // Tiles are smaller and squarer than the screen; a slightly wider view keeps the starting block in frame.
