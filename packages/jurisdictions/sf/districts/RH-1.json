@@ -10,9 +10,9 @@
       "plain": "RH-1 lots are for single-family homes: one unit per lot (or one per 3,000 sq ft of lot area), with up to four units (six on a corner lot) under the density exception, plus accessory units.",
       "params": {},
       "citation": "§209.1, §207(c)(8)",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-20077",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-209.-description-and-purpose-of-residential-and-residential-commercial-districts/sec.-209.1.-rh-residential-house-districts",
+      "verified": true,
+      "effectiveDate": "2026-04-11"
     },
     {
       "id": "height-reference",
@@ -57,8 +57,8 @@
       },
       "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "mapped-height",
@@ -240,20 +240,20 @@
         }
       },
       "citation": "§270(a), Table 270; §102 (Plan Dimensions); §270(i)",
-      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#270",
+      "verified": true,
+      "effectiveDate": "2026-03-16"
     },
     {
       "id": "narrow-street",
       "kind": "flag",
       "title": "Narrow streets",
-      "plain": "On a street 40 feet wide or narrower, upper stories may have to step back from the front; street widths aren't in this app's data, so that isn't shown.",
+      "plain": "On a street or alley 40 feet wide or narrower, away from the corner, upper stories must step back at least 10 feet above a height of 1.25 times the street's width (two-story buildings are exempt), and on the south side of an east-west narrow street they must stay under a 45-degree plane from the opposite property line. Street widths aren't in this app's data, so that isn't shown.",
       "params": {},
       "citation": "§261.1",
-      "url": "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-21519",
-      "verified": false,
-      "effectiveDate": null
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts/sec.-261.-additional-height-limits-applicable-to-certain-rh-districts/sec.-261.1.-additional-height-limits-for-narrow-streets-and-alleys-in-r-rto-nc-nct-and-east",
+      "verified": true,
+      "effectiveDate": "2021-05-17"
     },
     {
       "id": "cross-slope",

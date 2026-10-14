@@ -11,7 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-The rules checked so far are listed in the verification log at the end of this file.
+**Status (2026-10-14): every rule in all 13 files is verified** against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -109,7 +109,7 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
 |---|---|---|---|---|
-| `use` | Density: 1 unit per 800 / 600 / 400 / 200 sq ft of lot area (RM-4: a unit of 500 sq ft or less with one room plus kitchen and bath counts as ¾, note (8)). Open space per unit: 100 / 80 / 60 / 36 sq ft private, or 133 / 106 / 80 / 48 sq ft common | Table 209.2, §207, Table 135A | S10, S12 | Ord. 245-25 kept the lot-area limits and removed the Ord. 292-24 minimum-density text |
+| `use` | Density: 1 unit per 800 / 600 / 400 / 200 sq ft of lot area (RM-4: a unit of 500 sq ft or less with one room plus kitchen and bath counts as ¾, note (8)). Open space per unit: 100 / 80 / 60 / 36 sq ft private, or 133 / 106 / 80 / 48 sq ft common | Table 209.2, §207, Table 135A | S10, S12 | **Verified** (log, batch 4). The tables keep a "Minimum Dwelling Unit Densities, if applicable" row (§207.9, generally 50–100 units per acre); an earlier note here said Ord. 245-25 removed it, which was wrong. It isn't on the cards: it depends on location and doesn't change the envelope |
 | `rear-yard` | RM-1, RM-2: 30% of lot depth, at least 15 ft. RM-3, RM-4: 25%, at least 15 ft. At grade and every story | §134(c)(1), (c)(2), (d)(1) | S5, S12 | **Verified** (log, batch 2) |
 | `front-setback` | Same rule as RH: the adjacent building with the shallowest setback, up to 10 ft (15 ft exception not modeled). Table 209.2 still says "no case greater than 10 feet" without the 15 ft exception | §132(a), (c), (d) | S5, S12 | **Verified** (log, batch 2) |
 | `front-modulation` (flag, RM-1 and RM-2) | On lots wider than 35 ft, the front steps at least 2 ft in height or depth every 35 ft or less, or has a pedestrian entrance every 25 ft | §144.1 | S12 | Check |
@@ -149,11 +149,11 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 17. **Nearest R district density.** NC density is the table value or the nearest R district's, whichever is greater. Which R district is "nearest" isn't computed.
 18. **§134(l) on large RM lots.** Residential districts get 60% coverage at street grade and above on lots of 2 acres or more. It isn't flagged in the RM files because few RM lots are that big; check whether any are.
 19. **§144.1 in RM-3 and RM-4.** The Table 209.2 row extracts as if it spans all four RM columns, but §144.1 itself names only RM-1 and RM-2. The files follow §144.1.
-20. **Amendments after 2026-09-23.** The mirror's text is as of that date. Ord. 1-26, 13-26 (§134(d)(3)) and 37-26 amended NC tables or §134 earlier in 2026; their text should already be included.
+20. **Amendments after 2026-09-23.** The mirror's text is as of that date. Ord. 1-26, 13-26 (§134(d)(3)) and 37-26 amended NC tables or §134 earlier in 2026; their text should already be included. *Settled:* the official text (through Ord. 131-26) includes them, and every value matches. Check the amlegal update notice for ordinances after 131-26 before the next review.
 21. **Bulk height reference.** §270(a) applies the limits "above the height indicated", and §102 defines Height by pointing to §260. The app measures the bulk height from the same §260 reference as the height limits. That reading is an inference: §270 doesn't say so in as many words.
 22. **Length on irregular lots.** §102 measures length "parallel to an exterior wall". The app measures the envelope across and along the lot's front line, which matches the walls on rectangular lots and approximates them on irregular ones. The diagonal is exact (the two most separated points).
 23. **Where the box goes.** Bulk limits fix size, not position. The app keeps the widest street front the limits allow, then the depth the diagonal allows, at the front and centered across. That is one allowed placement among many, and the card says so.
-24. **Row T.** The mirror shows 80 / 110 / 125. Ord. 13-26 amended row T; the scanned page appears to strike "At setback height established pursuant to Section 132.2, but no higher then" and keep "80". Confirm.
+24. **Row T.** The mirror shows 80 / 110 / 125. Ord. 13-26 amended row T; the scanned page appears to strike "At setback height established pursuant to Section 132.2, but no higher then" and keep "80". Confirm. *Settled (batch 3):* the official Table 270 reads T: 80 / 110 / 125.
 25. **Row V.** The height cell is blank in the code (it once pointed at the repealed §253.2), so V is not modeled.
 26. **§271 exceptions.** The Planning Commission may let a project exceed the limits (conditional use, or design review in the Eastern Neighborhoods). Not modeled; the envelope shows the limits as written.
 27. **R-4 above the podium.** §270(i): above 85 ft, 15 ft interior setbacks, a 12,000 sq ft average floor plate, 130 ft length and 160 ft diagonal, tower spacing, and top-third reductions. Covered lots' R-4 base heights don't reach 85 ft, so the card says the limits don't apply. With Housing Choice-SF on, some program heights do (70//140-R-4, 55//100-R-4); there the card says the limits aren't modeled.
@@ -169,7 +169,7 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 
 ## Verification log
 
-**Method.** Each value was quoted in chat from the gocodebook mirror of the Planning Code ("2026-08 edition", text as of 2026-09-23) next to the value in the files, and the user confirmed it or gave a correction. amlegal can't be opened from the build sandbox. Verified rules link to the gocodebook page they were checked against.
+**Method.** Batches 1 and 2 were first checked in chat against the gocodebook mirror of the Planning Code ("2026-08 edition", text as of 2026-09-23). On 2026-10-14 the user supplied the official Planning Code PDF from amlegal (current through Ord. 131-26, effective 8/23/2026; kept in a private repo, not in this one, because amlegal's terms bar redistribution). Every rule in batches 1–5 was then compared with the official text: every value, every quoted sentence and every amendment-history date matches. The user confirmed each batch and each wording change in chat. Rules link to the gocodebook page with the same text (amlegal's section links couldn't be opened from the build sandbox).
 
 **Effective dates.** `effectiveDate` is the effective date of the latest ordinance that amended a cited subsection, from the section's amendment history. Where the history never names the subsection, it's the date of the section's latest amendment (the current text of the section has been in force since then).
 
@@ -199,3 +199,30 @@ The NC tables (710–713) only restate §134's rear yards, and their history not
 | `side-yards` | RH-1(D) | §133(a)–(c) | Matches (a)(1)–(5). Text now says lots under 31 ft get one strip | 1978-10-06: Ord. 443-78's approval date; the history records no effective date (decided with the user) |
 | `front-setback` (flag) | NC-1, NC-2, NC-3, NC-S | §132(e) | Matches | 2026-01-12 (Ord. 245-25 added (e)) |
 | `large-lot` (flag) | NC-S | §134(l) | Matches (65% coverage from the second story up, 35% unbuilt) | 2026-01-12 (Ord. 245-25 added (l)) |
+
+### Batch 3: bulk, narrow streets, FAR and the NC ground floor, confirmed 2026-10-14
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `bulk` | all 13 | §270(a), Table 270; §102 (Plan Dimensions); §270(i) | Matches: all 15 lettered rows, X ("not applicable"), R-4 (§270(i), 85 ft podium), the §102 length and diagonal definitions | 2026-03-16 (Ord. 13-26 amended row T) |
+| `narrow-street` (flag) | all 13 | §261.1 | Matches. Text now gives the 10 ft step-back above 1.25 × the street's width, the two-story exemption, the 20/60 ft distance from a wider street and the 45° plane on the south side of east-west streets | 2021-05-17 (Ord. 47-21, the section's latest amendment) |
+| `far` | RM-1 to RM-4, NC-1 to NC-S | §124(a)–(b), Table 124; district tables | Matches (1.8, 1.8, 3.6, 4.8; 1.8, 2.5, 3.6, 1.8; residential uses exempt). District tables restate Table 124, so dated by §124 | 2026-01-12 (Ord. 245-25 amended Table 124 and (b)) |
+| `ground-floor` | NC-1 to NC-S | §145.1(c)(4)(C) | Matches (14 ft; 10 ft in 40- and 50-ft districts) | 2018-09-10 (Ord. 202-18 amended (c)(4)(C)) |
+| `ground-floor-bonus` (flag) | NC-1, NC-2, NC-3 | §263.20 | Matches. Text now names (b)(1)'s districts (30-X, 40-X, 50-X; R-4 at 40, 50 or 80 ft) and the raised ground-floor homes in (b)(2), and says the district tables still limit it | 2026-01-12 (Ord. 245-25) |
+| `front-modulation` (flag) | RM-1, RM-2 | §144.1 | Matches | 2011-05-07 (Ord. 63-11 renumbered it from §145) |
+
+### Batch 4: use and density cards, confirmed 2026-10-14
+
+The tables were last amended by Ord. 37-26 ("Table amended", 4/11/2026); the tables are the source of these values, so every `use` card takes that date.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | RH-1(D), RH-1, RH-1(S), RH-2, RH-3 | §209.1 (Table 209.1, notes (6) and (11)), §207(c)(8) | Matches: 1 per lot or 1 per 3,000 sq ft up to 3 (RH-1(D)); 1 per lot or 1 per 3,000 sq ft (RH-1); 2 per lot if the second is 600 sq ft or less, or 1 per 3,000 sq ft up to 3 (RH-1(S)); 2 or 1 per 1,500 sq ft (RH-2); 3 or 1 per 1,000 sq ft (RH-3); 4 units, 6 on corner lots under the density exception; accessory units | 2026-04-11 |
+| `use` | RM-1 to RM-4 | §209.2 (Table 209.2, note (8)), §207, Table 135A | Matches: 1 per 800 / 600 / 400 / 200 sq ft; RM-4 ¾-unit note; open space 100 / 80 / 60 / 36 sq ft private, common at 1.33× (rounded on the cards) | 2026-04-11 |
+| `use` | NC-1 to NC-S | Tables 710–713, §207(b)(6) | Matches: 1 per 800 / 800 / 600 / 800 sq ft or the nearest R district's density, whichever is greater. Text now adds the tables' "Form-Based Density applies within the R-4 Height and Bulk District" (§102: units limited only by the allowed building) | 2026-04-11 |
+
+### Batch 5: Housing Choice-SF, confirmed 2026-10-14
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `local-program` | all 13 (three variants: RH-1(D)/RH-1/RH-1(S)/RH-2 waive the §261 rules; NC replace the rear yard; RH-3 and RM change neither) | §206.10(b), (d)(1)(A), (C), (E), (F), (G); §263.19(b)(2) | Matches: the height after "//"; 65 ft on a Corner Lot or a Lot larger than 8,000 sq ft; "Section 261 shall not apply"; NC rear yard 18% or 15 ft with none at the ground floor; §135 and §140 don't apply; FAR doesn't limit residential uses; the (b)(1)–(10) eligibility list; the not-drawn bonuses ((e)(7): +10 ft, or +30 ft with (e)(6); +20 ft for 100% affordable; 15% adjustments under (d)(1)(M)) | 2026-01-12 (Ord. 245-25 added §206.10 and §263.19(b)) |

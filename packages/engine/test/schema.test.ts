@@ -32,16 +32,8 @@ describe("district schema", () => {
       "narrow-street",
       "cross-slope",
     ]);
-    // Checked against the code text in the verification pass (VERIFY.md); the rest are drafts.
-    expect(rh2.rules.filter((r) => r.verified).map((r) => r.id)).toEqual([
-      "height-reference",
-      "mapped-height",
-      "rh-dwelling-height",
-      "rear-yard",
-      "front-setback",
-      "front-plane",
-      "cross-slope",
-    ]);
+    // Every rule was checked against the official code text in the verification pass (VERIFY.md).
+    expect(rh2.rules.every((r) => r.verified)).toBe(true);
     expect(rh2.rules.find((r) => r.id === "rear-yard")!.params).toEqual({
       pctOfLotDepth: 0.3,
       minFeet: 15,

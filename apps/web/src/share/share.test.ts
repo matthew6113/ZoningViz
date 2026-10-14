@@ -54,7 +54,11 @@ describe("storyboard", () => {
       "Already satisfied: RH-2 dwelling cap, Front setback · Doesn't apply: Housing Choice-SF, Bulk limits · Not modeled: Narrow streets, Cross-slope",
     );
     expect(board.footer).toContain(HONESTY_LINE);
-    expect(board.footer).toContain("4 of 11 rules are unverified drafts.");
+    expect(board.footer).toContain("All 11 rules are verified.");
+    // A draft rule is counted and tagged.
+    const draft = { ...fixtureA, steps: fixtureA.steps.map((s, i) => (i === 5 ? { ...s, rule: { ...s.rule, verified: false } } : s)) };
+    expect(storyboardCaption({ ...ctxA, result: draft }).footer).toContain("1 of 11 rules are unverified drafts.");
+    expect(viewCaption({ ...ctxA, result: draft }, 6).unverified).toBe(true);
   });
 
   it("links to the lot from the start, keeping the options but not the map view", () => {
@@ -72,7 +76,6 @@ describe("view caption", () => {
     expect(caption.removed?.cuFt).toBeCloseTo(30_000, 3);
     expect(caption.citation).toMatch(/§134/);
     expect(caption.unverified).toBe(false); // checked in the verification pass
-    expect(viewCaption(ctxA, 1).unverified).toBe(true); // the "use" card is still a draft
     expect(caption.link).toBe("https://example.test/ZoningViz/?parcel=fixture-a&step=6&off=front-plane,bulk");
   });
 
