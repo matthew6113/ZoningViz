@@ -11,7 +11,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
-import { DATASETS, metadataUrl, type DatasetId, type FetchJson } from "../packages/jurisdictions/sf/datasf";
+import { DATASETS, DataSfError, metadataUrl, type DatasetId, type FetchJson } from "../packages/jurisdictions/sf/datasf";
 import { parseCliArgs } from "../packages/jurisdictions/sf/node/args";
 import { devFetchJson } from "../packages/jurisdictions/sf/node/cache";
 import {
@@ -53,7 +53,7 @@ if (args.flags.has("--help")) {
 const fixture = args.flags.has("--fixture");
 const boxes = args.values.has("--bbox") ? parseBoxes(args.values.get("--bbox")!) : fixture ? FIXTURE_BOXES : [];
 const out = resolve(args.values.get("--out") ?? (fixture ? FIXTURE_OUT : CITY_OUT));
-const fetchJson = devFetchJson({ noCache: args.flags.has("--no-cache") });
+const fetchJson = retrying(devFetchJson({ noCache: args.flags.has("--no-cache") }));
 
 const tippecanoe = findTippecanoe();
 if (!tippecanoe) {
@@ -152,4 +152,25 @@ function readmeLines(): string[] {
     `  default output: ${relative(ROOT, CITY_OUT)} (whole city)`,
     `  --fixture:      ${relative(ROOT, FIXTURE_OUT)} (demo lots only, for the browser tests)`,
   ];
+}
+
+/**
+ * The deploy builds the tiles fresh from DataSF on a CI runner, so ride out a dropped
+ * connection, a timeout or a 5xx/429 with a few spaced retries. Other errors fail at once.
+ */
+function retrying(fetch: FetchJson, delaysMs = [2_000, 5_000, 15_000, 30_000]): FetchJson {
+  return async (url, body) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await fetch(url, body);
+      } catch (error) {
+        const status = error instanceof DataSfError ? error.status : undefined;
+        const transient = status === undefined || status >= 500 || status === 429;
+        const delay = delaysMs[attempt];
+        if (!transient || delay === undefined) throw error;
+        console.warn(`${new URL(url).host}: ${error instanceof Error ? error.message : String(error)}; retrying in ${delay / 1000} s`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  };
 }
