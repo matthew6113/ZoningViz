@@ -129,19 +129,21 @@ export function buildTimeline(
       tl.to(state, { tint: 1, duration: d.cut }, seg.cut);
     }
 
-    // Remove: the red piece lifts and fades; the counters tick down.
-    tl.to(state, { ...(full ? { lift: LIFT_FT } : {}), removedOpacity: 0, duration: d.remove, ease: "power1.in" }, seg.remove);
+    // The counters tick down as the cut lands, so a step at rest shows its own totals.
     tl.to(
       state,
       {
         volume: step.measurements.volume,
         footprint: step.measurements.footprintSqFt,
         percentLeft: step.measurements.percentOfStart,
-        duration: d.remove,
+        duration: d.cut,
         ease: "power1.out",
       },
-      seg.remove,
+      seg.cut,
     );
+
+    // Remove (after Next): the red piece lifts and fades.
+    tl.to(state, { ...(full ? { lift: LIFT_FT } : {}), removedOpacity: 0, duration: d.remove, ease: "power1.in" }, seg.remove);
   }
 
   // Finale: the envelope turns solid, floors appear from the ground up, then the summary.

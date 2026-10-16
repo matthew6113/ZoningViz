@@ -53,10 +53,12 @@ describe("timeline", () => {
   it("rests on the rear-yard step with the red piece in place", () => {
     tl.seek(stepLabel(6));
     expect(state).toMatchObject({ rule: 5, tint: 1, lift: 0, removedOpacity: ENVELOPE_OPACITY, measure: 1, camera: 1, rise: 1 });
-    expect(state.volume).toBeCloseTo(100_000, 3); // counters tick in the remove beat, not before
+    expect(state.volume).toBeCloseTo(70_000, 3); // the counters ticked down with the cut, so the step shows its own totals
+    tl.seek(s.rules[5]!.cut);
+    expect(state.volume).toBeCloseTo(100_000, 3); // and not before it
   });
 
-  it("lifts and fades the piece during the remove beat, then counts down", () => {
+  it("lifts and fades the piece during the remove beat", () => {
     const rear = s.rules[5]!;
     tl.seek(rear.remove + 0.45);
     expect(state.lift).toBeGreaterThan(0);
@@ -70,7 +72,7 @@ describe("timeline", () => {
   it("scrubs back to earlier steps and restores them exactly", () => {
     tl.seek(stepLabel(4));
     expect(state).toMatchObject({ rule: 3, tint: 1, lift: 0 });
-    expect(state.volume).toBeCloseTo(200_000, 3);
+    expect(state.volume).toBeCloseTo(100_000, 3); // the 40 ft height cut has landed
     tl.seek(0);
     expect(state).toMatchObject({ rule: -1, camera: 0, rise: 0, tint: 0, finale: 0, floors: 0 });
   });

@@ -215,11 +215,13 @@ test("the step dots and Home/End jump to any step without animating", async ({ p
   await page.getByRole("button", { name: "Go to the start" }).click();
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("200,000 cu ft");
-  await page.locator("body").press("End");
+  // Keys act when no button has focus (Space on a focused button presses that button).
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("End");
   await expect(label(page)).toHaveText("Result");
-  await page.locator("body").press("Home");
+  await page.keyboard.press("Home");
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
-  await page.locator("body").press(" ");
+  await page.keyboard.press(" ");
   await expect(label(page)).toHaveText("Rule 1 of 11: Homes, up to two units");
   await page.locator(".player").screenshot({ path: `${SHOTS}/fixture-a-step-dots.png` });
 });
