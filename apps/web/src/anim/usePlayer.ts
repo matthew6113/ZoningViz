@@ -18,24 +18,20 @@ export interface Player {
   position: number;
   /** The same, read now (it updates before React re-renders). */
   currentPosition(): number;
-  playing: boolean;
-  speed: 1 | 2;
+  /** A step is animating toward its resting point (the arrival, or after Next). */
+  animating: boolean;
   mode: MotionMode;
-  play(): void;
-  pause(): void;
+  /** Animates the next step and stops at its resting point. Pressed mid-animation, it finishes that step first. */
   next(): void;
+  /** Jumps to the previous step's resting point (or back to where an animating step began). */
   back(): void;
+  /** Jumps to a step's resting point without animating. */
   goTo(position: number): void;
-  /** Scrubber: 0–1 of the whole sequence. */
-  seekProgress(progress: number): void;
-  setSpeed(speed: 1 | 2): void;
-  setScrubbing(active: boolean): void;
+  /** Finishes any running animation at its resting point. */
+  settle(): void;
   registerCard(index: number, element: HTMLElement | null): void;
-  scrubberRef: RefObject<HTMLInputElement | null>;
   hud: HudRefs;
 }
-
-const SCRUBBER_STEPS = 1000;
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 export function useReducedMotion(): boolean {
@@ -51,9 +47,11 @@ export function useReducedMotion(): boolean {
 }
 
 /**
- * Owns the single GSAP timeline for a result. A fresh visit plays the arrival
- * and pauses at the starting block; a requested step (deep link, or the step
- * we were on before a toggle rebuilt the envelope) opens paused there.
+ * Owns the single GSAP timeline for a result. Nothing advances on its own:
+ * a fresh visit plays the arrival and waits at the starting block, and each
+ * press of Next animates one step and stops where it rests. A requested step
+ * (deep link, or the step we were on before a toggle rebuilt the envelope)
+ * opens at rest there.
  */
 export function usePlayer(result: OkResult, requestedStep: number | null, onPosition: (position: number) => void): Player {
   const mode: MotionMode = useReducedMotion() ? "reduced" : "full";
@@ -62,24 +60,20 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
   const scheduleRef = useRef<Schedule | null>(null);
   const cards = useRef<(HTMLElement | null)[]>([]);
   const stopAt = useRef<number | null>(null);
-  const scrubbing = useRef(false);
   const positionRef = useRef(0);
-  const speedRef = useRef<1 | 2>(1);
   const builtOnce = useRef(false);
   const requested = useRef(requestedStep);
   requested.current = requestedStep;
   const onPositionRef = useRef(onPosition);
   onPositionRef.current = onPosition;
 
-  const scrubberRef = useRef<HTMLInputElement | null>(null);
   const hud: HudRefs = { volume: useRef(null), footprint: useRef(null), percent: useRef(null) };
   const hudRef = useRef(hud);
   hudRef.current = hud;
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [position, setPosition] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [speed, setSpeedState] = useState<1 | 2>(1);
+  const [animating, setAnimating] = useState(false);
 
   /** Pushes the playhead out to everything that isn't the 3D scene. Called on every timeline update. */
   const sync = useCallback(() => {
@@ -91,7 +85,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
       stopAt.current = null;
       tl.pause();
       tl.seek(target);
-      setPlaying(false);
+      setAnimating(false);
     }
     const p = positionAt(s, tl.time());
     if (p !== positionRef.current) {
@@ -99,7 +93,6 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
       setPosition(p);
       onPositionRef.current(p);
     }
-    if (scrubberRef.current && !scrubbing.current) scrubberRef.current.value = String(Math.round(tl.progress() * SCRUBBER_STEPS));
     const { volume, footprint, percent } = hudRef.current;
     setText(volume.current, `${num(anim.volume)} cu ft`);
     setText(footprint.current, `${num(anim.footprint)} sq ft`);
@@ -110,7 +103,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
     (time: number) => {
       stopAt.current = null;
       timeline.current?.pause().seek(time);
-      setPlaying(false);
+      setAnimating(false);
       sync();
     },
     [sync],
@@ -123,7 +116,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
       if (time <= tl.time() + 1e-6) return seek(time);
       stopAt.current = time;
       tl.play();
-      setPlaying(true);
+      setAnimating(true);
     },
     [seek],
   );
@@ -133,9 +126,8 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
     const s = buildSchedule(result, mode);
     Object.assign(anim, initialState(result, mode));
     const tl = buildTimeline(result, s, anim, { cards: cards.current.slice(0, result.steps.length), summary: null });
-    tl.timeScale(speedRef.current);
     tl.eventCallback("onUpdate", sync);
-    tl.eventCallback("onComplete", () => setPlaying(false));
+    tl.eventCallback("onComplete", () => setAnimating(false));
     timeline.current = tl;
     scheduleRef.current = s;
     setSchedule(s);
@@ -148,7 +140,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
       sync();
       stopAt.current = s.labels[0]!;
       tl.play();
-      setPlaying(true);
+      setAnimating(true);
     } else {
       seek(s.labels[Math.min(Math.max(step ?? 0, 0), last)]!);
     }
@@ -164,54 +156,32 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
     anim,
     schedule,
     position,
-    playing,
-    speed,
+    animating,
     mode,
-    play: () => {
-      const tl = timeline.current;
-      if (!tl || !s) return;
-      if (tl.progress() >= 1) tl.seek(s.labels[0]!);
-      stopAt.current = null;
-      tl.play();
-      setPlaying(true);
-    },
-    pause: () => seek(timeline.current?.time() ?? 0),
     next: () => {
       const tl = timeline.current;
       if (!tl || !s) return;
       const last = s.labels.length - 1;
-      // While already heading to a step, Next means the one after it.
-      const heading = stopAt.current === null ? -1 : s.labels.indexOf(stopAt.current);
-      const target = heading >= 0 ? Math.min(heading + 1, last) : nextPosition(s, tl.time());
-      playTo(s.labels[target]!);
+      // Pressed mid-animation: land that step now, then animate the one after it.
+      if (stopAt.current !== null) seek(stopAt.current);
+      const p = nextPosition(s, tl.time());
+      if (p > last) return;
+      playTo(s.labels[p]!);
     },
     back: () => {
       const tl = timeline.current;
       if (!tl || !s) return;
       seek(s.labels[previousPosition(s, tl.time())]!);
     },
-    goTo: (p: number) => s && seek(s.labels[p]!),
-    currentPosition: () => Math.max(positionRef.current, 0),
-    seekProgress: (progress: number) => {
+    goTo: (p: number) => s && seek(s.labels[Math.min(Math.max(p, 0), s.labels.length - 1)]!),
+    settle: () => {
       const tl = timeline.current;
-      if (!tl) return;
-      stopAt.current = null;
-      tl.pause().progress(Math.min(Math.max(progress, 0), 1));
-      setPlaying(false);
-      sync();
+      if (tl) seek(stopAt.current ?? tl.time());
     },
-    setSpeed: (value: 1 | 2) => {
-      speedRef.current = value;
-      timeline.current?.timeScale(value);
-      setSpeedState(value);
-    },
-    setScrubbing: (active: boolean) => {
-      scrubbing.current = active;
-    },
+    currentPosition: () => Math.max(positionRef.current, 0),
     registerCard: (index: number, element: HTMLElement | null) => {
       cards.current[index] = element;
     },
-    scrubberRef,
     hud,
   };
 }
@@ -219,5 +189,3 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
 function setText(element: HTMLElement | null, text: string) {
   if (element && element.textContent !== text) element.textContent = text;
 }
-
-export { SCRUBBER_STEPS };

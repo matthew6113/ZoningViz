@@ -28,7 +28,7 @@ export function ShareButtons({ capturer, player, result, facts, program }: Share
     setBusy(kind);
     setError(null);
     try {
-      player.pause();
+      player.settle();
       const position = player.currentPosition();
       const ctx: ShareContext = { facts, result, href: pageLink(), program };
       const { canvas, link } = kind === "view" ? viewPicture(scene, ctx, player.anim, position) : storyboardPicture(scene, ctx, player);

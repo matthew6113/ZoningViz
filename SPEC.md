@@ -14,7 +14,7 @@ The experience in one pass:
 4. **Carve.** Each rule takes a turn. Its card appears with the plain-English rule and its code citation, a dimension line draws on the model, and the forbidden volume turns red and falls away.
 5. **Land.** The final envelope remains, sliced into floors, with running totals: envelope volume, footprint, stories, gross floor area, and percent of the starting block that survived.
 
-A scrubber lets the user step back and forth through the rules, or toggle any rule off to see what it costs.
+The user steps through the rules one at a time: nothing advances until they press Next, which plays one rule's sequence and stops. They can step back, jump to any step, or toggle any rule off to see what it costs. (Changed at the user's request on 2026-10-16: the original play/pause, scrubber and speed toggle were removed.)
 
 One naming note: "identify its zoning" is a data lookup, not an AI judgment. The parcel record already carries its zoning code, so the lookup is exact.
 
@@ -137,7 +137,7 @@ Test fixtures with hand-checked answers:
 
 ## Animation choreography
 
-Every rule plays the same four-beat sequence, about 3.5 seconds total, so the viewer learns the grammar once. One GSAP timeline holds all steps, which makes the scrubber and step buttons free.
+Every rule plays the same four-beat sequence, about 3.5 seconds total, so the viewer learns the grammar once. One GSAP timeline holds all steps, which makes the step buttons free.
 
 The four beats of each rule:
 
@@ -160,7 +160,7 @@ Visual language:
 - **Flagged rules** (not modeled): card with a dashed border saying what is not shown and why.
 - **prefers-reduced-motion:** skip the lift and sweep; crossfade between states instead.
 
-Controls: play/pause, step forward/back, a scrubber with a tick per rule, a speed toggle (1x, 2x), and a per-rule eye icon that toggles that rule off and recomputes, so the user can see what a single rule costs.
+Controls: Back and Next (Next animates one rule and stops; pressed mid-animation it finishes that rule and starts the next), a row of step dots (start, one per rule, result) that jump without animating, and a per-rule eye icon that toggles that rule off and recomputes, so the user can see what a single rule costs. Keyboard: → / Space / Page Down for Next, ← / Page Up for Back, Home and End for the start and the result. (Changed at the user's request on 2026-10-16; this replaced play/pause, a scrubber with a tick per rule and a 1x/2x speed toggle.)
 
 ## UI and interaction
 

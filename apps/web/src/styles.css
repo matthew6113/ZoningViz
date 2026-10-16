@@ -89,18 +89,14 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 
 .player { padding-top: 10px; }
 .step-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.step-controls .play { min-width: 5.5em; }
+.step-controls .next { min-width: 6.5em; }
 .step-label { flex: 1; text-align: center; font-weight: 600; min-width: 12em; }
-.speed { display: inline-flex; }
-.speed button { padding: 0.35em 0.6em; border-radius: 0; }
-.speed button:first-child { border-radius: 8px 0 0 8px; }
-.speed button:last-child { border-radius: 0 8px 8px 0; border-left: none; }
-.speed button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
-.scrubber { position: relative; margin-top: 10px; height: 26px; }
-.scrubber input { width: 100%; margin: 0; position: absolute; top: 8px; left: 0; accent-color: var(--ink); }
-.ticks { position: absolute; inset: 0; pointer-events: none; }
-.tick { position: absolute; top: 0; width: 12px; height: 10px; margin-left: -6px; padding: 0; border: none; background: none; pointer-events: auto; cursor: pointer; }
-.tick::after { content: ""; position: absolute; left: 5px; top: 0; width: 2px; height: 8px; background: var(--muted); border-radius: 1px; }
+.step-dots { list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; margin: 8px 0 0; padding: 0; }
+.step-dots .dot { width: 22px; height: 22px; padding: 0; border: none; background: none; display: grid; place-items: center; border-radius: 50%; }
+.step-dots .dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); background: var(--panel); box-sizing: border-box; }
+.step-dots .dot.done::after { background: var(--muted); }
+.step-dots .dot[aria-current="true"]::after { width: 14px; height: 14px; border-color: var(--ink); background: var(--ink); }
+.step-dots .dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .scene-wrap { position: relative; }
 .hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 14px; flex-wrap: wrap; background: rgba(255, 255, 255, 0.88); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; color: var(--muted); pointer-events: none; }

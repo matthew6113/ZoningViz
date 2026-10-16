@@ -23,7 +23,7 @@ test.afterEach(() => {
 const label = (page: Page) => page.getByTestId("step-label");
 const currentSentence = (page: Page) => page.locator("[aria-current=step] .sentence");
 const next = (page: Page) => page.getByRole("button", { name: "Next →" });
-const fast = (page: Page) => page.getByRole("button", { name: "2×" }).click();
+const toResult = (page: Page) => page.getByRole("button", { name: "Go to the result" }).click();
 
 /**
  * The WebGL canvas drew a real scene, not a blank clear color (polls until the first frames land).
@@ -53,7 +53,6 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await page.goto("/?parcel=fixture-a");
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expectSceneDrawn(page);
-  await fast(page);
 
   const expected: [string, string | RegExp][] = [
     ["Rule 1 of 11: Homes, up to two units", /^RH-2 lots are for homes: two units per lot/],
@@ -114,7 +113,6 @@ test("Back, arrow keys and deep links move between steps", async ({ page }) => {
 
 test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) => {
   await page.goto("/?parcel=4025007");
-  await fast(page);
   await expect(page.locator(".fact-card h2")).toHaveText("667 Hampshire St");
   await expect(page.locator(".fact-card")).toContainText("25.0 ft wide × 100.0 ft deep");
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
@@ -173,39 +171,57 @@ test("a lot outside the covered districts says so", async ({ page }) => {
 
 test("a fresh visit plays the arrival, then waits at the starting block", async ({ page }) => {
   await page.goto("/?parcel=fixture-a");
-  await expect(page.getByRole("button", { name: "Play" })).toBeVisible({ timeout: 10_000 });
+  await expect(next(page)).toBeVisible({ timeout: 10_000 });
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expect(page).toHaveURL(/step=0/);
   await expect(page.getByTestId("hud-volume")).toHaveText("200,000 cu ft");
+  // Step by step only: no play button, speed toggle or timeline slider, and nothing moves on its own.
+  await expect(page.getByRole("button", { name: "Play" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "2×" })).toHaveCount(0);
+  await expect(page.getByRole("slider")).toHaveCount(0);
+  await page.waitForTimeout(5_000);
+  await expect(label(page)).toHaveText("Start: everything up to 80 ft");
 });
 
-test("Play runs the whole sequence to the result", async ({ page }) => {
-  await page.goto("/?parcel=fixture-a&step=0");
-  await fast(page);
-  await page.getByRole("button", { name: "Play" }).click();
-  await expect(label(page)).toHaveText("Result", { timeout: 30_000 });
-  await expect(page).toHaveURL(/step=12/);
-  await expect(page.getByTestId("summary")).toContainText("68,750 cu ft");
+test("Next animates one rule, then waits for the next press", async ({ page }) => {
+  await page.goto("/?parcel=fixture-a&step=5");
+  await expect(label(page)).toHaveText("Rule 5 of 11: RH-2 dwelling cap");
+  await next(page).click();
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  // The rear yard's cut lands (40 ft over 2,500 sq ft, less 30,000 cu ft) and stays put.
+  await expect(page.getByTestId("hud-volume")).toHaveText("70,000 cu ft");
+  await page.waitForTimeout(5_000);
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expect(page).toHaveURL(/step=6/);
+  await expect(page.getByTestId("hud-volume")).toHaveText("70,000 cu ft");
+
+  // Pressed mid-animation, Next finishes that step at once and moves on to the next one.
+  await next(page).click();
+  await next(page).click();
+  await expect(label(page)).toHaveText("Rule 8 of 11: Front height plane");
   await expect(page.getByTestId("hud-volume")).toHaveText("68,750 cu ft");
-  await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
-  await page.screenshot({ path: `${SHOTS}/fixture-a-played.png` });
+  await page.screenshot({ path: `${SHOTS}/fixture-a-stepped.png` });
 });
 
-test("the scrubber jumps to a rule's tick and drags both ways", async ({ page }) => {
+test("the step dots and Home/End jump to any step without animating", async ({ page }) => {
   await page.goto("/?parcel=fixture-a&step=0");
   await page.getByRole("button", { name: "Go to rule 6: Rear yard" }).click();
   await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
   await expect(page).toHaveURL(/step=6/);
-  const scrubber = page.getByRole("slider", { name: "Timeline" });
-  await scrubber.fill("1000");
+  await expect(page.getByRole("button", { name: "Go to rule 6: Rear yard" })).toHaveAttribute("aria-current", "true");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("hud-volume")).toHaveText("68,750 cu ft");
-  await scrubber.fill("0");
+  await page.getByRole("button", { name: "Go to the start" }).click();
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expect(page.getByTestId("hud-volume")).toHaveText("200,000 cu ft");
-  await scrubber.fill("520");
-  await expect(label(page)).toHaveText(/^Rule \d+ of 11/);
-  await page.screenshot({ path: `${SHOTS}/fixture-a-scrubbed.png` });
+  await page.locator("body").press("End");
+  await expect(label(page)).toHaveText("Result");
+  await page.locator("body").press("Home");
+  await expect(label(page)).toHaveText("Start: everything up to 80 ft");
+  await page.locator("body").press(" ");
+  await expect(label(page)).toHaveText("Rule 1 of 11: Homes, up to two units");
+  await page.locator(".player").screenshot({ path: `${SHOTS}/fixture-a-step-dots.png` });
 });
 
 test("switching a rule off recomputes the envelope and keeps the step", async ({ page }) => {
@@ -214,7 +230,7 @@ test("switching a rule off recomputes the envelope and keeps the step", async ({
   await expect(page).toHaveURL(/off=rear-yard/);
   await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
   await expect(page.locator("[aria-current=step] .chip")).toHaveText("Off");
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   // 40 ft over the whole 2,500 sq ft lot, less the 1,250 cu ft front plane.
   await expect(page.getByTestId("summary")).toContainText("98,750 cu ft");
   await page.getByRole("button", { name: "Turn on Rear yard" }).click();
@@ -225,27 +241,30 @@ test("switching a rule off recomputes the envelope and keeps the step", async ({
 test.describe("with reduced motion", () => {
   test.use({ contextOptions: { reducedMotion: "reduce" } });
 
-  test("crossfades instead of flying, sweeping and lifting, and still plays through", async ({ page }) => {
+  test("crossfades instead of flying, sweeping and lifting, and still steps through", async ({ page }) => {
     await page.goto("/?parcel=fixture-a&step=0");
     await expect(page.locator(".lot-view")).toHaveAttribute("data-motion", "reduced");
-    await fast(page);
-    await page.getByRole("button", { name: "Play" }).click();
-    await expect(label(page)).toHaveText("Result", { timeout: 20_000 });
+    for (let i = 1; i <= 11; i++) {
+      await next(page).click();
+      await expect(label(page)).toContainText(`Rule ${i} of 11`);
+    }
+    await next(page).click();
+    await expect(label(page)).toHaveText("Result");
     await expect(page.getByTestId("summary")).toContainText("68,750 cu ft");
   });
 });
 
-test("playback costs little JavaScript per frame", async ({ page }) => {
+test("a step's animation costs little JavaScript per frame", async ({ page }) => {
   // Software WebGL (SwiftShader) here: frame rate depends on canvas size, so measure
   // main-thread script time per frame on a small canvas instead of trusting fps.
   await page.setViewportSize({ width: 640, height: 420 });
-  await page.goto("/?parcel=fixture-a&step=0");
+  await page.goto("/?parcel=fixture-a&step=5");
   await expectSceneDrawn(page);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Performance.enable");
   const scriptSeconds = async () =>
     (await cdp.send("Performance.getMetrics")).metrics.find((m) => m.name === "ScriptDuration")!.value;
-  await page.getByRole("button", { name: "Play" }).click();
+  await next(page).click(); // the rear yard's announce, measure and cut beats: about 2.6 s of animation
   const before = await scriptSeconds();
   const frames = await page.evaluate(
     () =>
@@ -292,7 +311,7 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   await expect(page.locator("[data-rule=height-reference] .sentence")).toContainText("slopes down from the street, so heights are measured from the curb");
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/clarendon-slope-cap.png` });
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/clarendon-slope-result.png` });
@@ -307,7 +326,7 @@ test("an uphill lot: 118 Dellbrook Ave rises 37 ft, so 40 ft and no front plane,
   await expect(currentSentence(page)).toHaveText(/^Front height plane: doesn't apply, because the rear lot line averages 3\d\.\d ft higher than the front \(20 ft or more\)\.$/);
   await expect(page.locator("[data-rule=rh-dwelling-height] .sentence")).toContainText("so 40 ft instead of 35 ft");
   await expect(page.locator("[data-rule=height-reference] .sentence")).toContainText("the lot slopes up from the street");
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toContainText("4 stories");
   await expectSceneDrawn(page);
@@ -327,7 +346,7 @@ test("an RM-2 lot: 619 Chestnut St keeps a 30% rear yard, and its floor-area lim
   await expect(far.locator(".eye")).toHaveCount(0);
   await expect(page.locator("[data-rule=front-modulation]")).toContainText("Not modeled");
 
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("far-cap")).toHaveText("6,023 sq ft (FAR 1.8; homes aren't limited)");
   await expectSceneDrawn(page);
@@ -346,7 +365,7 @@ test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard star
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/folsom-nc2-rear-yard.png` });
 
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toContainText("4 stories at 10 ft floor-to-floor, 14 ft ground floor");
   await expect(page.getByTestId("far-cap")).toContainText("(FAR 2.5; homes aren't limited)");
@@ -389,7 +408,7 @@ test("Housing Choice-SF: 1345 Clement St (NC-1, 40//65-R-4) switches to 65 ft an
   await expect(page.locator("[data-rule=rear-yard] footer a")).toContainText("§206.10(d)(1)(E)(i)–(ii)");
   await page.locator("[data-rule=local-program]").screenshot({ path: `${SHOTS}/clement-housing-choice-card.png` });
 
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("6 stories");
@@ -416,7 +435,7 @@ test("Housing Choice-SF on a hillside: 124 Clarendon Ave drops its 30 ft slope c
   await expect(page.locator("[data-rule=rh-dwelling-height] .eye")).toHaveCount(0);
   await expect(page.locator("[data-rule=front-plane] .chip")).toHaveText("Doesn't apply");
   await expect(page.locator("[data-rule=mapped-height] .sentence")).toHaveText("Height limit: 40 ft under Housing Choice-SF (40//40-R-4; the same without it).");
-  await page.getByRole("slider", { name: "Timeline" }).fill("1000");
+  await toResult(page);
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("program-compare")).toContainText("with the program");
   await expectSceneDrawn(page);
