@@ -250,7 +250,8 @@ test("on a phone, the current rule shows under the controls and nothing covers t
   await expect(detail).toBeInViewport();
   await page.screenshot({ path: `${SHOTS}/fixture-a-phone.png` });
   await toResult(page);
-  await expect(detail).toHaveText("The result: the totals are below.");
+  await expect(detail.locator("p").first()).toHaveText("The result: the totals are below.");
+  await expect(detail.locator(".passed")).toHaveText("No change to the shape: Bulk limits, Narrow streets, Cross-slope.");
 });
 
 test("switching a rule off recomputes the envelope and keeps the step", async ({ page }) => {
