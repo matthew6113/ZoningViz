@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import type { OkResult } from "../state/steps";
 import { num } from "../ui/format";
-import { buildSchedule, nextPosition, positionAt, previousPosition, type MotionMode, type Schedule } from "./schedule";
+import { buildSchedule, nextStop, positionAt, previousStop, type MotionMode, type Schedule } from "./schedule";
 import { buildTimeline, initialState, type AnimState } from "./timeline";
 
 export interface HudRefs {
@@ -21,9 +21,12 @@ export interface Player {
   /** A step is animating toward its resting point (the arrival, or after Next). */
   animating: boolean;
   mode: MotionMode;
-  /** Animates the next step and stops at its resting point. Pressed mid-animation, it finishes that step first. */
+  /**
+   * Animates to the next step that changes the shape (or the result) and stops there; steps that
+   * only show a card are passed over. Pressed mid-animation, it finishes that step first.
+   */
   next(): void;
-  /** Jumps to the previous step's resting point (or back to where an animating step began). */
+  /** Jumps to the previous such step (or back to where an animating step began). */
   back(): void;
   /** Jumps to a step's resting point without animating. */
   goTo(position: number): void;
@@ -49,7 +52,8 @@ export function useReducedMotion(): boolean {
 /**
  * Owns the single GSAP timeline for a result. Nothing advances on its own:
  * a fresh visit plays the arrival and waits at the starting block, and each
- * press of Next animates one step and stops where it rests. A requested step
+ * press of Next animates to the next step that changes the shape and stops
+ * where it rests, jumping over steps that only show a card. A requested step
  * (deep link, or the step we were on before a toggle rebuilt the envelope)
  * opens at rest there.
  */
@@ -60,6 +64,8 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
   const scheduleRef = useRef<Schedule | null>(null);
   const cards = useRef<(HTMLElement | null)[]>([]);
   const stopAt = useRef<number | null>(null);
+  /** While Next passes over card-only steps: on reaching `at`, jump ahead to `to`. */
+  const skip = useRef<{ at: number; to: number } | null>(null);
   const positionRef = useRef(0);
   const builtOnce = useRef(false);
   const requested = useRef(requestedStep);
@@ -80,6 +86,11 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
     const tl = timeline.current;
     const s = scheduleRef.current;
     if (!tl || !s) return;
+    const jump = skip.current;
+    if (jump && tl.time() >= jump.at - 1e-6) {
+      skip.current = null;
+      tl.seek(jump.to); // events suppressed: the passed-over cards' states land at once
+    }
     if (stopAt.current !== null && tl.time() >= stopAt.current - 1e-6) {
       const target = stopAt.current;
       stopAt.current = null;
@@ -102,6 +113,7 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
   const seek = useCallback(
     (time: number) => {
       stopAt.current = null;
+      skip.current = null;
       timeline.current?.pause().seek(time);
       setAnimating(false);
       sync();
@@ -161,17 +173,19 @@ export function usePlayer(result: OkResult, requestedStep: number | null, onPosi
     next: () => {
       const tl = timeline.current;
       if (!tl || !s) return;
-      const last = s.labels.length - 1;
       // Pressed mid-animation: land that step now, then animate the one after it.
       if (stopAt.current !== null) seek(stopAt.current);
-      const p = nextPosition(s, tl.time());
-      if (p > last) return;
-      playTo(s.labels[p]!);
+      const from = positionAt(s, tl.time());
+      const target = nextStop(s, tl.time());
+      if (target === from) return;
+      // Play out this step's last beat (the red piece lifting away), then jump over card-only steps.
+      if (target > from + 1) skip.current = { at: s.starts[from + 1]!, to: s.starts[target]! };
+      playTo(s.labels[target]!);
     },
     back: () => {
       const tl = timeline.current;
       if (!tl || !s) return;
-      seek(s.labels[previousPosition(s, tl.time())]!);
+      seek(s.labels[previousStop(s, tl.time())]!);
     },
     goTo: (p: number) => s && seek(s.labels[Math.min(Math.max(p, 0), s.labels.length - 1)]!),
     settle: () => {

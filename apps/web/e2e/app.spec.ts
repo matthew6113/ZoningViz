@@ -54,34 +54,40 @@ test("fixture A: Next steps through every rule to the result", async ({ page }) 
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expectSceneDrawn(page);
 
-  const expected: [string, string | RegExp][] = [
-    ["Rule 1 of 11: Homes, up to two units", /^RH-2 lots are for homes: two units per lot/],
-    ["Rule 2 of 11: Where height is measured from", /no ground elevations for this lot, so it is treated as flat/],
-    ["Rule 3 of 11: Housing Choice-SF", "Housing Choice-SF: doesn't apply, because no part of this lot has a local-program height."],
-    ["Rule 4 of 11: Height limit", "Height limit: 40 ft (40-X)."],
-    ["Rule 5 of 11: RH-2 dwelling cap", /assumes a flat lot: 40 ft\. Already satisfied/],
-    ["Rule 6 of 11: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
-    ["Rule 7 of 11: Front setback", /0 ft, your setting.*Already satisfied/],
-    ["Rule 8 of 11: Front height plane", /above 30 ft, the building steps back at 45°/],
-    ["Rule 9 of 11: Bulk limits", "Bulk limits: 40-X: bulk district X has no length or diagonal limits."],
-    ["Rule 10 of 11: Narrow streets", /^Not modeled:/],
-    ["Rule 11 of 11: Cross-slope", /^Not modeled:/],
+  // Next stops only where the shape changes; rules that only show a card are passed over.
+  await expect(page.getByTestId("step-detail")).toBeHidden(); // phones only
+  const stops: [number, string, string | RegExp][] = [
+    [4, "Rule 4 of 11: Height limit", "Height limit: 40 ft (40-X)."],
+    [5, "Rule 5 of 11: RH-2 dwelling cap", /assumes a flat lot: 40 ft\. Already satisfied/],
+    [6, "Rule 6 of 11: Rear yard", "Rear yard: 30% of 100 ft lot depth = 30 ft."],
+    [7, "Rule 7 of 11: Front setback", /0 ft, your setting.*Already satisfied/],
+    [8, "Rule 8 of 11: Front height plane", /above 30 ft, the building steps back at 45°/],
   ];
-  for (const [i, [stepLabel, sentence]] of expected.entries()) {
+  for (const [step, stepLabel, sentence] of stops) {
     await next(page).click();
     await expect(label(page)).toHaveText(stepLabel);
     await expect(currentSentence(page)).toHaveText(sentence);
-    await expect(page).toHaveURL(new RegExp(`step=${i + 1}`));
-    if (i === 2) {
-      // No local-program height here, so there's no switch.
-      await expect(page.getByRole("switch")).toHaveCount(0);
-    }
-    if (i === 5) {
+    await expect(page).toHaveURL(new RegExp(`step=${step}`));
+    if (step === 6) {
       await expect(page.locator(".dimension-label").first()).toHaveText("30 ft");
       await expect(page.locator("[aria-current=step] .removed-line")).toContainText("30,000 cu ft removed");
       await page.screenshot({ path: `${SHOTS}/fixture-a-rear-yard.png` });
     }
   }
+  // The passed-over rules keep their cards, and their dots are small.
+  const cardOnly: [string, string | RegExp][] = [
+    ["use", /^RH-2 lots are for homes: two units per lot/],
+    ["height-reference", /no ground elevations for this lot, so it is treated as flat/],
+    ["local-program", "Housing Choice-SF: doesn't apply, because no part of this lot has a local-program height."],
+    ["bulk", "Bulk limits: 40-X: bulk district X has no length or diagonal limits."],
+    ["narrow-street", /^Not modeled:/],
+    ["cross-slope", /^Not modeled:/],
+  ];
+  for (const [id, sentence] of cardOnly) await expect(page.locator(`[data-rule=${id}] .sentence`)).toHaveText(sentence);
+  await expect(page.getByRole("button", { name: "Go to rule 9: Bulk limits" })).toHaveClass(/minor/);
+  await expect(page.getByRole("button", { name: "Go to rule 6: Rear yard" })).not.toHaveClass(/minor/);
+  // No local-program height here, so there's no switch.
+  await expect(page.getByRole("switch")).toHaveCount(0);
 
   await next(page).click();
   await expect(label(page)).toHaveText("Result");
@@ -118,21 +124,24 @@ test("real lot 667 Hampshire St: every step from DataSF data", async ({ page }) 
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await expectSceneDrawn(page);
 
-  const sentences: string[] = [];
-  for (let i = 1; i <= 11; i++) {
+  // Press Next until the result, stopping only at rules that change the shape.
+  const visited: string[] = [];
+  while (visited.at(-1) !== "Result" && visited.length < 12) {
+    const before = (await label(page).textContent())!;
     await next(page).click();
-    await expect(label(page)).toContainText(`Rule ${i} of 11`);
-    sentences.push((await currentSentence(page).textContent()) ?? "");
-    if (i === 7) await page.screenshot({ path: `${SHOTS}/hampshire-front-setback.png` });
+    await expect(label(page)).not.toHaveText(before);
+    visited.push((await label(page).textContent())!);
+    if (visited.at(-1)!.startsWith("Rule 7 of 11")) await page.screenshot({ path: `${SHOTS}/hampshire-front-setback.png` });
   }
-  expect(sentences[1]).toMatch(/^Where height is measured from: the lot slopes up from the street/);
-  expect(sentences[2]).toBe("Housing Choice-SF: doesn't apply, because no part of this lot has a local-program height.");
-  expect(sentences[4]).toMatch(/^RH-2 dwelling cap: the rear lot line averages 5\.\d ft higher than the front .*, so 40 ft\./);
-  expect(sentences[5]).toBe("Rear yard: 30% of 100 ft lot depth = 30 ft.");
-  expect(sentences[6]).toContain("this shows the 10 ft maximum.");
+  expect(visited.at(-1)).toBe("Result");
+  expect(visited.length).toBeLessThan(12); // card-only rules were passed over
+  const sentence = (id: string) => page.locator(`[data-rule=${id}] .sentence`);
+  await expect(sentence("height-reference")).toHaveText(/^Where height is measured from: the lot slopes up from the street/);
+  await expect(sentence("local-program")).toHaveText("Housing Choice-SF: doesn't apply, because no part of this lot has a local-program height.");
+  await expect(sentence("rh-dwelling-height")).toHaveText(/^RH-2 dwelling cap: the rear lot line averages 5\.\d ft higher than the front .*, so 40 ft\./);
+  await expect(sentence("rear-yard")).toHaveText("Rear yard: 30% of 100 ft lot depth = 30 ft.");
+  await expect(sentence("front-setback")).toContainText("this shows the 10 ft maximum.");
 
-  await next(page).click();
-  await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toContainText("4 stories"); // stepping up the gentle slope
   await expect(page.getByTestId("summary")).toBeInViewport();
   await page.screenshot({ path: `${SHOTS}/hampshire-result.png` });
@@ -222,8 +231,26 @@ test("the step dots and Home/End jump to any step without animating", async ({ p
   await page.keyboard.press("Home");
   await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await page.keyboard.press(" ");
-  await expect(label(page)).toHaveText("Rule 1 of 11: Homes, up to two units");
+  await expect(label(page)).toHaveText("Rule 4 of 11: Height limit"); // rules 1–3 only show a card
+  await page.keyboard.press("ArrowLeft");
+  await expect(label(page)).toHaveText("Start: everything up to 80 ft");
   await page.locator(".player").screenshot({ path: `${SHOTS}/fixture-a-step-dots.png` });
+});
+
+test("on a phone, the current rule shows under the controls and nothing covers them", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?parcel=fixture-a&step=0");
+  const detail = page.getByTestId("step-detail");
+  await expect(detail).toHaveText("Press Next to apply the rules one at a time.");
+  await next(page).click(); // must be clickable: the cards sit below, not on top
+  await expect(label(page)).toHaveText("Rule 4 of 11: Height limit");
+  await expect(detail.locator(".sentence")).toHaveText("Height limit: 40 ft (40-X).");
+  await expect(detail.locator(".removed-line")).toHaveText("100,000 cu ft removed");
+  await expect(detail.locator(".passed")).toHaveText("No change to the shape: Homes, up to two units, Where height is measured from, Housing Choice-SF.");
+  await expect(detail).toBeInViewport();
+  await page.screenshot({ path: `${SHOTS}/fixture-a-phone.png` });
+  await toResult(page);
+  await expect(detail).toHaveText("The result: the totals are below.");
 });
 
 test("switching a rule off recomputes the envelope and keeps the step", async ({ page }) => {
@@ -246,9 +273,9 @@ test.describe("with reduced motion", () => {
   test("crossfades instead of flying, sweeping and lifting, and still steps through", async ({ page }) => {
     await page.goto("/?parcel=fixture-a&step=0");
     await expect(page.locator(".lot-view")).toHaveAttribute("data-motion", "reduced");
-    for (let i = 1; i <= 11; i++) {
+    for (const step of [4, 5, 6, 7, 8]) {
       await next(page).click();
-      await expect(label(page)).toContainText(`Rule ${i} of 11`);
+      await expect(label(page)).toContainText(`Rule ${step} of 11`);
     }
     await next(page).click();
     await expect(label(page)).toHaveText("Result");

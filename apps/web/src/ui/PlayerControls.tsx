@@ -1,10 +1,13 @@
 import type { Step } from "@zoningviz/engine";
 import { useEffect } from "react";
+import { isStop, type Schedule } from "../anim/schedule";
 import type { Player } from "../anim/usePlayer";
+import { num } from "./format";
 
 /**
  * Step-by-step controls: nothing advances until the viewer presses Next, which
- * animates one rule and stops. Back and the step dots jump without animating.
+ * animates to the next rule that changes the shape and stops. Back and the step
+ * dots jump without animating; rules that only show a card get small dots.
  */
 export function PlayerControls({ player, label, steps }: { player: Player; label: string; steps: Step[] }) {
   const { schedule, animating, position } = player;
@@ -34,10 +37,17 @@ export function PlayerControls({ player, label, steps }: { player: Player; label
     return () => window.removeEventListener("keydown", onKey);
   }, [player, last]);
 
-  const dots: { label: string; title: string }[] = [
-    { label: "Go to the start", title: "Start" },
-    ...steps.map((s, i) => ({ label: `Go to rule ${i + 1}: ${s.rule.title}`, title: `${i + 1}. ${s.rule.title}` })),
-    { label: "Go to the result", title: "Result" },
+  const dots: { label: string; title: string; minor: boolean }[] = [
+    { label: "Go to the start", title: "Start", minor: false },
+    ...steps.map((s, i) => {
+      const minor = schedule ? !isStop(schedule, i + 1) : false;
+      return {
+        label: `Go to rule ${i + 1}: ${s.rule.title}`,
+        title: `${i + 1}. ${s.rule.title}${minor ? " (no change to the shape)" : ""}`,
+        minor,
+      };
+    }),
+    { label: "Go to the result", title: "Result", minor: false },
   ];
 
   return (
@@ -58,7 +68,7 @@ export function PlayerControls({ player, label, steps }: { player: Player; label
           <li key={p}>
             <button
               type="button"
-              className={p < position ? "dot done" : "dot"}
+              className={["dot", d.minor ? "minor" : "", p < position ? "done" : ""].filter(Boolean).join(" ")}
               aria-label={d.label}
               aria-current={p === position ? "true" : undefined}
               title={d.title}
@@ -67,6 +77,35 @@ export function PlayerControls({ player, label, steps }: { player: Player; label
           </li>
         ))}
       </ol>
+      <StepDetail steps={steps} position={position} schedule={schedule} />
+    </div>
+  );
+}
+
+/**
+ * Phones only (styles.css): the cards sit below the canvas there, so the current
+ * rule's sentence, what it removed and the rules passed over on the way are
+ * repeated under the controls.
+ */
+function StepDetail({ steps, position, schedule }: { steps: Step[]; position: number; schedule: Schedule | null }) {
+  const step = position >= 1 && position <= steps.length ? steps[position - 1]! : null;
+  const passed: string[] = [];
+  for (let p = position - 1; schedule && p >= 1 && !isStop(schedule, p); p--) passed.unshift(steps[p - 1]!.rule.title);
+  return (
+    <div className="step-detail" data-testid="step-detail">
+      {step ? (
+        <>
+          <p className="sentence">{step.sentence}</p>
+          {step.measurements.removedVolume > 0 && (
+            <p className="removed-line">
+              <span className="removed-swatch" aria-hidden /> {num(step.measurements.removedVolume)} cu ft removed
+            </p>
+          )}
+        </>
+      ) : (
+        <p>{position <= 0 ? "Press Next to apply the rules one at a time." : "The result: the totals are below."}</p>
+      )}
+      {passed.length > 0 && <p className="muted passed">No change to the shape: {passed.join(", ")}.</p>}
     </div>
   );
 }

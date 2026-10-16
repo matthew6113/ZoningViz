@@ -130,3 +130,27 @@ export function previousPosition(schedule: Schedule, time: number): number {
   const p = positionAt(schedule, time);
   return time > schedule.labels[p]! + EPS ? p : Math.max(p - 1, 0);
 }
+
+/**
+ * Where Next and Back stop: the start, every rule that draws something (a cut, or the
+ * measure line of one that's already satisfied) and the result. Rules that only show a
+ * card (info, flags, rules that don't apply or are switched off) are passed over.
+ */
+export function isStop(schedule: Schedule, position: number): boolean {
+  const last = schedule.labels.length - 1;
+  return position <= 0 || position >= last || schedule.rules[position - 1]!.kind !== "card";
+}
+
+/** The next stop after the current step (finishing the current one first if it hasn't come to rest). */
+export function nextStop(schedule: Schedule, time: number): number {
+  let p = nextPosition(schedule, time);
+  while (!isStop(schedule, p)) p++;
+  return p;
+}
+
+/** The previous stop: the current step's resting point if we're past it, else the stop before. */
+export function previousStop(schedule: Schedule, time: number): number {
+  let p = previousPosition(schedule, time);
+  while (!isStop(schedule, p)) p--;
+  return p;
+}

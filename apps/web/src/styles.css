@@ -97,6 +97,11 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .step-dots .dot.done::after { background: var(--muted); }
 .step-dots .dot[aria-current="true"]::after { width: 14px; height: 14px; border-color: var(--ink); background: var(--ink); }
 .step-dots .dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.step-dots .dot.minor::after { width: 6px; height: 6px; border-width: 1.5px; }
+.step-dots .dot.minor[aria-current="true"]::after { width: 10px; height: 10px; }
+.step-detail { display: none; }
+.step-detail p { margin: 4px 0; }
+.step-detail .passed { font-size: 0.82rem; }
 
 .scene-wrap { position: relative; }
 .hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 14px; flex-wrap: wrap; background: rgba(255, 255, 255, 0.88); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; color: var(--muted); pointer-events: none; }
@@ -171,4 +176,5 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
   .lot-view { grid-template-columns: 1fr; grid-template-rows: max-content max-content; overflow-x: hidden !important; overflow-y: auto !important; }
   .scene-wrap { height: 55vh; flex: none; }
   .side { overflow: visible; }
+  .step-detail { display: block; margin-top: 6px; font-size: 0.9rem; }
 }

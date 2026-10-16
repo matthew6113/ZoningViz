@@ -2,7 +2,7 @@ import { createEngine, syntheticLot } from "@zoningviz/engine";
 import { loadDistrict } from "@zoningviz/jurisdictions/sf";
 import { describe, expect, it } from "vitest";
 import type { OkResult } from "../state/steps";
-import { buildSchedule, nextPosition, positionAt, previousPosition } from "./schedule";
+import { buildSchedule, isStop, nextPosition, nextStop, positionAt, previousPosition, previousStop } from "./schedule";
 import { buildTimeline, ENVELOPE_OPACITY, initialState, LIFT_FT, stepLabel } from "./timeline";
 
 // Fixture A from SPEC.md, computed by the real engine.
@@ -42,6 +42,18 @@ describe("schedule", () => {
     expect(nextPosition(s, s.rules[5]!.start + 0.1)).toBe(6); // finish the step in progress
     expect(previousPosition(s, s.labels[6]!)).toBe(5);
     expect(previousPosition(s, s.rules[5]!.remove + 0.1)).toBe(6); // past the rest point: back to it
+  });
+
+  it("stops Next and Back only where the shape changes: the start, cuts, satisfied caps and the result", () => {
+    const stops = s.labels.map((_, p) => p).filter((p) => isStop(s, p));
+    expect(stops).toEqual([0, 4, 5, 6, 7, 8, 12]); // rules 1–3 and 9–11 only show a card
+    expect(nextStop(s, s.labels[0]!)).toBe(4);
+    expect(nextStop(s, s.labels[4]!)).toBe(5);
+    expect(nextStop(s, s.labels[8]!)).toBe(12);
+    expect(nextStop(s, s.labels[12]!)).toBe(12);
+    expect(previousStop(s, s.labels[4]!)).toBe(0);
+    expect(previousStop(s, s.labels[12]!)).toBe(8);
+    expect(previousStop(s, s.labels[2]!)).toBe(0); // from a card-only step reached with a dot
   });
 });
 
