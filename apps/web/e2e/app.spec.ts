@@ -515,7 +515,7 @@ test("Storyboard: one tile per cut, red only where a rule removes volume, the pl
   expect(result!.red).toBe(0);
   await expect(page).toHaveURL(/step=6/);
   await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
-  await expect(page.getByTestId("hud-volume")).toHaveText("100,000 cu ft");
+  await expect(page.getByTestId("hud-volume")).toHaveText("70,000 cu ft"); // the rear yard has landed
 });
 
 test("share images work on a hillside lot and with Housing Choice-SF on", async ({ page }) => {
