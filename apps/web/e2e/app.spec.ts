@@ -495,7 +495,8 @@ test("a named NCD: 558 Castro St is Castro Street NCD, its rear yard above a 10 
   await expect(page.locator(".fact-card")).toContainText("NCD-CASTRO");
   await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
   await expect(currentSentence(page)).toHaveText(/^Rear yard: 25% of 127\.6 ft lot depth = 31\.9 ft\. It starts above the 10 ft first story/);
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-01-12");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");
