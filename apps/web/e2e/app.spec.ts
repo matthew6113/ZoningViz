@@ -175,7 +175,7 @@ test("a lot outside the covered districts says so", async ({ page }) => {
   // 558 Castro St: a named neighborhood commercial district, each of which has its own control table.
   await page.goto("/?parcel=2695010");
   // Parcels say only "NCD"; the zoning layer names the district.
-  await expect(page.locator(".notice")).toContainText("Zoned NCD-CASTRO. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-MISSION BERNAL, NCD-NORTH BEACH, NCD-POLK, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-VALENCIA only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD-CASTRO. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER CLEMENT, NCD-POLK, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-UPPER MARKET, NCT-VALENCIA only so far");
   await expect(page.locator(".fact-card")).toContainText("NCD-CASTRO");
 });
 
@@ -470,6 +470,21 @@ test("a named district whose code has no spaces: 4017 24th St is NCD-24TH-NOE-VA
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");
   await expect(summary).toContainText("6,840 sq ft");
+  await expectSceneDrawn(page);
+});
+
+test("a named NCT with a ground-level rear yard: 262 Noe St is Upper Market NCT", async ({ page }) => {
+  await page.goto("/?parcel=3561010&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("262–266 Noe St");
+  await expect(page.locator(".fact-card")).toContainText("NCT-UPPER MARKET");
+  await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
+  await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 100.3 ft lot depth = 25.1 ft.");
+  await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("at ground level and on every floor");
+  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await toResult(page);
+  const summary = page.getByTestId("summary");
+  await expect(summary).toContainText("4 stories");
+  await expect(summary).toContainText("8,276 sq ft");
   await expectSceneDrawn(page);
 });
 

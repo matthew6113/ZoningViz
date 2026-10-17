@@ -28,6 +28,11 @@ import ncdInnerClement from "./NCD-INNER-CLEMENT.json";
 import ncdMissionBernal from "./NCD-MISSION-BERNAL.json";
 import ncdSanBruno from "./NCD-SAN-BRUNO-AVENUE.json";
 import nctDivisadero from "./NCT-DIVISADERO.json";
+import ncdNoriega from "./NCD-NORIEGA.json";
+import ncdOuterClement from "./NCD-OUTER-CLEMENT.json";
+import ncdUpperFillmore from "./NCD-UPPER-FILLMORE.json";
+import nct24thMission from "./NCT-24TH-MISSION.json";
+import nctUpperMarket from "./NCT-UPPER-MARKET.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -57,14 +62,19 @@ const FILES: Record<string, unknown> = {
   "NCD-INNER CLEMENT": ncdInnerClement,
   "NCD-INNER SUNSET": ncdInnerSunset,
   "NCD-MISSION BERNAL": ncdMissionBernal,
+  "NCD-NORIEGA": ncdNoriega,
   "NCD-NORTH BEACH": ncdNorthBeach,
+  "NCD-OUTER CLEMENT": ncdOuterClement,
   "NCD-POLK": ncdPolk,
   "NCD-SAN BRUNO AVENUE": ncdSanBruno,
   "NCD-TARAVAL": ncdTaraval,
   "NCD-UNION": ncdUnion,
+  "NCD-UPPER FILLMORE": ncdUpperFillmore,
+  "NCT-24TH-MISSION": nct24thMission,
   "NCT-DIVISADERO": nctDivisadero,
   "NCT-HAYES": nctHayes,
   "NCT-MISSION": nctMission,
+  "NCT-UPPER MARKET": nctUpperMarket,
   "NCT-VALENCIA": nctValencia,
 };
 

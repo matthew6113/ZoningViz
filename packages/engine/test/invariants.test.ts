@@ -71,6 +71,12 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["3326 Mission St, Mission Bernal, falling (6635005)", loadParcel("6635005"), "NCD-MISSION BERNAL", {}],
   ["2660 San Bruno Ave, irregular (5982003A)", loadParcel("5982003A"), "NCD-SAN BRUNO AVENUE", {}],
   ["512 Divisadero St (1203019)", loadParcel("1203019"), "NCT-DIVISADERO", {}],
+  ["Y 25x100, Upper Market NCT", rectangularLot(25, 100), "NCT-UPPER MARKET", {}],
+  ["2515 Clement St, Outer Clement (1458040)", loadParcel("1458040"), "NCD-OUTER CLEMENT", {}],
+  ["2019 Fillmore St (0654003)", loadParcel("0654003"), "NCD-UPPER FILLMORE", {}],
+  ["1245 Noriega St (2056033)", loadParcel("2056033"), "NCD-NORIEGA", {}],
+  ["2718 24th St, 24th Street - Mission, 65-X (4211016)", loadParcel("4211016"), "NCT-24TH-MISSION", {}],
+  ["2355 Market St, 75//160-R-4, front 1 (3563044)", loadParcel("3563044"), "NCT-UPPER MARKET", { frontSide: 1 }],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

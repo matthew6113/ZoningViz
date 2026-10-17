@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { syntheticLot, type EnvelopeResult, type Step } from "../src";
 import { getEngine, loadDistrict, rectangularLot } from "./helpers";
 
-// Named neighborhood commercial districts (Article 7 tables). Fixtures W and X are hand-checked.
+// Named neighborhood commercial districts (Article 7 tables). Fixtures W, X and Y are hand-checked.
 const NO_SETBACK = { overrides: { "front-setback": { feet: 0 } } };
 
 type Ok = Extract<EnvelopeResult, { status: "ok" }>;
@@ -151,6 +151,51 @@ describe("named districts, batch 3", () => {
 
   it("Divisadero Street NCT: fixture W's 14 ft first story and 83,750 cu ft; FAR 2.5", () => {
     const r = envelope("NCT-DIVISADERO");
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+    expect(r.totals.volume).toBeCloseTo(83_750, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+  });
+});
+
+describe("fixture Y: 25 x 100 ft Upper Market Street NCT lot, 40-X", () => {
+  const r = envelope("NCT-UPPER MARKET");
+
+  it("takes a 25 ft rear yard at grade and every story (§134(d)(4)) under a 14 ft first story", () => {
+    expect(step(r, "rear-yard").numbers.aboveFt).toBeUndefined();
+    expect(step(r, "rear-yard").measurements.removedVolume).toBeCloseTo(25 * 25 * 40, 3);
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+  });
+
+  it("ends at 75,000 cu ft: stories from 0, 14, 24 and 34 ft of 1,875 sq ft each; FAR 3.0", () => {
+    expect(r.totals.volume).toBeCloseTo(75_000, 3);
+    expect(r.floors.map((f) => [f.bottomFt, f.topFt])).toEqual([[0, 14], [14, 24], [24, 34], [34, 44]]);
+    expect(plates(r)).toEqual([1875, 1875, 1875, 1875]);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(3 * 2500, 6);
+  });
+});
+
+describe("named districts, batch 4", () => {
+  it("Outer Clement: fixture X's ground-level rear yard and 75,000 cu ft; FAR 1.8; the bonus flagged", () => {
+    const r = envelope("NCD-OUTER CLEMENT");
+    expect(step(r, "rear-yard").numbers.aboveFt).toBeUndefined();
+    expect(r.totals.volume).toBeCloseTo(75_000, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+    expect(step(r, "ground-floor-bonus").status).toBe("not_modeled");
+  });
+
+  it("Upper Fillmore and Noriega: fixture H's shape; FAR 2.5; only Noriega flags the bonus", () => {
+    for (const code of ["NCD-UPPER FILLMORE", "NCD-NORIEGA"]) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+    }
+    expect(envelope("NCD-UPPER FILLMORE").steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+    expect(step(envelope("NCD-NORIEGA"), "ground-floor-bonus").status).toBe("not_modeled");
+  });
+
+  it("24th Street - Mission NCT: fixture W's 14 ft first story and 83,750 cu ft; FAR 2.5", () => {
+    const r = envelope("NCT-24TH-MISSION");
     expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
     expect(r.totals.volume).toBeCloseTo(83_750, 3);
     expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);

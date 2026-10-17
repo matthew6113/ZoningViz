@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status: every rule in all 31 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); and five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Named NC districts, batch 4 (2026-10-17): drafts** (section below). NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION and NCT-UPPER MARKET carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
+
+**Status: every rule in the other 31 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); and five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -174,6 +176,19 @@ Same layout as batches 1 and 2. 24th Street – Noe Valley's zoning-layer code i
 | `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
 | `ground-floor-bonus` (flag) | §263.20: P | P | "P in some districts" (question 49) | P | P | 2026-01-12 |
 
+## Named NC districts, batch 4 (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Same layout as the earlier batches. All five tables were last amended by Ord. 37-26 (4/11/2026). Upper Market Street NCT's rear yard is §134(d)(4), at grade and every story like (d)(1).
+
+| Rule id | NCD-OUTER CLEMENT (§717) | NCD-UPPER FILLMORE (§718) | NCD-NORIEGA (§731) | NCT-24TH-MISSION (§763) | NCT-UPPER MARKET (§764) | Proposed `effectiveDate` |
+|---|---|---|---|---|---|---|
+| `use` | Form-based density; open space 80/100; lot mergers ≤ 50 ft frontage (§121.7) | 1 home per 600 sq ft or nearest R district (form-based in R-4, note (2)); open space 80/100 | Form-based; open space 100/133 | Form-based; GF commercial required on 24th Street (§145.4(b)(15)), GF residential C there (note (1)); open space 80/100; lots of 5,000 sq ft or more C (§121.1) | Form-based; GF commercial required on Market and Church Streets (§145.4(b)(5), (11)), GF residential C there (note (1)); open space 60/80; lots of 10,000 sq ft or more C (§121.1); lot mergers on Market ≤ 150 ft (§121.7) | 2026-04-11 |
+| `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | same as 24th Street – Mission | (C) 2018-09-10; (B) 2019-01-12 |
+| `rear-yard` | 25%, ≥ 15 ft, at grade and every story ((d)(1)) | from the 2nd story ((d)(2)) | (d)(2) | (d)(2) | at grade and every story ((d)(4)); a waiver for buildings without homes is named, not drawn (question 53) | (d)(1) and (d)(2) 2026-01-12; (d)(4) 2024-01-14 (question 54) |
+| `far` | 1.8 (Table 124) | 2.5 | 2.5 | 2.5 | 3.0 | 2026-01-12 |
+| `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
+| `ground-floor-bonus` (flag) | §263.20: P | NP, no flag | P | P | P | 2026-01-12 |
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -245,6 +260,8 @@ Same layout as batches 1 and 2. 24th Street – Noe Valley's zoning-layer code i
 50. **Mission Bernal's rear-yard note.** The rear-yard row points at note (6), which is about automotive uses ("So in Ord. 7-20"), like question 42.
 51. **Mission Bernal and San Bruno Avenue without R-4.** Tables 740 and 741 state density per lot area with no form-based R-4 sentence and have no Housing Choice-SF row. The sampled lots are all 40-X, so their Housing Choice-SF card says it doesn't apply; if an R-4 label ever reaches these districts, §206.10 would apply by its own terms.
 52. **Divisadero's lot-merger exception.** §121.7 limits merged frontage in the Divisadero Street NCT to 100 ft "except for the east and west blocks between Oak and Fell". The card says so; which blocks a lot is on isn't checked.
+53. **Upper Market's rear-yard waiver.** Table 764's rear-yard row says "See § 134(a)(1)(D) for waiver", a subsection that no longer exists since Ord. 248-23 reorganized §134. §134(d)(4) itself lets the Zoning Administrator waive or reduce the yard for buildings without Residential Uses that don't abut a pattern of rear yards, "pursuant to the procedures of subsection (h)", which is about corner lots (the NC modification procedure is (k)). The card names the waiver and draws the yard.
+54. **Upper Market's rear-yard date.** §134(c)(2) and (d)(4) were last changed by Ord. 248-23 (1/14/2024); (d)(1)–(2) were amended by Ord. 245-25 and (d)(3) by Ord. 13-26. So this file's rear yard is dated 2024-01-14.
 
 ## Special use district notes (`sf/specialUse.json`)
 

@@ -39,6 +39,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-MISSION BERNAL": "#2a6a5c",
   "NCD-SAN BRUNO AVENUE": "#5f9f8c",
   "NCT-DIVISADERO": "#477fa0",
+  "NCD-NORIEGA": "#55a08a",
+  "NCD-OUTER CLEMENT": "#2f7a6a",
+  "NCD-UPPER FILLMORE": "#6aa996",
+  "NCT-24TH-MISSION": "#356f93",
+  "NCT-UPPER MARKET": "#5487a8",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

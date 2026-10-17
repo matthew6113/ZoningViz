@@ -110,7 +110,7 @@ test("a lot whose zoning isn't covered explains why and stays on the map", async
   await expect(tooltip(page)).toContainText("Zoned PDR-1-G.");
 
   await page.mouse.click(center.x, center.y);
-  await expect(page.getByTestId("map-popup")).toContainText("Zoned PDR-1-G. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-MISSION BERNAL, NCD-NORTH BEACH, NCD-POLK, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-VALENCIA only so far");
+  await expect(page.getByTestId("map-popup")).toContainText("Zoned PDR-1-G. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER CLEMENT, NCD-POLK, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-UPPER MARKET, NCT-VALENCIA only so far");
   await page.waitForTimeout(300);
   await expect(page).not.toHaveURL(/parcel=/);
 });
