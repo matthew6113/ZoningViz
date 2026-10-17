@@ -8,7 +8,7 @@ Pick a San Francisco parcel; show in 3D how each zoning rule carves a translucen
 
 Zoning identification is a data lookup (the parcel record carries `zoning_code`), never an AI judgment.
 
-v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; the named NCD/NCT districts (each with its own control table) aren't covered.
+v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17, drafts). The named NCD/NCT districts (each with its own control table) aren't covered.
 
 ## Working rules
 
@@ -85,7 +85,7 @@ packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve 
   src/rules/schema.ts           # zod schema for district files
   src/rules/resolve.ts          # rule params -> numbers, card sentence, cut (no geometry)
   src/rules/regions.ts          # cut -> allowed region; dimension lines; cut planes (for the sweep)
-  test/                         # fixtures A–T (far: RM/NC, bulk, localProgram: Housing Choice-SF), invariants, schema, front detection, terrain
+  test/                         # fixtures A–V (far: RM/NC, bulk, localProgram: Housing Choice-SF, rto), invariants, schema, front detection, terrain
   test/fixtures/parcels/        # recorded real parcels (pnpm record-fixtures)
 packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
   sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses
@@ -154,7 +154,7 @@ type Rule = {
 };
 ```
 
-Verification (done 2026-10-14, every rule in all 13 files): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
+Verification (done 2026-10-14, every rule in the 13 RH, RM and NC files; the RTO files' own rules are drafts, see VERIFY.md): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|
@@ -223,8 +223,10 @@ Fixtures (hand-checked):
 | R | 100 x 100 ft, RH-2, 40//40-R-4, on | Larger than 8,000 sq ft: 65 ft; 455,000 cu ft; 6 × 7,000 = 42,000 sq ft (275,000 and 27,500 without) |
 | S | 80 x 100 ft, RH-2, 40//40-R-4, on | Exactly 8,000 sq ft, not larger: stays 40 ft; 224,000 cu ft |
 | T | 25 x 100 ft, RH-2, 40//40-R-4, on, streets front and left | Corner lot: 65 ft; 113,750 cu ft. Streets front and rear (through lot): stays 40 ft |
+| U | 25 x 100 ft, RTO-C, 40-X, flat, no setback | 25 ft rear yard at every level (no first-story height for RTO-C); 75,000 cu ft; 4 × 1,875 = 7,500 sq ft; FAR 1.8 budget 4,500 sq ft. RTO-1 and RTO-M: 30 ft yard, 70,000 cu ft |
+| V | 25 x 100 ft, RTO-C, 40//65-R-4, on | 65 ft; program's 18% (18 ft) rear yard at every level; 133,250 cu ft; 6 × 2,050 = 12,300 sq ft. RTO-1 keeps its 30% yard: 113,750 cu ft |
 
-Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4).
+Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner), 0872013 (RTO-1, 85//85-R-4), 3597019 (RTO-M), 0493016 (RTO-C, corner, 40//65-R-4). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4) and 3249 Webster St (RTO-C, 40//65-R-4).
 
 ## Phase status
 
@@ -240,6 +242,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
   - [x] Bulk letters: Table 270 `bulk` rule in every district, one fitting box above the bulk height; fixtures K, L, N
   - [x] Family Zoning Plan local-program unlock: `local_program` rule (Housing Choice-SF, §206.10) in every district, `?program=1` switch on R-4 lots, summary comparison; fixtures O–T
   - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
+- [x] Since Phase 6: special use districts listed on the fact card (§249.94 note, draft); RTO-1, RTO-M, RTO-C district files (Table 209.4, drafts); fixtures U and V
 
 ## Web app notes
 

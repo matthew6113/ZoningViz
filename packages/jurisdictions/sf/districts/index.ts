@@ -8,6 +8,9 @@ import rm1 from "./RM-1.json";
 import rm2 from "./RM-2.json";
 import rm3 from "./RM-3.json";
 import rm4 from "./RM-4.json";
+import rto1 from "./RTO-1.json";
+import rtoM from "./RTO-M.json";
+import rtoC from "./RTO-C.json";
 import nc1 from "./NC-1.json";
 import nc2 from "./NC-2.json";
 import nc3 from "./NC-3.json";
@@ -24,6 +27,9 @@ const FILES: Record<string, unknown> = {
   "RM-2": rm2,
   "RM-3": rm3,
   "RM-4": rm4,
+  "RTO-1": rto1,
+  "RTO-M": rtoM,
+  "RTO-C": rtoC,
   "NC-1": nc1,
   "NC-2": nc2,
   "NC-3": nc3,

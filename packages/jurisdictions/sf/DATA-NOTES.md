@@ -89,6 +89,11 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 2. **Edge contact.** District lines follow lot lines and streets, so a plain polygon query also finds districts that only meet a lot's edge. The adapter queries with the lot shrunk by 1 ft instead (the intersection of eight copies of the lot shifted 1 ft outward in eight directions, coordinates rounded to 1e-7°). On 301 random RH/RM/NC lots, measured against the downloaded district shapes: all 463 real overlaps (the smallest 6.9% of the lot) were found, and all 9 edge contacts (0.001% of the lot or less) were dropped, at insets from 0.25 ft to 3 ft. No district shape has to be downloaded.
 3. **Long outlines.** When the shrunk lot's WKT is over 6,000 characters (or nothing is left of a sliver), the adapter fetches the districts crossing the lot's bounding box with their shapes and keeps those covering at least 0.1% of the lot, as for height districts. That download can reach several hundred KB, so it's kept for the few hundred lots with outlines of 150+ vertices.
 
+## RTO coverage (2026-10-17)
+
+- Active land parcels: RTO-C 8,766, RTO-1 1,325, RTO-M 1,147. With them, about 88% of land parcels have a rule file (81% before). The largest uncovered groups left are the named NCD districts (4,850 lots in about 30 tables), NCT (1,798) and P (1,683).
+- Sweep (`pnpm sweep --per-district 15 --seed 7 --program`): all 45 RTO lots produced envelopes. 8 asked for the front; one RTO-M front choice (3643058, front 2) leaves nothing. Every sampled RTO-C lot was in an R-4 district, and all grew under Housing Choice-SF (median +5,818 sq ft); 10 of the 13 R-4 RTO-1 lots didn't change (their two heights are equal).
+
 ## Neighbors' front setbacks: not from building outlines (2026-10-17)
 
 §132(a) sets the front setback from the adjacent buildings' setbacks, which city data doesn't record. The Building Footprints layer (`ynuv-fyni`) was tried as a stand-in and rejected:

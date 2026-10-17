@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status (2026-10-14): every rule in all 13 files is verified** against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**RTO-1, RTO-M and RTO-C (added 2026-10-17) are drafts** (section below): their district-specific rules are `verified: false`, while the rules every district file shares (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copied unchanged from the verified files, because the consistency tests keep the copies identical.
+
+**Status (2026-10-14): every rule in the 13 RH, RM and NC files is verified** against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -115,6 +117,22 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 | `front-modulation` (flag, RM-1 and RM-2) | On lots wider than 35 ft, the front steps at least 2 ft in height or depth every 35 ft or less, or has a pedestrian entrance every 25 ft | §144.1 | S12 | Check |
 | *(absent)* | No side yards (Table 209.2: "Not Required"; §133 is RH-1(D) only). No §261 dwelling cap or front plane (RH only) | §133, §261 | S10, S13 | — |
 
+## RTO-1, RTO-M, RTO-C (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Table 209.4 covers all three. It was last amended by Ord. 37-26 ("Table 209.4 amended", 4/11/2026). The `use` cards' link is built from the §209.1 and §209.2 pages' pattern and hasn't been opened.
+
+| Rule id | Value | Check | Proposed `effectiveDate` |
+|---|---|---|---|
+| `use` | RTO-1: 1 unit per 600 sq ft of lot area as of right, C above (§207(a)); a unit of 500 sq ft or less with one room plus kitchen and bath counts as ¾ (note (8)); corner shops reaching ≤ 50 ft from the corner (§231). RTO-M and RTO-C: form-based density; RTO-M corner shops ≤ 100 ft; RTO-C allows more non-residential uses, ground floor commercial not required. Open space per unit: 80/106, 100/133, 60/80 sq ft private/common. All: new buildings on lots of 10,000 sq ft or more need C (§303(r)) | Table 209.4, §207, §303(r) | 2026-04-11 (Ord. 37-26, as for the other use cards) |
+| `rear-yard` | RTO-1, RTO-M: 30% of lot depth, at least 15 ft, at grade and every story (§134(c)(1) and (d)(1) name both; the rule is RM-1's unchanged). RTO-C: 25%, at least 15 ft, from the second story up and at the first story if it has a dwelling ((c)(2), (d)(2)); drawn at every level, because §145.1(c)(4) sets no ground-floor height for RTO (question 39) | §134(c)(1)–(2), (d)(1)–(2); Table 209.4 | 2026-01-12 (Ord. 245-25 amended (c)(1), (d)(1)–(2)) |
+| `front-setback` | RM's rule unchanged: the adjacent building with the shallowest setback, up to 10 ft (§132 applies "in all RH, RTO, and RM Districts"). Table 209.4 also says "in no case … greater than 10 feet", as Table 209.2 does | §132(a), (c), (d); Table 209.4 | 2025-01-19 (as RM) |
+| `sidewalk-setback` (flag, RTO-C) | Where the sidewalk is narrower than the Better Streets Plan width, set the first 15 ft of height back to widen it. NC's flag text, which follows §132(e)(1)'s criteria (50 ft frontage, corner lot, next to a set-back building); Table 209.4 states it for RTO-C without them | §132(e); Table 209.4 | 2026-01-12 (Ord. 245-25 added (e)) |
+| `far` | 1.8 for non-residential floor area in all three (Table 124 lists RTO at 1.8; Table 209.4 puts FAR under non-residential standards). See question 38 for RTO-C | §124(a)–(b), Table 124; Table 209.4 | 2026-01-12 (as RM) |
+| `local-program` (RTO-C) | As NC's, but the replacement rear yard (18%, at least 15 ft, none at the ground floor, §206.10(d)(1)(E)(i)–(ii)) is drawn at every level for the reason in question 39. RTO-1 and RTO-M carry RM's card unchanged: (E)(i) excludes "lots in Residential Districts other than" RTO-C, so their 30% yard stays | §206.10(d)(1)(E) | 2026-01-12 (as the other files) |
+| *(absent)* | No side yards (Table 209.4: "Not Required"). No §261 cap or front plane (RH only). No §144.1 front modulation (RM-1 and RM-2 only). No §145.1 ground-floor height (not an NC, RC, C or Mixed Use district) | §133, §261, §144.1, §145.1 | — |
+
+Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to every height district; Table 270 to every bulk district; §261.1(c) names "RH, RM, RTO, NC, NCT"; §260(a)(3)–(4) apply wherever the height limit is 65 ft or less (or R-4 up to 85 ft).
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -168,6 +186,10 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 36. **Citywide Design Standards.** Bulletin No. 11 says Design Standard C.6 limits many R-district HC-SF envelopes at the rear (side setbacks above the ground floor, 30 ft between 55% and 30% of lot depth). That's a design standard, not Planning Code, and wasn't read at its source; not drawn, and named in `notDrawn`.
 
 37. **§249.94's exclusions.** (c)(1)(A) leaves out lots in the Telegraph Hill – North Beach Residential SUD (§249.49), which the note checks by name, and the North Beach SUD (§780.3), which has been repealed and isn't on the map. (c)(1)(B) and (c)(4)(B)(ii)–(iii) depend on the area bounded by the Great Highway, Lincoln Way, 19th Avenue and Sloat Boulevard; the app doesn't check it and says so.
+
+38. **RTO-C and §124(b).** §124(b) exempts residential uses from FAR "in R, RC, NC, and Mixed Use Districts", and §102 defines "R District" as RH, RM, "RTO, RTO-M" and RC, without RTO-C (probably not updated when Ord. 245-25 created RTO-C; §206.10(d)(1)(E)(i) calls RTO-C a Residential District). The draft follows Table 209.4, which puts RTO-C's 1.8 FAR under non-residential standards.
+39. **RTO-C's first story.** §134(d)(2) requires the RTO-C rear yard from the second story up (and at the first story only if it has a dwelling), and Housing Choice-SF waives it at the ground floor, but no section gives RTO-C a ground-floor height: §145.1 lists NC, RC, C-2 and Mixed Use districts, not RTO. Without a height to cut at, both yards are drawn at every level, as for a building with homes on the ground floor; the cards say so.
+40. **§134(l) on large RTO lots.** As with RM (question 18), the 2-acre lot coverage rule isn't flagged in the RTO files. §134(l) gives RTO-C the 65%-from-the-second-story variant and RTO-1/RTO-M the 60%-at-grade one.
 
 ## Special use district notes (`sf/specialUse.json`)
 

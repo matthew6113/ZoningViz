@@ -23,6 +23,10 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NC-2": "#2f8fa8",
   "NC-3": "#1f6a7f",
   "NC-S": "#7a9cb3",
+  // RTO: mauves, light to dark (neighborhood, Mission, commercial).
+  "RTO-1": "#c48bbf",
+  "RTO-M": "#a25d9c",
+  "RTO-C": "#7d3f78",
 };
 export const OTHER_RESIDENTIAL = "#b9b4a3";
 export const OTHER_ZONING = "#c5c8ce";

@@ -174,7 +174,7 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 test("a lot outside the covered districts says so", async ({ page }) => {
   // 2139 Polk St: a named neighborhood commercial district, each of which has its own control table.
   await page.goto("/?parcel=0571003");
-  await expect(page.locator(".notice")).toContainText("Zoned NCD. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, NC-1–NC-3, NC-S only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S only so far");
   await expect(page.locator(".fact-card")).toContainText("NCD");
 });
 
@@ -345,7 +345,6 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   await fsho.getByText("What it allows").click();
   await expect(fsho.locator("details")).toContainText("The height limit is 40 ft where the height map allows 40 ft");
   await expect(specialUse.locator(".special-use").nth(1)).toHaveText(/^Central Neighborhoods Large Residence not modeled$/);
-  await page.locator(".fact-card").screenshot({ path: `${SHOTS}/clarendon-special-use.png` });
   await expect(label(page)).toHaveText("Rule 5 of 12: RH-1(D) dwelling cap");
   await expect(currentSentence(page)).toHaveText(
     /^RH-1\(D\) dwelling cap: the rear lot line averages 3\d\.\d ft lower than the front \(.*\), 20 ft or more, so 30 ft instead of 35 ft\.$/,
@@ -357,6 +356,9 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   await expect(label(page)).toHaveText("Result");
   await expect(page.getByTestId("summary")).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/clarendon-slope-result.png` });
+  // Last: after capturing this card (taller than the viewport), reading the canvas in
+  // expectSceneDrawn timed out, though a plain viewport resize redraws the scene at once.
+  await page.locator(".fact-card").screenshot({ path: `${SHOTS}/clarendon-special-use.png` });
 });
 
 test("an uphill lot: 118 Dellbrook Ave rises 37 ft, so 40 ft and no front plane, stepping up the hill", async ({ page }) => {
@@ -393,6 +395,33 @@ test("an RM-2 lot: 619 Chestnut St keeps a 30% rear yard, and its floor-area lim
   await expect(page.getByTestId("far-cap")).toHaveText("6,023 sq ft (FAR 1.8; homes aren't limited)");
   await expectSceneDrawn(page);
   await page.screenshot({ path: `${SHOTS}/chestnut-rm2-result.png` });
+});
+
+test("an RTO-C lot: 3249 Webster St, drafted rules tagged unverified, 65 ft under Housing Choice-SF", async ({ page }) => {
+  test.setTimeout(180_000); // two engine runs on a lot with buildings and terrain (see expectSceneDrawn)
+  await page.goto("/?parcel=0492027&step=5");
+  await expect(page.locator(".fact-card h2")).toHaveText("3249 Webster St");
+  await expect(label(page)).toHaveText("Rule 5 of 11: Rear yard");
+  await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 66.8 ft lot depth = 16.7 ft.");
+  // RTO rules are drafts until checked against the code, and say so.
+  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible();
+  await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("drawn at every level");
+  await expect(page.locator("[data-rule=sidewalk-setback]")).toContainText("Not modeled");
+  await expect(page.locator("[data-rule=mapped-height] .tag-unverified")).toHaveCount(0);
+
+  await toResult(page);
+  const summary = page.getByTestId("summary");
+  await expect(summary).toContainText("4 stories");
+  await expect(summary).toContainText("5,050 sq ft");
+
+  await page.getByRole("switch", { name: "Housing Choice-SF: off" }).click();
+  await expect(page).toHaveURL(/program=1/);
+  await expect(page.locator("[data-rule=rear-yard] .sentence")).toHaveText("Rear yard: 18% of 66.8 ft lot depth = 12 ft, below the 15 ft minimum, so 15 ft.");
+  await toResult(page);
+  await expect(summary).toContainText("6 stories");
+  await expect(summary).toContainText("7,896 sq ft");
+  await expectSceneDrawn(page, 120_000);
+  await page.screenshot({ path: `${SHOTS}/webster-rto-c-housing-choice.png` });
 });
 
 test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard starts above it", async ({ page }) => {

@@ -33,14 +33,14 @@ describe("district files", () => {
     for (const copy of common) expect(copy).toEqual(common[0]);
   });
 
-  it("waive exactly the §261(b) and §261(c) rules, and replace NC rear yards", () => {
+  it("waive exactly the §261(b) and §261(c) rules, and replace NC and RTO-C rear yards (§206.10(d)(1)(E))", () => {
     for (const code of availableDistricts()) {
       const rules = loadDistrict(code)!.rules;
       const program = rules.find((r) => r.kind === "local_program");
       if (program?.kind !== "local_program") throw new Error(`${code} has no local_program rule`);
       const section261 = rules.filter((r) => /§261\((b|c)\)/.test(r.citation)).map((r) => r.id);
       expect(program.params.waives.map((w) => w.ruleId), code).toEqual(section261);
-      expect(program.params.replaces.map((r) => r.ruleId), code).toEqual(code.startsWith("NC") ? ["rear-yard"] : []);
+      expect(program.params.replaces.map((r) => r.ruleId), code).toEqual(code.startsWith("NC") || code === "RTO-C" ? ["rear-yard"] : []);
     }
   });
 

@@ -48,6 +48,12 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["R 100x100 40//40-R-4", syntheticLot(100, 100, r4(40, 40)), "RH-2", {}],
   ["T corner 25x100 40//40-R-4", syntheticLot(25, 100, r4(40, 40), { streets: "front_and_left" }), "RH-2", { frontSide: 1 }],
   ["NC-2 25x100 40//65-R-4 rising 20 ft", { ...slopedLot(25, 100, 20), heightZones: syntheticLot(25, 100, r4(40, 65)).heightZones }, "NC-2", {}],
+  ["U 25x100, RTO-C", rectangularLot(25, 100), "RTO-C", {}],
+  ["V 25x100 40//65-R-4, RTO-C", syntheticLot(25, 100, r4(40, 65)), "RTO-C", {}],
+  ["RTO-1 25x100 falling 25 ft", slopedLot(25, 100, -25), "RTO-1", {}],
+  ["3250 Webster St, corner, front 1 (0493016)", loadParcel("0493016"), "RTO-C", { frontSide: 1 }],
+  ["65 Hermann St (0872013)", loadParcel("0872013"), "RTO-1", {}],
+  ["3646 20th St (3597019)", loadParcel("3597019"), "RTO-M", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
