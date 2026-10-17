@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coverageNote, districtList, zoningCodes, zoningCoverage } from "../zoning";
+import { coverageNote, districtList, namedDistrictIndex, resolveNamedDistrict, zoningCodes, zoningCoverage } from "../zoning";
 
 describe("zoning codes on the parcel record", () => {
   it.each([
@@ -41,5 +41,35 @@ describe("zoning codes on the parcel record", () => {
     );
     expect(districtList(["RM-1", "RM-3"])).toBe("RM-1, RM-3");
     expect(districtList([])).toBe("");
+  });
+});
+
+describe("named neighborhood commercial districts", () => {
+  // As the zoning layer serves them (zoning, districtna), with one name used for two codes.
+  const index = namedDistrictIndex([
+    { zoning: "NCD-NORTH BEACH", districtna: "NORTH BEACH NEIGHBORHOOD COMMERCIAL" },
+    { zoning: "NCT-MISSION", districtna: "MISSION STREET NEIGHBORHOOD COMMERCIAL TRANSIT" },
+    { zoning: "M-2", districtna: "PDR PRODUCTION, DISTRIBUTION, AND REPAIR" },
+    { zoning: "PDR-2", districtna: "PDR PRODUCTION, DISTRIBUTION, AND REPAIR" },
+    { zoning: "RH-2" },
+  ]);
+
+  it("finds a generic NCD or NCT code's own district by name", () => {
+    expect(resolveNamedDistrict("NCD", "North Beach Neighborhood Commercial ", index)).toBe("NCD-NORTH BEACH");
+    expect(resolveNamedDistrict("NCT", "MISSION STREET  NEIGHBORHOOD COMMERCIAL TRANSIT", index)).toBe("NCT-MISSION");
+  });
+
+  it("leaves other codes, unknown names and ambiguous names alone", () => {
+    expect(resolveNamedDistrict("RH-2", "NORTH BEACH NEIGHBORHOOD COMMERCIAL", index)).toBe("RH-2");
+    expect(resolveNamedDistrict("NCD", "POLK STREET NEIGHBORHOOD COMMERCIAL", index)).toBe("NCD");
+    expect(resolveNamedDistrict("NCD", null, index)).toBe("NCD");
+    expect(index.has("PDR PRODUCTION, DISTRIBUTION, AND REPAIR")).toBe(false);
+  });
+
+  it("covers the named districts that have rule files", () => {
+    for (const code of ["NCD-EXCELSIOR", "NCD-GEARY BOULEVARD", "NCD-NORTH BEACH", "NCT-MISSION", "NCT-VALENCIA"]) {
+      expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
+    }
+    expect(zoningCoverage("NCD-POLK")).toEqual({ kind: "not_covered", code: "NCD-POLK" });
   });
 });

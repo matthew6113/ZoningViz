@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status: every rule in all 16 files is verified**: the 13 RH, RM and NC files on 2026-10-14, and RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6). The RTO files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Named NC districts, batch 1 (2026-10-17): drafts** (section below). NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION and NCT-VALENCIA carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
+
+**Status: every rule in the other 16 files is verified**: the 13 RH, RM and NC files on 2026-10-14, and RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6). The RTO files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -131,6 +133,21 @@ Table 209.4 covers all three. It was last amended by Ord. 37-26 ("Table 209.4 am
 
 Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to every height district; Table 270 to every bulk district; §261.1(c) names "RH, RM, RTO, NC, NCT"; §260(a)(3)–(4) apply wherever the height limit is 65 ft or less (or R-4 up to 85 ft).
 
+## Named NC districts, batch 1 (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Parcels label every named district "NCD" or "NCT"; the app takes the specific code from the zoning layer by name (sf/DATA-NOTES.md). Files are keyed by that code. All five tables were last amended by Ord. 37-26 (4/11/2026).
+
+| Rule id | NCD-EXCELSIOR (§720) | NCD-GEARY BOULEVARD (§739) | NCD-NORTH BEACH (§722) | NCT-MISSION (§754) | NCT-VALENCIA (§762) | Proposed `effectiveDate` |
+|---|---|---|---|---|---|---|
+| `use` | 1 home per 600 sq ft; open space 80/100; lots of 10,000 sq ft or more C (§121.1) | Form-based density; open space 80/100 | 1 per 400 sq ft or nearest R district (form-based in R-4); residential NP on the 1st story; ground floor commercial required district-wide (§145.4); open space 60/80; lot mergers ≤ 25 ft frontage (§121.7) | Form-based; GF commercial required on Mission St and parts of 16th/22nd (§145.4), GF residential C there (note (1)); open space 80/100; lots ≥ 10,000 sq ft C | Form-based; GF commercial required on parts of Valencia, 16th, 22nd; GF residential C there (note (1)); open space 80/100 | 2026-04-11 |
+| `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | same as Mission | (C) 2018-09-10; (B) 2019-01-12 (Ord. 296-18) |
+| `rear-yard` | 25%, ≥ 15 ft, from the 2nd story ((d)(2)) | from the lowest story with a dwelling ((d)(3)) | (d)(2) | (d)(3) | (d)(2) | (d)(2) 2026-01-12; (d)(3) 2026-03-16 |
+| `far` | 3.6 (Table 124 "Excelsior-Outer Mission") | 3.6 (Table 739; Geary isn't in Table 124, §124(a) defers to the district table) | 1.8 | 3.6 | 2.5 | 2026-01-12 |
+| `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
+| `ground-floor-bonus` (flag) | §263.20: P | P(1) in some districts (question 41) | NP: no flag | P | P | 2026-01-12 |
+
+Shared rules copied unchanged: height reference, Housing Choice-SF (NC variant: 18% rear yard, none at the ground floor; §206.10(d)(1)(E)(ii) names "Named Neighborhood Commercial"), mapped height, bulk, narrow streets, cross-slope.
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -188,6 +205,10 @@ Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to e
 38. **RTO-C and §124(b).** §124(b) exempts residential uses from FAR "in R, RC, NC, and Mixed Use Districts", and §102 defines "R District" as RH, RM, "RTO, RTO-M" and RC, without RTO-C (probably not updated when Ord. 245-25 created RTO-C; §206.10(d)(1)(E)(i) calls RTO-C a Residential District). The draft follows Table 209.4, which puts RTO-C's 1.8 FAR under non-residential standards.
 39. **RTO-C's first story.** §134(d)(2) requires the RTO-C rear yard from the second story up (and at the first story only if it has a dwelling), and Housing Choice-SF waives it at the ground floor, but no section gives RTO-C a ground-floor height: §145.1 lists NC, RC, C-2 and Mixed Use districts, not RTO. Without a height to cut at, both yards are drawn at every level, as for a building with homes on the ground floor; the cards say so.
 40. **§134(l) on large RTO lots.** As with RM (question 18), the 2-acre lot coverage rule isn't flagged in the RTO files. §134(l) gives RTO-C the 65%-from-the-second-story variant and RTO-1/RTO-M the 60%-at-grade one.
+
+41. **Geary's ground-floor bonus.** Table 739 says "P(1) in some districts", and note (1) gives "Additional 5 feet for NC-3 parcels zoned 40' or 50' with an Active Use on the ground floor" along Geary from Masonic Avenue to 28th Avenue, except the north side between Palm and Parker Avenues. Geary lots are NCD, not NC-3; the flag quotes the note as written.
+42. **Geary's rear-yard note.** Table 739's rear-yard row points at note (6), which is about car washing at service stations, the same kind of stale reference as question 16.
+43. **NCT ground floors.** §145.1(c)(4)(B) gives NCT districts 14 ft with no 40/50-ft exception, so a 40-X NCT lot gets a 14 ft first story (fixture W) where an NCD lot gets 10 ft.
 
 ## Special use district notes (`sf/specialUse.json`)
 

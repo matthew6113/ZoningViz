@@ -89,6 +89,13 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 2. **Edge contact.** District lines follow lot lines and streets, so a plain polygon query also finds districts that only meet a lot's edge. The adapter queries with the lot shrunk by 1 ft instead (the intersection of eight copies of the lot shifted 1 ft outward in eight directions, coordinates rounded to 1e-7°). On 301 random RH/RM/NC lots, measured against the downloaded district shapes: all 463 real overlaps (the smallest 6.9% of the lot) were found, and all 9 edge contacts (0.001% of the lot or less) were dropped, at insets from 0.25 ft to 3 ft. No district shape has to be downloaded.
 3. **Long outlines.** When the shrunk lot's WKT is over 6,000 characters (or nothing is left of a sliver), the adapter fetches the districts crossing the lot's bounding box with their shapes and keeps those covering at least 0.1% of the lot, as for height districts. That download can reach several hundred KB, so it's kept for the few hundred lots with outlines of 150+ vertices.
 
+## Named neighborhood commercial districts (2026-10-17)
+
+- The parcel layer gives every named NC district a generic `zoning_code`, "NCD" (33 districts) or "NCT" (11), and its name in `zoning_district` ("NORTH BEACH NEIGHBORHOOD COMMERCIAL"). The zoning layer (`3i4a-hu95`) has each district's own code in `zoning` ("NCD-NORTH BEACH", "NCT-MISSION") with the same name in `districtna`.
+- All 44 parcel names match exactly one zoning-layer code. The layer has 121 (code, name) pairs in all; the one name shared by two codes ("PDR PRODUCTION, DISTRIBUTION, AND REPAIR": M-2 and PDR-2) is never a generic code's.
+- So `resolveNamedDistrict` (sf/zoning.ts) swaps a lot's generic code for the zoning layer's by name: the adapter with one grouped query (`select zoning,districtna group by zoning,districtna`, cached per adapter), and `pnpm build-tiles` with the same query before writing parcels, so the map's hover and click see the specific code too. A name that isn't found leaves the generic code (shown as not covered).
+- Sweep (`pnpm sweep --per-district 12 --seed 9 --program`, batch 1): all 60 lots in the five named districts produced envelopes. Bulk B and A cut nothing on the sampled lots ("already satisfied"); every sampled Geary lot is R-4 (50//85 and similar) and all grew under Housing Choice-SF. `--only CODE,CODE` sweeps chosen districts.
+
 ## RTO coverage (2026-10-17)
 
 - Active land parcels: RTO-C 8,766, RTO-1 1,325, RTO-M 1,147. With them, about 88% of land parcels have a rule file (81% before). The largest uncovered groups left are the named NCD districts (4,850 lots in about 30 tables), NCT (1,798) and P (1,683).

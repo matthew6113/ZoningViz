@@ -54,6 +54,12 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["3250 Webster St, corner, front 1 (0493016)", loadParcel("0493016"), "RTO-C", { frontSide: 1 }],
   ["65 Hermann St (0872013)", loadParcel("0872013"), "RTO-1", {}],
   ["3646 20th St (3597019)", loadParcel("3597019"), "RTO-M", {}],
+  ["W 25x100, Mission Street NCT", rectangularLot(25, 100), "NCT-MISSION", {}],
+  ["4479 Mission St, Excelsior (6013018)", loadParcel("6013018"), "NCD-EXCELSIOR", {}],
+  ["2700 Geary Blvd, front 0 (1070003)", loadParcel("1070003"), "NCD-GEARY BOULEVARD", { frontSide: 0 }],
+  ["1415 Grant Ave, North Beach, front 0 (0116010)", loadParcel("0116010"), "NCD-NORTH BEACH", { frontSide: 0 }],
+  ["2044 Mission St, 80-B (3569008)", loadParcel("3569008"), "NCT-MISSION", {}],
+  ["518 Valencia St (3568002)", loadParcel("3568002"), "NCT-VALENCIA", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

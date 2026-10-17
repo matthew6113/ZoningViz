@@ -174,8 +174,9 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 test("a lot outside the covered districts says so", async ({ page }) => {
   // 2139 Polk St: a named neighborhood commercial district, each of which has its own control table.
   await page.goto("/?parcel=0571003");
-  await expect(page.locator(".notice")).toContainText("Zoned NCD. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S only so far");
-  await expect(page.locator(".fact-card")).toContainText("NCD");
+  // Parcels say only "NCD"; the zoning layer names the district.
+  await expect(page.locator(".notice")).toContainText("Zoned NCD-POLK. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA only so far");
+  await expect(page.locator(".fact-card")).toContainText("NCD-POLK");
 });
 
 test("a fresh visit plays the arrival, then waits at the starting block", async ({ page }) => {
@@ -422,6 +423,22 @@ test("an RTO-C lot: 3249 Webster St, a 25% rear yard at every level, 65 ft under
   await expect(summary).toContainText("7,896 sq ft");
   await expectSceneDrawn(page, 120_000);
   await page.screenshot({ path: `${SHOTS}/webster-rto-c-housing-choice.png` });
+});
+
+test("a named NC district: 518 Valencia St is Valencia Street NCT, with a 14 ft shop floor in every height district", async ({ page }) => {
+  await page.goto("/?parcel=3568002&step=5");
+  await expect(page.locator(".fact-card h2")).toHaveText("518–522 Valencia St");
+  await expect(page.locator(".fact-card")).toContainText("NCT-VALENCIA");
+  await expect(label(page)).toHaveText("Rule 5 of 12: Ground floor height");
+  await expect(currentSentence(page)).toHaveText(
+    "Ground floor height: a shop or other non-residential ground floor must be at least 14 ft floor to floor, in every height district. The first story is drawn 14 ft tall; a taller one is allowed.",
+  );
+  await expect(page.locator("[data-rule=rear-yard] .sentence")).toHaveText(/^Rear yard: 25% of 89\.1 ft lot depth = 22\.3 ft\. It starts above the 14 ft first story/);
+  await expect(page.locator("[data-rule=ground-floor] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=far] .sentence")).toContainText("2.5 × 2,672 sq ft");
+  await toResult(page);
+  await expect(page.getByTestId("summary")).toContainText("5 stories");
+  await expectSceneDrawn(page);
 });
 
 test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard starts above it", async ({ page }) => {

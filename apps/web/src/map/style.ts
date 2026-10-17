@@ -23,6 +23,12 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NC-2": "#2f8fa8",
   "NC-3": "#1f6a7f",
   "NC-S": "#7a9cb3",
+  // Named NCD and NCT districts: deep teals and blue-greens, apart from NC's cyans.
+  "NCD-EXCELSIOR": "#3d8c7a",
+  "NCD-GEARY BOULEVARD": "#2c6e63",
+  "NCD-NORTH BEACH": "#5aa58f",
+  "NCT-MISSION": "#3f7f9c",
+  "NCT-VALENCIA": "#5b93ad",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

@@ -1,7 +1,7 @@
 import type { Feature, MultiPolygon, Polygon } from "geojson";
 import { addressOf, type ParcelAddressFields } from "./address";
 import { DATASETS, soqlString, soqlUrl } from "./datasf";
-import { zoningCodes } from "./zoning";
+import { resolveNamedDistrict, zoningCodes } from "./zoning";
 
 // What goes into the map's vector tiles (scripts/build-tiles.ts), and the
 // queries that fetch it. The app reads these property names, so they are the
@@ -13,7 +13,10 @@ export const TILE_LAYERS = { parcels: "parcels", zoning: "zoning" } as const;
 export interface ParcelTileProps {
   /** The land record's block/lot (condo units are left out). */
   blklot: string;
-  /** Raw zoning_code; "|"-joined when the lot is split between districts. Absent when blank. */
+  /**
+   * zoning_code, "|"-joined when the lot is split between districts, with a named NC district's
+   * generic code ("NCD", "NCT") replaced by its own ("NCD-NORTH BEACH"). Absent when blank.
+   */
   zoning?: string;
   /** Display address, e.g. "667 Hampshire St". Absent when the record has no street. */
   address?: string;
@@ -56,7 +59,7 @@ function boxesWhere(column: string, boxes: Box[]): string | null {
 export function parcelPageUrl(offset: number, limit: number, boxes: Box[] = []): string {
   const where = ["active=true", "blklot=mapblklot", boxesWhere("shape", boxes)].filter(Boolean).join(" AND ");
   return soqlUrl(DATASETS.parcels, {
-    select: "mapblklot,zoning_code,from_address_num,to_address_num,street_name,street_type,shape",
+    select: "mapblklot,zoning_code,zoning_district,from_address_num,to_address_num,street_name,street_type,shape",
     where,
     order: "mapblklot",
     limit,
@@ -79,13 +82,19 @@ export function zoningPageUrl(offset: number, limit: number, boxes: Box[] = []):
 export interface ParcelTileRow extends ParcelAddressFields {
   mapblklot?: string;
   zoning_code?: string;
+  zoning_district?: string;
   shape?: MultiPolygon | Polygon;
 }
 
-export function toParcelFeature(row: ParcelTileRow): Feature<MultiPolygon | Polygon, ParcelTileProps> | null {
+/** `namedDistricts` comes from `namedDistrictIndex` (sf/zoning.ts). */
+export function toParcelFeature(
+  row: ParcelTileRow,
+  namedDistricts: ReadonlyMap<string, string> = new Map(),
+): Feature<MultiPolygon | Polygon, ParcelTileProps> | null {
   if (!row.mapblklot || !row.shape) return null;
   const properties: ParcelTileProps = { blklot: row.mapblklot };
-  const codes = zoningCodes(row.zoning_code);
+  let codes = zoningCodes(row.zoning_code);
+  if (codes.length === 1) codes = [resolveNamedDistrict(codes[0]!, row.zoning_district, namedDistricts)];
   if (codes.length) properties.zoning = codes.join("|");
   const address = addressOf(row).label;
   if (address) properties.address = address;

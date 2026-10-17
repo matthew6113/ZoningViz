@@ -17,7 +17,7 @@ import { parseHeightLabel } from "./heightLabel";
 import type { SfAddressMatch, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfSpecialUseDistrict, SfZoning } from "./types";
 import { addressOf, displayAddress, normalizeAddressQuery } from "./address";
 import { getTerrain } from "./terrain";
-import { zoningCodes } from "./zoning";
+import { NAMED_DISTRICT_CODES, namedDistrictIndex, namedDistrictsUrl, resolveNamedDistrict, zoningCodes } from "./zoning";
 
 /** Raw row from acdm-wktn (Socrata serves numbers as strings). */
 interface ParcelRow {
@@ -198,8 +198,16 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
     warnings: string[],
   ): Promise<SfZoning> {
     if (land.zoning_code?.trim()) {
-      const codes = zoningCodes(land.zoning_code);
-      return { code: codes.join("|"), codes, name: land.zoning_district?.trim() || null, source: "parcel" };
+      let codes = zoningCodes(land.zoning_code);
+      const name = land.zoning_district?.trim() || null;
+      if (codes.length === 1 && NAMED_DISTRICT_CODES.includes(codes[0]!)) {
+        try {
+          codes = [resolveNamedDistrict(codes[0]!, name, await namedDistricts())];
+        } catch {
+          warnings.push(`Couldn't look up which ${codes[0]} district this is in the zoning layer.`);
+        }
+      }
+      return { code: codes.join("|"), codes, name, source: "parcel" };
     }
     const hits = await rows<{ zoning?: string; districtna?: string }>(
       soqlUrl(DATASETS.zoningDistricts, {
@@ -349,6 +357,16 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
     });
     const dates = found.map((row) => row.data_as_of?.slice(0, 10)).filter((d): d is string => !!d).sort();
     return { buildings, asOf: dates[dates.length - 1] ?? null };
+  }
+
+  let namedDistrictsLookup: Promise<Map<string, string>> | null = null;
+  /** The zoning layer's code for each named district, fetched once per adapter. */
+  function namedDistricts(): Promise<Map<string, string>> {
+    if (!namedDistrictsLookup) {
+      namedDistrictsLookup = rows<{ zoning?: string; districtna?: string }>(namedDistrictsUrl()).then(namedDistrictIndex);
+      namedDistrictsLookup.catch(() => (namedDistrictsLookup = null)); // a failed lookup is tried again next time
+    }
+    return namedDistrictsLookup;
   }
 
   const asOfCache = new Map<string, Promise<string | null>>();

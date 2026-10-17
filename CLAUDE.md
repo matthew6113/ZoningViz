@@ -6,9 +6,9 @@ Full spec: `SPEC.md`. This file is the condensed version plus working rules. Whe
 
 Pick a San Francisco parcel; show in 3D how each zoning rule carves a translucent "potential" block (2x the mapped height) down to the legal building envelope, one rule at a time. Each rule gets a card (plain-English sentence resolved for this lot + code citation), a dimension line, and a red removed volume. Ends with the envelope sliced into floors and running totals (volume, footprint, stories, gross floor area, % of block surviving). The viewer steps through the rules with Next (nothing plays on its own); any rule can be toggled off to see its cost.
 
-Zoning identification is a data lookup (the parcel record carries `zoning_code`), never an AI judgment.
+Zoning identification is a data lookup (the parcel record carries `zoning_code`; for named NC districts, coded just "NCD"/"NCT", the zoning layer gives the specific code by district name), never an AI judgment.
 
-v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17). The named NCD/NCT districts (each with its own control table) aren't covered.
+v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17), then the first five named NC districts (Excelsior Outer Mission, Geary Boulevard and North Beach NCDs; Mission Street and Valencia Street NCTs; drafts). The other named NCD/NCT districts (each with its own control table) aren't covered.
 
 ## Working rules
 
@@ -85,7 +85,7 @@ packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve 
   src/rules/schema.ts           # zod schema for district files
   src/rules/resolve.ts          # rule params -> numbers, card sentence, cut (no geometry)
   src/rules/regions.ts          # cut -> allowed region; dimension lines; cut planes (for the sweep)
-  test/                         # fixtures A–V (far: RM/NC, bulk, localProgram: Housing Choice-SF, rto), invariants, schema, front detection, terrain
+  test/                         # fixtures A–W (far: RM/NC, bulk, localProgram: Housing Choice-SF, rto, namedNc), invariants, schema, front detection, terrain
   test/fixtures/parcels/        # recorded real parcels (pnpm record-fixtures)
 packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
   sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses
@@ -99,7 +99,7 @@ packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, n
   sf/engineInput.ts             # toParcelInput(parcel, neighbors) -> engine ParcelInput
   sf/cli.ts, sf/envelope-cli.ts # `pnpm parcel`, `pnpm envelope`
   sf/DATA-NOTES.md              # verified fields and query syntax, deviations from SPEC.md
-  sf/districts/<CODE>.json      # one rule file per district; register it in sf/districts/index.ts
+  sf/districts/<CODE>.json      # one rule file per district, named by its code with spaces as hyphens (NCD-NORTH-BEACH.json); register it in sf/districts/index.ts
   sf/districts/VERIFY.md        # every drafted value, the section to check, sources, open questions
 scripts/record-engine-fixtures.mts  # real parcels -> engine test inputs
 scripts/build-tiles.ts          # parcels + zoning -> PMTiles via tippecanoe
@@ -115,7 +115,7 @@ Base: `https://data.sf.gov/resource/<id>.json` or `.geojson` (formerly data.sfgo
 | Layer | ID | Use |
 |---|---|---|
 | Parcels – Active and Retired | `acdm-wktn` | blklot, mapblklot, zoning_code, zoning_district, shape, active, address fields, centroid lat/lon |
-| Zoning Districts | `3i4a-hu95` | Map overlay; cross-check blank zoning |
+| Zoning Districts | `3i4a-hu95` | Map overlay; cross-check blank zoning; the specific code of a named NC district (`zoning` by `districtna`), since parcels say only "NCD"/"NCT" |
 | Height and Bulk Districts | `h9wh-cg3m` | `height` label, `gen_hght`, geometry in **`the_geom`** (not `shape`); parcels straddling two districts keep both and split the envelope |
 | Building Footprints | `ynuv-fyni` | Scene context only: outlines with LiDAR `hgt_median_m` (2010 survey); the app shows buildings on the lot's own block |
 | USGS 3DEP elevation | ImageServer `getSamples` | Ground for the slope rules and the drawn terrain: 1 m bare-earth LiDAR (survey `CA_SanFrancisco_B23`, 2023-04-20), meters → US survey feet. Takes EPSG:2227 points, ≤ 1,000 per POST, CORS open; about 3% of requests 502, so they're retried. Not DataSF: `elevation.nationalmap.gov` |
@@ -225,8 +225,9 @@ Fixtures (hand-checked):
 | T | 25 x 100 ft, RH-2, 40//40-R-4, on, streets front and left | Corner lot: 65 ft; 113,750 cu ft. Streets front and rear (through lot): stays 40 ft |
 | U | 25 x 100 ft, RTO-C, 40-X, flat, no setback | 25 ft rear yard at every level (no first-story height for RTO-C); 75,000 cu ft; 4 × 1,875 = 7,500 sq ft; FAR 1.8 budget 4,500 sq ft. RTO-1 and RTO-M: 30 ft yard, 70,000 cu ft |
 | V | 25 x 100 ft, RTO-C, 40//65-R-4, on | 65 ft; program's 18% (18 ft) rear yard at every level; 133,250 cu ft; 6 × 2,050 = 12,300 sq ft. RTO-1 keeps its 30% yard: 113,750 cu ft |
+| W | 25 x 100 ft, NCT-MISSION, 40-X, flat, no setback | 14 ft first story (NCTs have no 40/50-ft exception); rear yard 25 ft from 14 ft up; 83,750 cu ft; stories 0–14, 14–24, 24–34, 34–44 (counted: its middle is under 40 ft): 2,500 + 3 × 1,875 = 8,125 sq ft. North Beach, Excelsior and Geary at 40-X: fixture H's 81,250 cu ft |
 
-Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner), 0872013 (RTO-1, 85//85-R-4), 3597019 (RTO-M), 0493016 (RTO-C, corner, 40//65-R-4). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4) and 3249 Webster St (RTO-C, 40//65-R-4).
+Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner), 0872013 (RTO-1, 85//85-R-4), 3597019 (RTO-M), 0493016 (RTO-C, corner, 40//65-R-4), 6013018 (NCD-EXCELSIOR), 1070003 (NCD-GEARY BOULEVARD, corner, 50//85-R-4, 10,750 sq ft), 0116010 (NCD-NORTH BEACH, corner), 3569008 (NCT-MISSION, 80-B), 3568002 (NCT-VALENCIA). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4) and 3249 Webster St (RTO-C, 40//65-R-4).
 
 ## Phase status
 
@@ -243,6 +244,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
   - [x] Family Zoning Plan local-program unlock: `local_program` rule (Housing Choice-SF, §206.10) in every district, `?program=1` switch on R-4 lots, summary comparison; fixtures O–T
   - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
 - [x] Since Phase 6: special use districts listed on the fact card (§249.94 note); RTO-1, RTO-M, RTO-C district files (Table 209.4); fixtures U and V; all verified 2026-10-17
+- [ ] Named NC districts, batch 1 (2026-10-17): named-district lookup, five district files (drafts, VERIFY.md), fixture W
 
 ## Web app notes
 

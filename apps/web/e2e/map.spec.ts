@@ -110,7 +110,7 @@ test("a lot whose zoning isn't covered explains why and stays on the map", async
   await expect(tooltip(page)).toContainText("Zoned PDR-1-G.");
 
   await page.mouse.click(center.x, center.y);
-  await expect(page.getByTestId("map-popup")).toContainText("Zoned PDR-1-G. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S only so far");
+  await expect(page.getByTestId("map-popup")).toContainText("Zoned PDR-1-G. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA only so far");
   await page.waitForTimeout(300);
   await expect(page).not.toHaveURL(/parcel=/);
 });

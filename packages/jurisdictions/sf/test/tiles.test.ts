@@ -44,6 +44,14 @@ describe("tile features", () => {
     expect(feature).toEqual({ type: "Feature", properties: { blklot: "4025007", zoning: "RH-2", address: "667 Hampshire St" }, geometry: square });
   });
 
+  it("gives a named NC district its own code, looked up by name", () => {
+    const named = new Map([["NORTH BEACH NEIGHBORHOOD COMMERCIAL", "NCD-NORTH BEACH"]]);
+    const row = { mapblklot: "0102003", zoning_code: "NCD", zoning_district: "NORTH BEACH NEIGHBORHOOD COMMERCIAL", shape: square };
+    expect(toParcelFeature(row, named)!.properties.zoning).toBe("NCD-NORTH BEACH");
+    expect(toParcelFeature(row)!.properties.zoning).toBe("NCD"); // without the index it stays generic
+    expect(parcelPageUrl(0, 10)).toContain("zoning_district");
+  });
+
   it("keeps split codes, and leaves out blank fields", () => {
     expect(toParcelFeature({ mapblklot: "1", zoning_code: "RH-1|RH-2", shape: square })!.properties).toEqual({ blklot: "1", zoning: "RH-1|RH-2" });
     expect(toParcelFeature({ mapblklot: "2", zoning_code: "", shape: square })!.properties).toEqual({ blklot: "2" });

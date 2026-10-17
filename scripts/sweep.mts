@@ -2,7 +2,7 @@
 // through the DataSF adapter and the engine, the same path a click on the map
 // takes, and checks the SPEC.md invariants on each result.
 //
-//   pnpm sweep [--per-district 50] [--seed 1] [--split 10] [--program] [--no-cache]
+//   pnpm sweep [--per-district 50] [--seed 1] [--split 10] [--program] [--only CODE,CODE] [--no-cache]
 //
 // Prints a table per district and every failure with its block/lot. With
 // --program, lots with a local-program height (R-4) are run again with
@@ -14,9 +14,11 @@ import { availableDistricts, loadDistrict } from "../packages/jurisdictions/sf/d
 import { toParcelInput } from "../packages/jurisdictions/sf/engineInput";
 import { parseCliArgs } from "../packages/jurisdictions/sf/node/args";
 import { devFetchJson } from "../packages/jurisdictions/sf/node/cache";
-import { coverageNote, zoningCoverage } from "../packages/jurisdictions/sf/zoning";
+import { coverageNote, namedDistrictIndex, namedDistrictsUrl, zoningCoverage } from "../packages/jurisdictions/sf/zoning";
 
-const args = parseCliArgs(process.argv.slice(2), ["--no-cache", "--program"], ["--per-district", "--seed", "--split"]);
+const args = parseCliArgs(process.argv.slice(2), ["--no-cache", "--program"], ["--per-district", "--seed", "--split", "--only"]);
+/** --only "NC-3,NCT-MISSION": sweep just these districts. */
+const only = args.values.get("--only")?.split(",").map((code) => code.trim()).filter(Boolean);
 const withProgram = args.flags.has("--program");
 const perDistrict = Number(args.values.get("--per-district") ?? 50);
 const splitCount = Number(args.values.get("--split") ?? 10);
@@ -176,8 +178,16 @@ const bulkRows: string[][] = [["District", "Letters seen", "Cut", "Already satis
 const bulkCuts: string[] = [];
 const programRows: string[][] = [["District", "R-4 lots", "Taller", "Same height, more floor area", "No change", "65 ft minimum", "Median floor area gain"]];
 const minHeightLots: string[] = [];
-for (const code of availableDistricts()) {
-  const all = await landParcels(`zoning_code=${soqlString(code)}`);
+// Named NC districts: parcels carry the generic code ("NCD") and the district's name (sf/zoning.ts).
+const namedDistrictNames = new Map(
+  [...namedDistrictIndex((await fetchJson(namedDistrictsUrl())) as { zoning?: string; districtna?: string }[])].map(([name, code]) => [code, name]),
+);
+for (const code of only ?? availableDistricts()) {
+  let all = await landParcels(`zoning_code=${soqlString(code)}`);
+  const name = namedDistrictNames.get(code);
+  if (all.length === 0 && name) {
+    all = await landParcels(`zoning_code=${soqlString(code.split("-")[0]!)} AND upper(zoning_district)=${soqlString(name)}`);
+  }
   const outcomes = await runAll(sample(all, perDistrict));
   const count = (kind: Outcome["kind"]) => [...outcomes.values()].filter((o) => o.kind === kind).length;
   const oks = [...outcomes.values()].filter((o): o is Extract<Outcome, { kind: "ok" }> => o.kind === "ok");

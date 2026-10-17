@@ -233,6 +233,16 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
 
     case "ground_story": {
       const story = ctx.firstStory!;
+      if (rule.params.exceptions.length === 0) {
+        return {
+          status: "info",
+          sentence:
+            `${rule.title}: a shop or other non-residential ground floor must be at least ${ft(story.feet)} floor to floor, in every height district. ` +
+            `The first story is drawn ${ft(story.feet)} tall; a taller one is allowed.`,
+          numbers: { firstStoryFt: story.feet, ...(story.heightDistrictFt === null ? {} : { heightDistrictFt: story.heightDistrictFt }) },
+          cut: { type: "none" },
+        };
+      }
       const where =
         story.heightDistrictFt === null
           ? "the mapped height can't be read here"

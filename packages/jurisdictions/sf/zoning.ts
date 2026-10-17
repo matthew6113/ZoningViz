@@ -1,3 +1,4 @@
+import { DATASETS, soqlUrl } from "./datasf";
 import { availableDistricts } from "./districts";
 
 // The parcel layer's zoning_code can name more than one district, separated by
@@ -8,6 +9,40 @@ import { availableDistricts } from "./districts";
 export function zoningCodes(raw: string | null | undefined): string[] {
   const codes = (raw ?? "").split("|").map((code) => code.trim()).filter(Boolean);
   return [...new Set(codes)];
+}
+
+// Parcels label every named neighborhood commercial district with a generic code
+// ("NCD" or "NCT") and give its name in zoning_district. The zoning layer has each
+// district's own code ("NCD-NORTH BEACH", "NCT-MISSION") next to the same name
+// (districtna), so the specific code is looked up there by name.
+export const NAMED_DISTRICT_CODES: readonly string[] = ["NCD", "NCT"];
+
+/** Every (code, name) pair in the zoning layer: about 120 rows. */
+export function namedDistrictsUrl(): string {
+  return soqlUrl(DATASETS.zoningDistricts, { select: "zoning,districtna", group: "zoning,districtna", limit: 5000 });
+}
+
+/** District name → zoning-layer code, for names that map to exactly one code. */
+export function namedDistrictIndex(rows: readonly { zoning?: string; districtna?: string }[]): Map<string, string> {
+  const codes = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const name = districtNameKey(row.districtna);
+    const code = row.zoning?.trim();
+    if (!name || !code) continue;
+    if (!codes.has(name)) codes.set(name, new Set());
+    codes.get(name)!.add(code);
+  }
+  return new Map([...codes].flatMap(([name, set]) => (set.size === 1 ? [[name, [...set][0]!] as const] : [])));
+}
+
+/** "NCD" named "NORTH BEACH NEIGHBORHOOD COMMERCIAL" → "NCD-NORTH BEACH". Other codes, and names not found, come back unchanged. */
+export function resolveNamedDistrict(code: string, districtName: string | null | undefined, index: ReadonlyMap<string, string>): string {
+  if (!NAMED_DISTRICT_CODES.includes(code)) return code;
+  return index.get(districtNameKey(districtName)) ?? code;
+}
+
+function districtNameKey(name: string | null | undefined): string {
+  return (name ?? "").trim().toUpperCase().replace(/\s+/g, " ");
 }
 
 export type ZoningCoverage =

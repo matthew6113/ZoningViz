@@ -14,6 +14,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { DATASETS, DataSfError, metadataUrl, type DatasetId, type FetchJson } from "../packages/jurisdictions/sf/datasf";
 import { parseCliArgs } from "../packages/jurisdictions/sf/node/args";
 import { devFetchJson } from "../packages/jurisdictions/sf/node/cache";
+import { namedDistrictIndex, namedDistrictsUrl } from "../packages/jurisdictions/sf/zoning";
 import {
   parcelPageUrl,
   parseBoxes,
@@ -73,10 +74,12 @@ await mkdir(WORK, { recursive: true });
 const area = boxes.length ? `${boxes.length} box${boxes.length > 1 ? "es" : ""}` : "the whole city";
 console.log(`Fetching parcels and zoning districts for ${area}…`);
 
+// Parcels give named NC districts a generic code ("NCD"); the zoning layer has their own.
+const namedDistricts = namedDistrictIndex((await fetchJson(namedDistrictsUrl())) as { zoning?: string; districtna?: string }[]);
 const parcelsFile = join(WORK, fixture ? "parcels-fixture.ndjson" : "parcels.ndjson");
 const zoningFile = join(WORK, fixture ? "zoning-fixture.ndjson" : "zoning.ndjson");
 const [parcelCount, zoningCount, parcelsAsOf, zoningAsOf] = await Promise.all([
-  writeLayer(parcelsFile, (offset) => parcelPageUrl(offset, PAGE_SIZE, boxes), (row: ParcelTileRow) => toParcelFeature(row)),
+  writeLayer(parcelsFile, (offset) => parcelPageUrl(offset, PAGE_SIZE, boxes), (row: ParcelTileRow) => toParcelFeature(row, namedDistricts)),
   writeLayer(zoningFile, (offset) => zoningPageUrl(offset, PAGE_SIZE, boxes), (row: ZoningTileRow) => toZoningFeature(row)),
   asOf(fetchJson, DATASETS.parcels),
   asOf(fetchJson, DATASETS.zoningDistricts),

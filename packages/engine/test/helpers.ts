@@ -8,7 +8,7 @@ import { loadManifold } from "../src/geometry/manifold";
 const DISTRICTS = join(import.meta.dirname, "..", "..", "jurisdictions", "sf", "districts");
 
 export function loadDistrict(code: string): DistrictFile {
-  const path = join(DISTRICTS, `${code}.json`);
+  const path = join(DISTRICTS, `${code.replaceAll(" ", "-")}.json`); // files are named by the code, spaces as hyphens
   return parseDistrictFile(JSON.parse(readFileSync(path, "utf8")), path);
 }
 

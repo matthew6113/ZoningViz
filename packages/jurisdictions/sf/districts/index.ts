@@ -15,8 +15,14 @@ import nc1 from "./NC-1.json";
 import nc2 from "./NC-2.json";
 import nc3 from "./NC-3.json";
 import ncs from "./NC-S.json";
+import ncdExcelsior from "./NCD-EXCELSIOR.json";
+import ncdGeary from "./NCD-GEARY-BOULEVARD.json";
+import ncdNorthBeach from "./NCD-NORTH-BEACH.json";
+import nctMission from "./NCT-MISSION.json";
+import nctValencia from "./NCT-VALENCIA.json";
 
-// One hand-written rule file per district. Add new files here.
+// One hand-written rule file per district, keyed by its zoning code; a file is named
+// by the code with spaces as hyphens. Add new files here.
 const FILES: Record<string, unknown> = {
   "RH-1(D)": rh1d,
   "RH-1": rh1,
@@ -34,6 +40,12 @@ const FILES: Record<string, unknown> = {
   "NC-2": nc2,
   "NC-3": nc3,
   "NC-S": ncs,
+  // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
+  "NCD-EXCELSIOR": ncdExcelsior,
+  "NCD-GEARY BOULEVARD": ncdGeary,
+  "NCD-NORTH BEACH": ncdNorthBeach,
+  "NCT-MISSION": nctMission,
+  "NCT-VALENCIA": nctValencia,
 };
 
 const parsed = new Map<string, DistrictFile>();
@@ -48,7 +60,7 @@ export function loadDistrict(code: string): DistrictFile | null {
   if (cached) return cached;
   const file = FILES[code];
   if (!file) return null;
-  const district = parseDistrictFile(file, `districts/${code}.json`);
+  const district = parseDistrictFile(file, `districts/${code.replaceAll(" ", "-")}.json`);
   parsed.set(code, district);
   return district;
 }
