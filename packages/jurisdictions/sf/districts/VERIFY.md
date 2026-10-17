@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status: every rule in all 26 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); and the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Named NC districts, batch 3 (2026-10-17): drafts** (section below). NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE and NCT-DIVISADERO carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
+
+**Status: every rule in the other 26 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); and the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -161,6 +163,19 @@ Same layout as batch 1. Hayes-Gough is NCT-HAYES in the zoning layer ("HAYES NCT
 
 Shared rules copied unchanged, as in batch 1. Under Housing Choice-SF, Inner Sunset's ground-level yard becomes the program's 18% yard with none at the ground floor (question 48).
 
+## Named NC districts, batch 3 (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Same layout as batches 1 and 2. 24th Street – Noe Valley's zoning-layer code is "NCD-24TH-NOE-VALLEY" (hyphens, no spaces). All five tables were last amended by Ord. 37-26 (4/11/2026). Tables 740 and 741 (added by Ord. 7-20) have no Housing Choice-SF row (question 51).
+
+| Rule id | NCD-INNER CLEMENT (§716) | NCD-24TH-NOE-VALLEY (§728) | NCD-MISSION BERNAL (§740) | NCD-SAN BRUNO AVENUE (§741) | NCT-DIVISADERO (§759) | Proposed `effectiveDate` |
+|---|---|---|---|---|---|---|
+| `use` | Form-based density; open space 80/100; lot mergers ≤ 50 ft frontage (§121.7) | Form-based; open space 80/100 | 1 home per 600 sq ft or nearest R district; open space 80/100 | 1 per 800 sq ft or nearest R district; open space 100/133; lots of 10,000 sq ft or more C (§121.1) | Form-based; GF commercial required district-wide (§145.4(b)(26)), GF residential C (note (1)); open space 100/133; lot mergers ≤ 100 ft except the blocks between Oak and Fell (§121.7, question 52); lots of 10,000 sq ft or more C in the Priority Equity Geographies SUD (note (11), §121.1) | 2026-04-11 |
+| `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | (C) 2018-09-10; (B) 2019-01-12 |
+| `rear-yard` | 25%, ≥ 15 ft, from the 2nd story ((d)(2)) | at grade and every story ((d)(1)) | from the lowest story with a dwelling ((d)(3); the row's note (6) is stale, question 50) | (d)(2) | (d)(2) | (d)(1) and (d)(2) 2026-01-12; (d)(3) 2026-03-16 |
+| `far` | 1.8 (Table 124) | 1.8 (Table 124) | 3.6 (Table 740; not in Table 124) | 2.5 (Table 741; not in Table 124) | 2.5 (Table 759; not in Table 124) | 2026-01-12 |
+| `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
+| `ground-floor-bonus` (flag) | §263.20: P | P | "P in some districts" (question 49) | P | P | 2026-01-12 |
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -228,6 +243,10 @@ Shared rules copied unchanged, as in batch 1. Under Housing Choice-SF, Inner Sun
 46. **Hayes-Gough's Octavia parcels.** §134(d)(3) lets lots on the east side of Octavia Boulevard between Linden and Market Streets (Central Freeway Parcels L, M, N, R, S, T, U and V) skip the rear yard if the project meets §135 open space and §140 exposure and considers its neighbors' light and air. The app can't tell those lots apart or check the conditions; the yard is drawn and the card says so.
 47. **Union's setback row.** Table 725's front-setback row ends "See § (e)", without the "132" the other tables have. The flag cites §132(e).
 48. **Inner Sunset under Housing Choice-SF.** §134(d)(1) puts Inner Sunset's rear yard at grade, but §206.10(d)(1)(E)(ii) says no rear yard is required at the ground floor in "Named Neighborhood Commercial" districts, so with the program on the 18% yard starts above the first story (fixture X; the same volume as fixture Q).
+49. **Mission Bernal's ground-floor bonus.** Table 740 says "P in some districts" without a note, and §263.20 no longer lists districts (Ord. 245-25 deleted its list; (a) still speaks of "specific districts listed below"). The flag quotes the table and gives §263.20(b)'s height-district test.
+50. **Mission Bernal's rear-yard note.** The rear-yard row points at note (6), which is about automotive uses ("So in Ord. 7-20"), like question 42.
+51. **Mission Bernal and San Bruno Avenue without R-4.** Tables 740 and 741 state density per lot area with no form-based R-4 sentence and have no Housing Choice-SF row. The sampled lots are all 40-X, so their Housing Choice-SF card says it doesn't apply; if an R-4 label ever reaches these districts, §206.10 would apply by its own terms.
+52. **Divisadero's lot-merger exception.** §121.7 limits merged frontage in the Divisadero Street NCT to 100 ft "except for the east and west blocks between Oak and Fell". The card says so; which blocks a lot is on isn't checked.
 
 ## Special use district notes (`sf/specialUse.json`)
 

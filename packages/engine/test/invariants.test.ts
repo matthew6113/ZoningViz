@@ -66,6 +66,11 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["2122 Taraval St, rising (2360031)", loadParcel("2360031"), "NCD-TARAVAL", {}],
   ["1900 Union St, corner, front 1 (0531006A)", loadParcel("0531006A"), "NCD-UNION", { frontSide: 1 }],
   ["361 Hayes St, through lot, front 0 (0816012)", loadParcel("0816012"), "NCT-HAYES", { frontSide: 0 }],
+  ["637 Clement St, Inner Clement (1439040)", loadParcel("1439040"), "NCD-INNER CLEMENT", {}],
+  ["4017 24th St, Noe Valley (6507031)", loadParcel("6507031"), "NCD-24TH-NOE-VALLEY", {}],
+  ["3326 Mission St, Mission Bernal, falling (6635005)", loadParcel("6635005"), "NCD-MISSION BERNAL", {}],
+  ["2660 San Bruno Ave, irregular (5982003A)", loadParcel("5982003A"), "NCD-SAN BRUNO AVENUE", {}],
+  ["512 Divisadero St (1203019)", loadParcel("1203019"), "NCT-DIVISADERO", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

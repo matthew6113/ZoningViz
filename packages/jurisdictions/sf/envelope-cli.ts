@@ -63,7 +63,7 @@ async function main(): Promise<number> {
   const result = engine.computeEnvelope(toParcelInput(parcel, neighbors, terrain), district, options);
 
   if (flags.has("--json")) {
-    console.log(JSON.stringify(result, (_, v) => (ArrayBuffer.isView(v) ? `[${(v as Float32Array).length} values]` : v), 2));
+    await print(JSON.stringify(result, (_, v) => (ArrayBuffer.isView(v) ? `[${(v as Float32Array).length} values]` : v), 2));
     return 0;
   }
   console.log(format(parcel, result));
@@ -103,6 +103,11 @@ function format(parcel: SfParcel, result: EnvelopeResult): string {
     lines.push("Notes", ...[...notes, ...parcel.warnings].map((w) => `  • ${w}`));
   }
   return lines.join("\n");
+}
+
+// process.exit doesn't wait for a piped stdout to drain, so long output is awaited.
+function print(text: string): Promise<void> {
+  return new Promise((resolve) => process.stdout.write(`${text}\n`, () => resolve()));
 }
 
 function n(value: number, digits = 0): string {

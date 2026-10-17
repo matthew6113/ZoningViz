@@ -175,7 +175,7 @@ test("a lot outside the covered districts says so", async ({ page }) => {
   // 558 Castro St: a named neighborhood commercial district, each of which has its own control table.
   await page.goto("/?parcel=2695010");
   // Parcels say only "NCD"; the zoning layer names the district.
-  await expect(page.locator(".notice")).toContainText("Zoned NCD-CASTRO. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER SUNSET, NCD-NORTH BEACH, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES, NCT-MISSION, NCT-VALENCIA only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD-CASTRO. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-MISSION BERNAL, NCD-NORTH BEACH, NCD-POLK, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-VALENCIA only so far");
   await expect(page.locator(".fact-card")).toContainText("NCD-CASTRO");
 });
 
@@ -455,6 +455,20 @@ test("a named NC district with a ground-level rear yard: 1144 Irving St is Inner
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("5 stories");
   await expect(summary).toContainText("9,375 sq ft");
+  await expectSceneDrawn(page);
+});
+
+test("a named district whose code has no spaces: 4017 24th St is NCD-24TH-NOE-VALLEY, with its rear yard at grade", async ({ page }) => {
+  await page.goto("/?parcel=6507031&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("4017–4019 24th St");
+  await expect(page.locator(".fact-card")).toContainText("NCD-24TH-NOE-VALLEY");
+  await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
+  await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 114 ft lot depth = 28.5 ft.");
+  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await toResult(page);
+  const summary = page.getByTestId("summary");
+  await expect(summary).toContainText("4 stories");
+  await expect(summary).toContainText("6,840 sq ft");
   await expectSceneDrawn(page);
 });
 

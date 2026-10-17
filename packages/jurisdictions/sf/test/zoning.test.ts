@@ -68,7 +68,8 @@ describe("named neighborhood commercial districts", () => {
 
   it("covers the named districts that have rule files", () => {
     const covered = ["NCD-EXCELSIOR", "NCD-GEARY BOULEVARD", "NCD-NORTH BEACH", "NCT-MISSION", "NCT-VALENCIA",
-      "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES"];
+      "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES",
+      "NCD-24TH-NOE-VALLEY", "NCD-INNER CLEMENT", "NCD-MISSION BERNAL", "NCD-SAN BRUNO AVENUE", "NCT-DIVISADERO"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
     expect(zoningCoverage("NCD-CASTRO")).toEqual({ kind: "not_covered", code: "NCD-CASTRO" });
   });

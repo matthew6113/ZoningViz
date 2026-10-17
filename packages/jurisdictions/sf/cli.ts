@@ -48,7 +48,9 @@ async function main(): Promise<number> {
     console.error(`No parcel found for ${query}.`);
     return 2;
   }
-  console.log(values.json ? JSON.stringify(parcel, null, 2) : format(parcel));
+  // process.exit doesn't wait for a piped stdout to drain, so the output is awaited.
+  const text = values.json ? JSON.stringify(parcel, null, 2) : format(parcel);
+  await new Promise<void>((resolve) => process.stdout.write(`${text}\n`, () => resolve()));
   return 0;
 }
 

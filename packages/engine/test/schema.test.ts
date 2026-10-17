@@ -43,7 +43,8 @@ describe("district schema", () => {
 
   const DRAFTS = ["RH-1(D)", "RH-1", "RH-1(S)", "RH-2", "RH-3", "RM-1", "RM-2", "RM-3", "RM-4", "RTO-1", "RTO-M", "RTO-C", "NC-1", "NC-2", "NC-3", "NC-S",
     "NCD-EXCELSIOR", "NCD-GEARY BOULEVARD", "NCD-NORTH BEACH", "NCT-MISSION", "NCT-VALENCIA",
-    "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES"];
+    "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES",
+    "NCD-24TH-NOE-VALLEY", "NCD-INNER CLEMENT", "NCD-MISSION BERNAL", "NCD-SAN BRUNO AVENUE", "NCT-DIVISADERO"];
   it.each(DRAFTS)("accepts the %s file, every rule cited and dated only once verified", (code) => {
     const district = loadDistrict(code);
     expect(district.district).toBe(code);

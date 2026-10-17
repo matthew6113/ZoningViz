@@ -130,3 +130,29 @@ describe("named districts, batch 2", () => {
     expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(3 * 2500, 6);
   });
 });
+
+describe("named districts, batch 3", () => {
+  it("24th Street – Noe Valley: fixture X's ground-level rear yard and 75,000 cu ft; FAR 1.8; the bonus flagged", () => {
+    const r = envelope("NCD-24TH-NOE-VALLEY");
+    expect(step(r, "rear-yard").numbers.aboveFt).toBeUndefined();
+    expect(r.totals.volume).toBeCloseTo(75_000, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+    expect(step(r, "ground-floor-bonus").status).toBe("not_modeled");
+  });
+
+  it("Inner Clement, Mission Bernal and San Bruno Avenue: fixture H's shape; FAR 1.8, 3.6 and 2.5", () => {
+    for (const [code, ratio] of [["NCD-INNER CLEMENT", 1.8], ["NCD-MISSION BERNAL", 3.6], ["NCD-SAN BRUNO AVENUE", 2.5]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+    }
+  });
+
+  it("Divisadero Street NCT: fixture W's 14 ft first story and 83,750 cu ft; FAR 2.5", () => {
+    const r = envelope("NCT-DIVISADERO");
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+    expect(r.totals.volume).toBeCloseTo(83_750, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+  });
+});
