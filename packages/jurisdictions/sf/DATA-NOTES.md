@@ -99,7 +99,8 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 - Batch 3 (`--per-district 12 --seed 31`, the five codes): all 60 lots produced envelopes; 14 asked for the front. Inner Clement, 24th Street – Noe Valley and Divisadero lots are all R-4 and grew under Housing Choice-SF; every sampled Mission Bernal and San Bruno Avenue lot is 40-X (their tables have no R-4 rows, VERIFY.md question 51). Two Mission Bernal lots rise more than 20 ft to the rear.
 - Batch 4 (`--per-district 12 --seed 41`, the five codes): all 60 lots produced envelopes; 19 asked for the front. Every sampled Outer Clement, Noriega and Upper Market lot and 11 of 12 Upper Fillmore lots are R-4 and grew under Housing Choice-SF; the 24th Street – Mission lots are X districts. One Upper Market lot rises more than 20 ft to the rear.
 - Batch 5 (`--per-district 12 --seed 51`, the five codes): all 60 lots produced envelopes; 22 asked for the front. One Castro lot (3582085) is in a B bulk district and got the first bulk cut on a named-district lot; every Bayview lot is 40-X (no R-4 rows in Table 737). Three lots rise more than 20 ft to the rear (one Bayview, two Pacific Avenue).
-- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3, 91.4% with batch 4, 91.7% with batch 5.
+- Batch 6 (`--per-district 12 --seed 61`, the five codes): all 60 lots produced envelopes; 14 asked for the front. Every sampled lot is R-4 and grew under Housing Choice-SF. One Sacramento lot got no 3DEP ground in that run (drawn flat, with the card note) and one rises 31 ft to the rear.
+- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3, 91.4% with batch 4, 91.7% with batch 5, 92.0% with batch 6.
 
 ## RTO coverage (2026-10-17)
 
