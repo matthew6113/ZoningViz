@@ -480,7 +480,8 @@ test("a named NCT with a ground-level rear yard: 262 Noe St is Upper Market NCT"
   await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
   await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 100.3 ft lot depth = 25.1 ft.");
   await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("at ground level and on every floor");
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2024-01-14");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");

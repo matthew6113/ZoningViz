@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 4 (2026-10-17): drafts** (section below). NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION and NCT-UPPER MARKET carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 31 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); and five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 36 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); and five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -180,7 +178,7 @@ Same layout as batches 1 and 2. 24th Street – Noe Valley's zoning-layer code i
 
 Same layout as the earlier batches. All five tables were last amended by Ord. 37-26 (4/11/2026). Upper Market Street NCT's rear yard is §134(d)(4), at grade and every story like (d)(1).
 
-| Rule id | NCD-OUTER CLEMENT (§717) | NCD-UPPER FILLMORE (§718) | NCD-NORIEGA (§731) | NCT-24TH-MISSION (§763) | NCT-UPPER MARKET (§764) | Proposed `effectiveDate` |
+| Rule id | NCD-OUTER CLEMENT (§717) | NCD-UPPER FILLMORE (§718) | NCD-NORIEGA (§731) | NCT-24TH-MISSION (§763) | NCT-UPPER MARKET (§764) | `effectiveDate` (batch 10) |
 |---|---|---|---|---|---|---|
 | `use` | Form-based density; open space 80/100; lot mergers ≤ 50 ft frontage (§121.7) | 1 home per 600 sq ft or nearest R district (form-based in R-4, note (2)); open space 80/100 | Form-based; open space 100/133 | Form-based; GF commercial required on 24th Street (§145.4(b)(15)), GF residential C there (note (1)); open space 80/100; lots of 5,000 sq ft or more C (§121.1) | Form-based; GF commercial required on Market and Church Streets (§145.4(b)(5), (11)), GF residential C there (note (1)); open space 60/80; lots of 10,000 sq ft or more C (§121.1); lot mergers on Market ≤ 150 ft (§121.7) | 2026-04-11 |
 | `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | same as 24th Street – Mission | (C) 2018-09-10; (B) 2019-01-12 |
@@ -383,3 +381,16 @@ Drafted the same day from the official PDF (Tables 716, 728, 740, 741 and 759 an
 | `far` | all five | §124(a)–(b) (Table 124 for Inner Clement and Noe Valley); district table | 1.8 (Inner Clement, Noe Valley), 3.6 (Mission Bernal), 2.5 (San Bruno Avenue, Divisadero), non-residential only | 2026-01-12 |
 | `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
 | `ground-floor-bonus` (flag) | all five | §263.20; Mission Bernal's "P in some districts" (question 49) | Up to 5 ft for a tall ground floor | 2026-01-12 |
+
+### Batch 10: named NC districts, batch 4, confirmed 2026-10-17
+
+Drafted the same day from the official PDF (Tables 717, 718, 731, 763 and 764 and the sections they cite) and confirmed by the user in chat with the dates in the batch 4 table above; questions 53–54 stand as the cards describe them.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §717 / §718 / §731 / §763 / §764, §207 (and §121.1, §121.7, §145.4 where cited) | Matches each table's density, open space, ground-floor commercial, lot-size and lot-merger rows | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | three NCDs / two NCTs | §145.1(c)(4)(C) / (c)(4)(B) | 14 ft, 10 ft in 40- and 50-ft districts / 14 ft in every district | 2018-09-10 / 2019-01-12 |
+| `rear-yard` | Outer Clement / Upper Fillmore, Noriega, 24th Street – Mission / Upper Market | §134(c)(2), (d)(1) / (d)(2) / (d)(4) | 25%, at least 15 ft: at grade and every story / above a non-residential first story / at grade and every story, waiver named | 2026-01-12 / 2026-01-12 / 2024-01-14 (Ord. 248-23) |
+| `far` | all five | §124(a)–(b), Table 124; district table | 1.8 (Outer Clement), 2.5 (Upper Fillmore, Noriega, 24th Street – Mission), 3.0 (Upper Market), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `ground-floor-bonus` (flag) | all but Upper Fillmore | §263.20 | Up to 5 ft for a tall ground floor; NP in Upper Fillmore | 2026-01-12 |
