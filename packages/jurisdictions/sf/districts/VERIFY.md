@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 1 (2026-10-17): drafts** (section below). NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION and NCT-VALENCIA carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 16 files is verified**: the 13 RH, RM and NC files on 2026-10-14, and RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6). The RTO files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 21 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); and the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -137,7 +135,7 @@ Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to e
 
 Parcels label every named district "NCD" or "NCT"; the app takes the specific code from the zoning layer by name (sf/DATA-NOTES.md). Files are keyed by that code. All five tables were last amended by Ord. 37-26 (4/11/2026).
 
-| Rule id | NCD-EXCELSIOR (§720) | NCD-GEARY BOULEVARD (§739) | NCD-NORTH BEACH (§722) | NCT-MISSION (§754) | NCT-VALENCIA (§762) | Proposed `effectiveDate` |
+| Rule id | NCD-EXCELSIOR (§720) | NCD-GEARY BOULEVARD (§739) | NCD-NORTH BEACH (§722) | NCT-MISSION (§754) | NCT-VALENCIA (§762) | `effectiveDate` (batch 7) |
 |---|---|---|---|---|---|---|
 | `use` | 1 home per 600 sq ft; open space 80/100; lots of 10,000 sq ft or more C (§121.1) | Form-based density; open space 80/100 | 1 per 400 sq ft or nearest R district (form-based in R-4); residential NP on the 1st story; ground floor commercial required district-wide (§145.4); open space 60/80; lot mergers ≤ 25 ft frontage (§121.7) | Form-based; GF commercial required on Mission St and parts of 16th/22nd (§145.4), GF residential C there (note (1)); open space 80/100; lots ≥ 10,000 sq ft C | Form-based; GF commercial required on parts of Valencia, 16th, 22nd; GF residential C there (note (1)); open space 80/100 | 2026-04-11 |
 | `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | same as Mission | (C) 2018-09-10; (B) 2019-01-12 (Ord. 296-18) |
@@ -291,3 +289,16 @@ Drafted the same day from the official PDF (Table 209.4 and the sections it cite
 | `far` | all three | §124(a)–(b), Table 124; Table 209.4 | 1.8, non-residential only (question 38) | 2026-01-12 |
 | `local-program` | RTO-C | §206.10(d)(1)(E)(i)–(ii) | 18% rear yard (at least 15 ft), drawn at every level | 2026-01-12 |
 | §249.94 note | `sf/specialUse.json` | §249.94(c)(1), (c)(4)(A), (d)(1)–(3), (d)(6) | Who qualifies, homes per lot, rear-yard building, 40 ft over §261(b), corner-lot 65 ft option | 2024-04-13 (Ord. 41-24) |
+
+### Batch 7: named NC districts, batch 1, confirmed 2026-10-17
+
+Drafted the same day from the official PDF (Tables 720, 722, 739, 754 and 762 and the sections they cite) and confirmed by the user in chat with the dates in the named-district table above.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §720 / §722 / §739 / §754 / §762, §207 (and §121.1, §121.7, §145.4 where the table cites them) | Matches each table's density, open space, ground-floor commercial and lot-size rows | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | NCDs / NCTs | §145.1(c)(4)(C) / (c)(4)(B) | 14 ft, 10 ft in 40- and 50-ft districts / 14 ft in every district (question 43) | 2018-09-10 / 2019-01-12 (Ord. 296-18) |
+| `rear-yard` | Excelsior, North Beach, Valencia / Geary, Mission | §134(c)(2), (d)(2) / (d)(3) | 25%, at least 15 ft, above a non-residential first story | 2026-01-12 / 2026-03-16 |
+| `far` | all five | §124(a)–(b), Table 124 (not Geary); district table | 3.6 (Excelsior, Geary, Mission), 1.8 (North Beach), 2.5 (Valencia), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `ground-floor-bonus` (flag) | all but North Beach | §263.20; Geary: Table 739 note (1) (question 41) | Up to 5 ft for a tall ground floor; NP in North Beach | 2026-01-12 |

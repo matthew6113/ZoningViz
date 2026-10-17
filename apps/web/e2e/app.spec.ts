@@ -434,7 +434,8 @@ test("a named NC district: 518 Valencia St is Valencia Street NCT, with a 14 ft 
     "Ground floor height: a shop or other non-residential ground floor must be at least 14 ft floor to floor, in every height district. The first story is drawn 14 ft tall; a taller one is allowed.",
   );
   await expect(page.locator("[data-rule=rear-yard] .sentence")).toHaveText(/^Rear yard: 25% of 89\.1 ft lot depth = 22\.3 ft\. It starts above the 14 ft first story/);
-  await expect(page.locator("[data-rule=ground-floor] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=ground-floor] footer")).toContainText("in effect since 2019-01-12");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await expect(page.locator("[data-rule=far] .sentence")).toContainText("2.5 × 2,672 sq ft");
   await toResult(page);
   await expect(page.getByTestId("summary")).toContainText("5 stories");
