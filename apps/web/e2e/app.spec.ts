@@ -449,7 +449,8 @@ test("a named NC district with a ground-level rear yard: 1144 Irving St is Inner
   await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
   await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 100 ft lot depth = 25 ft.");
   await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("at ground level and on every floor");
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-01-12");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("5 stories");

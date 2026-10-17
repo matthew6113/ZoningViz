@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 2 (2026-10-17): drafts** (section below). NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION and NCT-HAYES carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 21 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); and the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 26 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); and the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -152,7 +150,7 @@ Shared rules copied unchanged: height reference, Housing Choice-SF (NC variant: 
 
 Same layout as batch 1. Hayes-Gough is NCT-HAYES in the zoning layer ("HAYES NCT"). All five tables were last amended by Ord. 37-26 (4/11/2026).
 
-| Rule id | NCD-INNER SUNSET (§730) | NCD-POLK (§723) | NCD-TARAVAL (§733) | NCD-UNION (§725) | NCT-HAYES (§761) | Proposed `effectiveDate` |
+| Rule id | NCD-INNER SUNSET (§730) | NCD-POLK (§723) | NCD-TARAVAL (§733) | NCD-UNION (§725) | NCT-HAYES (§761) | `effectiveDate` (batch 8) |
 |---|---|---|---|---|---|---|
 | `use` | 1 home per 800 sq ft or nearest R district (form-based in R-4, note (1)); open space 100/133 | 1 per 400 sq ft or nearest R district (form-based in R-4, note (14)); ground floor commercial required on every frontage (§145.4(b)(28)); open space 60/80; lot mergers ≤ 25 ft frontage (§121.7); lots of 2,500 sq ft or more C in the Priority Equity Geographies SUD (note (12), §121.1; question 44) | Form-based density; open space 100/133 | 1 per 600 sq ft or nearest R district (form-based in R-4, note (2)); open space 80/100 | Form-based; GF commercial required on Hayes St and Octavia Blvd between Fell and Hayes (§145.4(b)(8)–(9)), GF residential C there (note (1)); open space 60/80; lots of 10,000 sq ft or more C (question 45); lot mergers on Hayes ≤ 50 ft (§121.7) | 2026-04-11 |
 | `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | (C) 2018-09-10; (B) 2019-01-12 |
@@ -325,3 +323,16 @@ Drafted the same day from the official PDF (Tables 720, 722, 739, 754 and 762 an
 | `far` | all five | §124(a)–(b), Table 124 (not Geary); district table | 3.6 (Excelsior, Geary, Mission), 1.8 (North Beach), 2.5 (Valencia), non-residential only | 2026-01-12 |
 | `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
 | `ground-floor-bonus` (flag) | all but North Beach | §263.20; Geary: Table 739 note (1) (question 41) | Up to 5 ft for a tall ground floor; NP in North Beach | 2026-01-12 |
+
+### Batch 8: named NC districts, batch 2, confirmed 2026-10-17
+
+Drafted the same day from the official PDF (Tables 723, 725, 730, 733 and 761 and the sections they cite) and confirmed by the user in chat with the dates in the batch 2 table above; questions 44–48 stand as the cards describe them.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §723 / §725 / §730 / §733 / §761, §207 (and §121.1, §121.7, §145.4 where cited) | Matches each table's density, open space, ground-floor commercial, lot-size and lot-merger rows | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | four NCDs / Hayes-Gough | §145.1(c)(4)(C) / (c)(4)(B) | 14 ft, 10 ft in 40- and 50-ft districts / 14 ft in every district | 2018-09-10 / 2019-01-12 |
+| `rear-yard` | Inner Sunset / Taraval, Union / Polk, Hayes-Gough | §134(c)(2), (d)(1) / (d)(2) / (d)(3) | 25%, at least 15 ft: at grade and every story / above a non-residential first story (the Octavia parcels exception named on Hayes-Gough's card) | 2026-01-12 / 2026-01-12 / 2026-03-16 |
+| `far` | all five | §124(a)–(b), Table 124; district table | 1.8 (Inner Sunset), 2.5 (Polk, Taraval), 3.0 (Union, Hayes-Gough), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `ground-floor-bonus` (flag) | Taraval, Hayes-Gough | §263.20 | Up to 5 ft for a tall ground floor; NP in the other three | 2026-01-12 |

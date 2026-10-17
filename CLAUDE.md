@@ -8,7 +8,7 @@ Pick a San Francisco parcel; show in 3D how each zoning rule carves a translucen
 
 Zoning identification is a data lookup (the parcel record carries `zoning_code`; for named NC districts, coded just "NCD"/"NCT", the zoning layer gives the specific code by district name), never an AI judgment.
 
-v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17), then the first five named NC districts (Excelsior Outer Mission, Geary Boulevard and North Beach NCDs; Mission Street and Valencia Street NCTs) and five more (Inner Sunset, Polk Street, Taraval Street and Union Street NCDs; Hayes-Gough NCT; drafts). The other named NCD/NCT districts (each with its own control table) aren't covered.
+v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17), then the first five named NC districts (Excelsior Outer Mission, Geary Boulevard and North Beach NCDs; Mission Street and Valencia Street NCTs) and five more (Inner Sunset, Polk Street, Taraval Street and Union Street NCDs; Hayes-Gough NCT). The other named NCD/NCT districts (each with its own control table) aren't covered.
 
 ## Working rules
 
@@ -154,7 +154,7 @@ type Rule = {
 };
 ```
 
-Verification (every rule in all 21 files: the RH, RM and NC files 2026-10-14; the RTO files, the §249.94 note and the first five named NC districts 2026-10-17): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
+Verification (every rule in all 26 files: the RH, RM and NC files 2026-10-14; the RTO files, the §249.94 note and the ten named NC districts 2026-10-17): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|
@@ -246,7 +246,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
   - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
 - [x] Since Phase 6: special use districts listed on the fact card (§249.94 note); RTO-1, RTO-M, RTO-C district files (Table 209.4); fixtures U and V; all verified 2026-10-17
 - [x] Named NC districts, batch 1 (2026-10-17): named-district lookup, five district files, fixture W; verified 2026-10-17
-- [ ] Named NC districts, batch 2 (2026-10-17): Inner Sunset, Polk, Taraval, Union, Hayes-Gough (drafts, VERIFY.md), fixture X
+- [x] Named NC districts, batch 2 (2026-10-17): Inner Sunset, Polk, Taraval, Union, Hayes-Gough, fixture X; verified 2026-10-17
 
 ## Web app notes
 
