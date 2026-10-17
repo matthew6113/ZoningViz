@@ -24,5 +24,6 @@ export const EXAMPLES: Example[] = [
   { id: "1446048", label: "1345–1347 Clement St", note: "NC-1, 40//65-R-4: switch on Housing Choice-SF for 65 ft", at: [-122.47379, 37.78227] },
   { id: "0492027", label: "3249 Webster St", note: "RTO-C: 25% rear yard; 65 ft under Housing Choice-SF", at: [-122.43478, 37.80071] },
   { id: "3568002", label: "518–522 Valencia St", note: "Valencia Street NCT: a 14 ft shop floor in every height district", at: [-122.42214, 37.7645] },
+  { id: "1738025", label: "1144 Irving St", note: "Inner Sunset NCD: rear yard at ground level too", at: [-122.47036, 37.76411] },
   { id: "fixture-a", label: "Fixture A", note: "synthetic 25 × 100 ft RH-2 lot (SPEC.md)" },
 ];

@@ -1,0 +1,258 @@
+{
+  "jurisdiction": "sf",
+  "district": "NCT-HAYES",
+  "name": "Hayes-Gough Neighborhood Commercial Transit District",
+  "rules": [
+    {
+      "id": "use",
+      "kind": "info",
+      "title": "Shops with homes",
+      "plain": "Hayes-Gough lots are for shops and services with homes; the number of homes is limited only by what fits in the allowed building (form-based density). Ground-floor commercial uses are required on Hayes Street and on Octavia Boulevard between Fell and Hayes Streets, where homes on the ground floor need conditional use approval. Each home needs 60 square feet of private or 80 square feet of shared open space (or the nearest residential district's amount, if that's less). Developments on lots of 10,000 square feet or more need conditional use approval, and lot mergers on Hayes Street can't create a frontage wider than 50 feet.",
+      "params": {},
+      "citation": "§761 (Table 761), §207, §121.7, §145.4",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-7-neighborhood-commercial-districts#761",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "height-reference",
+      "kind": "height_reference",
+      "title": "Where height is measured from",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet, or halfway to the street behind if that's farther.",
+      "params": {
+        "downslopeCurbDepthFeet": 100,
+        "upslopeCurbWithinFeet": 10
+      },
+      "citation": "§260(a)(1)(A)–(C), §261(a)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
+    },
+    {
+      "id": "local-program",
+      "kind": "local_program",
+      "title": "Housing Choice-SF",
+      "plain": "On lots in the Family Zoning Plan's R-4 districts, a housing project can opt into Housing Choice-SF. It may then be as tall as the second number in the R-4 height label (65 ft in 40//65-R-4), and at least 65 ft on a corner lot or a lot larger than 8,000 sq ft. Its rear yard is 18% of lot depth (at least 15 ft), with none needed at the ground floor. Open space and exposure requirements don't apply, and FAR doesn't limit its homes.",
+      "params": {
+        "minHeight": {
+          "feet": 65,
+          "onCornerLot": true,
+          "lotAreaOverSqFt": 8000
+        },
+        "waives": [],
+        "replaces": [
+          {
+            "ruleId": "rear-yard",
+            "params": {
+              "pctOfLotDepth": 0.18,
+              "minFeet": 15,
+              "appliesAt": "above_first_story"
+            },
+            "citation": "§206.10(d)(1)(E)(i)–(ii)"
+          }
+        ],
+        "assumes": "a project that adds homes (2 or more units, at least two-thirds residential, no other density bonus) and doesn't demolish a historic building, a hotel or a building with more than 2 rent-controlled units",
+        "notDrawn": "the optional height bonuses (up to 30 ft), 20 ft more for 100% affordable projects, §263.20's 5 ft for tall ground floors, the 15% adjustments to other standards and the Citywide Design Standards"
+      },
+      "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(E), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
+    },
+    {
+      "id": "mapped-height",
+      "kind": "height_cap",
+      "title": "Height limit",
+      "plain": "No part of a building may be taller than the height limit mapped for this lot's height and bulk district.",
+      "params": {
+        "source": "heightDistrict"
+      },
+      "citation": "§250",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#250",
+      "verified": true,
+      "effectiveDate": "2016-08-28"
+    },
+    {
+      "id": "ground-floor",
+      "kind": "ground_story",
+      "title": "Ground floor height",
+      "plain": "A shop or other non-residential ground floor must be at least 14 feet from floor to floor, in every height district.",
+      "params": {
+        "minFloorToFloorFeet": 14,
+        "exceptions": []
+      },
+      "citation": "§145.1(c)(4)(B)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-145.-frontages-outdoor-activity-areas-walkup-facilities-and-ground-floor-uses-and-standa/sec.-145.1.-street-frontages-in-neighborhood-commercial-residential-commercial-commercial-and",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "rear-yard",
+      "kind": "rear_yard",
+      "title": "Rear yard",
+      "plain": "The back 25% of the lot, and never less than 15 feet, must stay open from the lowest story with homes up; with shops on the ground floor, that's from the second story. Lots on the east side of Octavia Boulevard between Linden and Market Streets (former Central Freeway parcels) need none if the project meets the open space and exposure rules; that isn't checked here, and the yard is drawn.",
+      "params": {
+        "pctOfLotDepth": 0.25,
+        "minFeet": 15,
+        "appliesAt": "above_first_story"
+      },
+      "citation": "§134(c)(2), §134(d)(3); Table 761",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "bulk",
+      "kind": "bulk",
+      "title": "Bulk limits",
+      "plain": "Above a height set by the lot's bulk district (the letter after the height, as in 65-A), no floor may be longer, or longer corner to corner, than the district allows.",
+      "params": {
+        "letters": {
+          "A": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "B": {
+            "aboveFeet": 50,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "C": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "D": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "E": {
+            "aboveFeet": 65,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "F": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "G": {
+            "aboveFeet": 80,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "H": {
+            "aboveFeet": 100,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "I": {
+            "aboveFeet": 150,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "J": {
+            "aboveFeet": 40,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "K": {
+            "aboveFeet": 60,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "L": {
+            "aboveFeet": 80,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "M": {
+            "aboveFeet": 100,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "N": {
+            "aboveFeet": 40,
+            "lengthFeet": 50,
+            "diagonalFeet": 100
+          },
+          "T": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          }
+        },
+        "noLimit": [
+          "X"
+        ],
+        "podiumOnly": {
+          "R-4": 85
+        }
+      },
+      "citation": "§270(a), Table 270; §102 (Plan Dimensions); §270(i)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#270",
+      "verified": true,
+      "effectiveDate": "2026-03-16"
+    },
+    {
+      "id": "far",
+      "kind": "far",
+      "title": "Floor area for non-residential uses",
+      "plain": "Shops, offices and other non-residential uses may have floor area up to 3 times the lot area; homes don't count toward this limit.",
+      "params": {
+        "ratio": 3.0,
+        "appliesTo": "non_residential"
+      },
+      "citation": "§124(a)–(b), Table 124; Table 761",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#124",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "front-setback",
+      "kind": "flag",
+      "title": "Sidewalk setback",
+      "plain": "Where the sidewalk is narrower than the Better Streets Plan recommends, a lot with 50 feet or more of frontage, a corner lot or a lot next to a set-back building must set its first 15 feet of height back to widen the sidewalk; sidewalk widths aren't in this app's data.",
+      "params": {},
+      "citation": "§132(e); Table 761",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "ground-floor-bonus",
+      "kind": "flag",
+      "title": "Taller ground floor bonus",
+      "plain": "A building may rise 1 foot higher for each foot of ground-floor clear ceiling height above 10 feet, or each foot its ground-floor homes are raised above the sidewalk, up to 5 feet, in 30-X, 40-X and 50-X districts (and R-4 districts with a 40, 50 or 80 foot limit). This district's table permits it; it isn't shown.",
+      "params": {},
+      "citation": "§263.20; Table 761",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts/sec.-263.-height-limits-special-exceptions/sec.-263.20.-special-height-exception-additional-five-feet-height-for-active-ground-floor-uses",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "narrow-street",
+      "kind": "flag",
+      "title": "Narrow streets",
+      "plain": "On a street or alley 40 feet wide or narrower, away from the corner, upper stories must step back at least 10 feet above a height of 1.25 times the street's width (two-story buildings are exempt), and on the south side of an east-west narrow street they must stay under a 45-degree plane from the opposite property line. Street widths aren't in this app's data, so that isn't shown.",
+      "params": {},
+      "citation": "§261.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts/sec.-261.-additional-height-limits-applicable-to-certain-rh-districts/sec.-261.1.-additional-height-limits-for-narrow-streets-and-alleys-in-r-rto-nc-nct-and-east",
+      "verified": true,
+      "effectiveDate": "2021-05-17"
+    },
+    {
+      "id": "cross-slope",
+      "kind": "flag",
+      "title": "Cross-slope",
+      "plain": "Where the height limit is 65 feet or less and the street slopes along the lot's front, or the ground slopes across a lot that rises from the street, by more than 5%, a wide building is measured from several points, each covering at most 65 feet (35 to 55 on steeper slopes; on R-4 lots up to 85 feet tall, 55 to 85). It doesn't apply where §270 bulk limits apply. This view measures from one point.",
+      "params": {},
+      "citation": "§260(a)(3)–(4), Tables 260-1 and 260-2",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
+    }
+  ]
+}

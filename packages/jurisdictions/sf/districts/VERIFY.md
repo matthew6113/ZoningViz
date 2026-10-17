@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status: every rule in all 21 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); and the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Named NC districts, batch 2 (2026-10-17): drafts** (section below). NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION and NCT-HAYES carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
+
+**Status: every rule in the other 21 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); and the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -146,6 +148,21 @@ Parcels label every named district "NCD" or "NCT"; the app takes the specific co
 
 Shared rules copied unchanged: height reference, Housing Choice-SF (NC variant: 18% rear yard, none at the ground floor; §206.10(d)(1)(E)(ii) names "Named Neighborhood Commercial"), mapped height, bulk, narrow streets, cross-slope.
 
+## Named NC districts, batch 2 (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Same layout as batch 1. Hayes-Gough is NCT-HAYES in the zoning layer ("HAYES NCT"). All five tables were last amended by Ord. 37-26 (4/11/2026).
+
+| Rule id | NCD-INNER SUNSET (§730) | NCD-POLK (§723) | NCD-TARAVAL (§733) | NCD-UNION (§725) | NCT-HAYES (§761) | Proposed `effectiveDate` |
+|---|---|---|---|---|---|---|
+| `use` | 1 home per 800 sq ft or nearest R district (form-based in R-4, note (1)); open space 100/133 | 1 per 400 sq ft or nearest R district (form-based in R-4, note (14)); ground floor commercial required on every frontage (§145.4(b)(28)); open space 60/80; lot mergers ≤ 25 ft frontage (§121.7); lots of 2,500 sq ft or more C in the Priority Equity Geographies SUD (note (12), §121.1; question 44) | Form-based density; open space 100/133 | 1 per 600 sq ft or nearest R district (form-based in R-4, note (2)); open space 80/100 | Form-based; GF commercial required on Hayes St and Octavia Blvd between Fell and Hayes (§145.4(b)(8)–(9)), GF residential C there (note (1)); open space 60/80; lots of 10,000 sq ft or more C (question 45); lot mergers on Hayes ≤ 50 ft (§121.7) | 2026-04-11 |
+| `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | (C) 2018-09-10; (B) 2019-01-12 |
+| `rear-yard` | 25%, ≥ 15 ft, at grade and every story ((d)(1)) | from the lowest story with a dwelling ((d)(3)) | from the 2nd story ((d)(2)) | (d)(2) | (d)(3), with the Octavia parcels exception (question 46) | (d)(1) and (d)(2) 2026-01-12; (d)(3) 2026-03-16 |
+| `far` | 1.8 | 2.5 | 2.5 | 3.0 | 3.0 | 2026-01-12 |
+| `front-setback` (flag) | §132(e), as NC | same | same | same (table says "See § (e)", question 47) | same | 2026-01-12 |
+| `ground-floor-bonus` (flag) | §263.20: NP, no flag | NP, no flag | P | NP, no flag | P | 2026-01-12 |
+
+Shared rules copied unchanged, as in batch 1. Under Housing Choice-SF, Inner Sunset's ground-level yard becomes the program's 18% yard with none at the ground floor (question 48).
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -207,6 +224,12 @@ Shared rules copied unchanged: height reference, Housing Choice-SF (NC variant: 
 41. **Geary's ground-floor bonus.** Table 739 says "P(1) in some districts", and note (1) gives "Additional 5 feet for NC-3 parcels zoned 40' or 50' with an Active Use on the ground floor" along Geary from Masonic Avenue to 28th Avenue, except the north side between Palm and Parker Avenues. Geary lots are NCD, not NC-3; the flag quotes the note as written.
 42. **Geary's rear-yard note.** Table 739's rear-yard row points at note (6), which is about car washing at service stations, the same kind of stale reference as question 16.
 43. **NCT ground floors.** §145.1(c)(4)(B) gives NCT districts 14 ft with no 40/50-ft exception, so a 40-X NCT lot gets a 14 ft first story (fixture W) where an NCD lot gets 10 ft.
+
+44. **Polk's lot-size row.** Table 723 gives "Lot Size (Per Development): P(12)", and note (12) reads "C for 2,500 square feet and above if located within the Priority Equity Geographies Special Use District", which matches §121.1's 2,500 sq ft limit for Polk Street (marked (*): only the part of the district in that SUD). The use card says so; whether a lot is in the SUD shows on the fact card's special use list.
+45. **Hayes-Gough's lot-size row.** Table 761 requires conditional use for developments on lots of 10,000 sq ft or more and cites §121.1, but §121.1's table (now limited to NC districts in the Priority Equity Geographies SUD) doesn't list Hayes-Gough. The card follows the district table.
+46. **Hayes-Gough's Octavia parcels.** §134(d)(3) lets lots on the east side of Octavia Boulevard between Linden and Market Streets (Central Freeway Parcels L, M, N, R, S, T, U and V) skip the rear yard if the project meets §135 open space and §140 exposure and considers its neighbors' light and air. The app can't tell those lots apart or check the conditions; the yard is drawn and the card says so.
+47. **Union's setback row.** Table 725's front-setback row ends "See § (e)", without the "132" the other tables have. The flag cites §132(e).
+48. **Inner Sunset under Housing Choice-SF.** §134(d)(1) puts Inner Sunset's rear yard at grade, but §206.10(d)(1)(E)(ii) says no rear yard is required at the ground floor in "Named Neighborhood Commercial" districts, so with the program on the 18% yard starts above the first story (fixture X; the same volume as fixture Q).
 
 ## Special use district notes (`sf/specialUse.json`)
 

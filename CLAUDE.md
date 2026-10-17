@@ -8,7 +8,7 @@ Pick a San Francisco parcel; show in 3D how each zoning rule carves a translucen
 
 Zoning identification is a data lookup (the parcel record carries `zoning_code`; for named NC districts, coded just "NCD"/"NCT", the zoning layer gives the specific code by district name), never an AI judgment.
 
-v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17), then the first five named NC districts (Excelsior Outer Mission, Geary Boulevard and North Beach NCDs; Mission Street and Valencia Street NCTs). The other named NCD/NCT districts (each with its own control table) aren't covered.
+v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17), then the first five named NC districts (Excelsior Outer Mission, Geary Boulevard and North Beach NCDs; Mission Street and Valencia Street NCTs) and five more (Inner Sunset, Polk Street, Taraval Street and Union Street NCDs; Hayes-Gough NCT; drafts). The other named NCD/NCT districts (each with its own control table) aren't covered.
 
 ## Working rules
 
@@ -85,7 +85,7 @@ packages/engine/                # @zoningviz/engine — pure TS + WASM: resolve 
   src/rules/schema.ts           # zod schema for district files
   src/rules/resolve.ts          # rule params -> numbers, card sentence, cut (no geometry)
   src/rules/regions.ts          # cut -> allowed region; dimension lines; cut planes (for the sweep)
-  test/                         # fixtures A–W (far: RM/NC, bulk, localProgram: Housing Choice-SF, rto, namedNc), invariants, schema, front detection, terrain
+  test/                         # fixtures A–X (far: RM/NC, bulk, localProgram: Housing Choice-SF, rto, namedNc), invariants, schema, front detection, terrain
   test/fixtures/parcels/        # recorded real parcels (pnpm record-fixtures)
 packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, never the reverse)
   sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses
@@ -226,8 +226,9 @@ Fixtures (hand-checked):
 | U | 25 x 100 ft, RTO-C, 40-X, flat, no setback | 25 ft rear yard at every level (no first-story height for RTO-C); 75,000 cu ft; 4 × 1,875 = 7,500 sq ft; FAR 1.8 budget 4,500 sq ft. RTO-1 and RTO-M: 30 ft yard, 70,000 cu ft |
 | V | 25 x 100 ft, RTO-C, 40//65-R-4, on | 65 ft; program's 18% (18 ft) rear yard at every level; 133,250 cu ft; 6 × 2,050 = 12,300 sq ft. RTO-1 keeps its 30% yard: 113,750 cu ft |
 | W | 25 x 100 ft, NCT-MISSION, 40-X, flat, no setback | 14 ft first story (NCTs have no 40/50-ft exception); rear yard 25 ft from 14 ft up; 83,750 cu ft; stories 0–14, 14–24, 24–34, 34–44 (counted: its middle is under 40 ft): 2,500 + 3 × 1,875 = 8,125 sq ft. North Beach, Excelsior and Geary at 40-X: fixture H's 81,250 cu ft |
+| X | 25 x 100 ft, NCD-INNER SUNSET, 40-X, flat, no setback | Rear yard 25 ft at grade and every story (§134(d)(1)); 10 ft first story; 75,000 cu ft; 4 × 1,875 = 7,500 sq ft; FAR 1.8 budget 4,500 sq ft. With Housing Choice-SF at 40//65-R-4: the program's 18% yard above the first story, fixture Q's 139,550 cu ft. Polk, Taraval and Union at 40-X: fixture H's 81,250; Hayes-Gough NCT: fixture W's 83,750 |
 
-Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner), 0872013 (RTO-1, 85//85-R-4), 3597019 (RTO-M), 0493016 (RTO-C, corner, 40//65-R-4), 6013018 (NCD-EXCELSIOR), 1070003 (NCD-GEARY BOULEVARD, corner, 50//85-R-4, 10,750 sq ft), 0116010 (NCD-NORTH BEACH, corner), 3569008 (NCT-MISSION, 80-B), 3568002 (NCT-VALENCIA). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4) and 3249 Webster St (RTO-C, 40//65-R-4).
+Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006, 4276045, 0044030 (RH-2), 2687029 (RH-1(D), irregular, falls 35.5 ft from the street), 1646023 (RH-1, also run as RH-1(S)), 0982019 (RH-3), 0072050 (RM-1), 0065024 (RM-2), 0191023 (RM-3), 0224032 (RM-4, corner), 1446048 (NC-1), 2516021 and 3593008 (NC-2; 2516021 rises from the street), 0496004 (NC-3), 1018019 (NC-S, corner), 0872013 (RTO-1, 85//85-R-4), 3597019 (RTO-M), 0493016 (RTO-C, corner, 40//65-R-4), 6013018 (NCD-EXCELSIOR), 1070003 (NCD-GEARY BOULEVARD, corner, 50//85-R-4, 10,750 sq ft), 0116010 (NCD-NORTH BEACH, corner), 3569008 (NCT-MISSION, 80-B), 3568002 (NCT-VALENCIA), 0571003 (NCD-POLK, 65//85-R-4), 1738025 (NCD-INNER SUNSET), 2360031 (NCD-TARAVAL, rises from the street), 0531006A (NCD-UNION, corner), 0816012 (NCT-HAYES, through lot, 40-X and 50-X). Hillside e2e: 124 Clarendon Ave (downslope, 30 ft; 40 ft under Housing Choice-SF) and 118 Dellbrook Ave 2820020 (upslope +36.9 ft: 40 ft, no front plane). Recorded lots with an R-4 label are also run with Housing Choice-SF on; e2e switches it on at 1345–1347 Clement St (NC-1, 40//65-R-4) and 3249 Webster St (RTO-C, 40//65-R-4).
 
 ## Phase status
 
@@ -245,6 +246,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
   - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
 - [x] Since Phase 6: special use districts listed on the fact card (§249.94 note); RTO-1, RTO-M, RTO-C district files (Table 209.4); fixtures U and V; all verified 2026-10-17
 - [x] Named NC districts, batch 1 (2026-10-17): named-district lookup, five district files, fixture W; verified 2026-10-17
+- [ ] Named NC districts, batch 2 (2026-10-17): Inner Sunset, Polk, Taraval, Union, Hayes-Gough (drafts, VERIFY.md), fixture X
 
 ## Web app notes
 

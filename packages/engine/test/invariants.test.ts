@@ -60,6 +60,12 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["1415 Grant Ave, North Beach, front 0 (0116010)", loadParcel("0116010"), "NCD-NORTH BEACH", { frontSide: 0 }],
   ["2044 Mission St, 80-B (3569008)", loadParcel("3569008"), "NCT-MISSION", {}],
   ["518 Valencia St (3568002)", loadParcel("3568002"), "NCT-VALENCIA", {}],
+  ["X 25x100, Inner Sunset", rectangularLot(25, 100), "NCD-INNER SUNSET", {}],
+  ["2139 Polk St (0571003)", loadParcel("0571003"), "NCD-POLK", {}],
+  ["1144 Irving St, Inner Sunset (1738025)", loadParcel("1738025"), "NCD-INNER SUNSET", {}],
+  ["2122 Taraval St, rising (2360031)", loadParcel("2360031"), "NCD-TARAVAL", {}],
+  ["1900 Union St, corner, front 1 (0531006A)", loadParcel("0531006A"), "NCD-UNION", { frontSide: 1 }],
+  ["361 Hayes St, through lot, front 0 (0816012)", loadParcel("0816012"), "NCT-HAYES", { frontSide: 0 }],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

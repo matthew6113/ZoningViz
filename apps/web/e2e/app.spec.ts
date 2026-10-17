@@ -172,11 +172,11 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 });
 
 test("a lot outside the covered districts says so", async ({ page }) => {
-  // 2139 Polk St: a named neighborhood commercial district, each of which has its own control table.
-  await page.goto("/?parcel=0571003");
+  // 558 Castro St: a named neighborhood commercial district, each of which has its own control table.
+  await page.goto("/?parcel=2695010");
   // Parcels say only "NCD"; the zoning layer names the district.
-  await expect(page.locator(".notice")).toContainText("Zoned NCD-POLK. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA only so far");
-  await expect(page.locator(".fact-card")).toContainText("NCD-POLK");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD-CASTRO. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-INNER SUNSET, NCD-NORTH BEACH, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES, NCT-MISSION, NCT-VALENCIA only so far");
+  await expect(page.locator(".fact-card")).toContainText("NCD-CASTRO");
 });
 
 test("a fresh visit plays the arrival, then waits at the starting block", async ({ page }) => {
@@ -439,6 +439,21 @@ test("a named NC district: 518 Valencia St is Valencia Street NCT, with a 14 ft 
   await expect(page.locator("[data-rule=far] .sentence")).toContainText("2.5 × 2,672 sq ft");
   await toResult(page);
   await expect(page.getByTestId("summary")).toContainText("5 stories");
+  await expectSceneDrawn(page);
+});
+
+test("a named NC district with a ground-level rear yard: 1144 Irving St is Inner Sunset NCD", async ({ page }) => {
+  await page.goto("/?parcel=1738025&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("1144 Irving St");
+  await expect(page.locator(".fact-card")).toContainText("NCD-INNER SUNSET");
+  await expect(label(page)).toHaveText("Rule 6 of 11: Rear yard");
+  await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 100 ft lot depth = 25 ft.");
+  await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("at ground level and on every floor");
+  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await toResult(page);
+  const summary = page.getByTestId("summary");
+  await expect(summary).toContainText("5 stories");
+  await expect(summary).toContainText("9,375 sq ft");
   await expectSceneDrawn(page);
 });
 

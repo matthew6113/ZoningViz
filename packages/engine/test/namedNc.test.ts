@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { syntheticLot, type EnvelopeResult, type Step } from "../src";
 import { getEngine, loadDistrict, rectangularLot } from "./helpers";
 
-// Named neighborhood commercial districts (Article 7 tables). Fixture W is hand-checked.
+// Named neighborhood commercial districts (Article 7 tables). Fixtures W and X are hand-checked.
 const NO_SETBACK = { overrides: { "front-setback": { feet: 0 } } };
 
 type Ok = Extract<EnvelopeResult, { status: "ok" }>;
@@ -16,6 +16,12 @@ const plates = (r: Ok) => r.floors.map((f) => Math.round(f.plateSqFt));
 const engine = await getEngine();
 const envelope = (district: string, heightFt = 40) =>
   ok(engine.computeEnvelope(syntheticLot(25, 100, { label: `${heightFt}-X`, heightFt, bulk: "X" }), loadDistrict(district), NO_SETBACK));
+const r4Envelope = (district: string) =>
+  ok(engine.computeEnvelope(
+    syntheticLot(25, 100, { label: "40//65-R-4", heightFt: 40, localProgramHeightFt: 65, bulk: "R-4" }),
+    loadDistrict(district),
+    { ...NO_SETBACK, localProgram: true },
+  ));
 
 describe("fixture W: 25 x 100 ft Mission Street NCT lot, 40-X", () => {
   const r = envelope("NCT-MISSION");
@@ -70,5 +76,57 @@ describe("other named districts", () => {
   it("uses each district's own 14 ft minimum in a 65 ft district", () => {
     expect(step(envelope("NCD-EXCELSIOR", 65), "ground-floor").numbers.firstStoryFt).toBe(14);
     expect(rectangularLot(25, 100).heightZones[0]!.heightFt).toBe(40);
+  });
+});
+
+describe("fixture X: 25 x 100 ft Inner Sunset lot, 40-X", () => {
+  const r = envelope("NCD-INNER SUNSET");
+
+  it("takes a 25 ft rear yard at grade and every story (§134(d)(1)), with a 10 ft first story", () => {
+    const rear = step(r, "rear-yard");
+    expect(rear.numbers).toMatchObject({ rearYardFt: 25 });
+    expect(rear.numbers.aboveFt).toBeUndefined();
+    expect(rear.measurements.removedVolume).toBeCloseTo(25 * 25 * 40, 3);
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(10);
+  });
+
+  it("ends at 75,000 cu ft: 4 stories of 1,875 sq ft, with a 4,500 sq ft non-residential budget", () => {
+    expect(r.totals.volume).toBeCloseTo(75_000, 3);
+    expect(r.floors.map((f) => [f.bottomFt, f.topFt])).toEqual([[0, 10], [10, 20], [20, 30], [30, 40]]);
+    expect(plates(r)).toEqual([1875, 1875, 1875, 1875]);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+    expect(r.steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+  });
+
+  it("under Housing Choice-SF takes the program's 18% yard above the first story, as fixture Q", () => {
+    const on = r4Envelope("NCD-INNER SUNSET");
+    expect(step(on, "rear-yard").numbers).toMatchObject({ rearYardFt: 18, aboveFt: 14 });
+    expect(on.totals.volume).toBeCloseTo(139_550, 3);
+  });
+});
+
+describe("named districts, batch 2", () => {
+  it("Polk and Union: the NCD first story and rear yard of fixture H; FAR 2.5 and 3.0; no ground-floor bonus", () => {
+    for (const [code, ratio] of [["NCD-POLK", 2.5], ["NCD-UNION", 3]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+      expect(r.steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+    }
+  });
+
+  it("Taraval: fixture H's shape, FAR 2.5, the ground-floor bonus flagged", () => {
+    const r = envelope("NCD-TARAVAL");
+    expect(r.totals.volume).toBeCloseTo(81_250, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+    expect(step(r, "ground-floor-bonus").status).toBe("not_modeled");
+  });
+
+  it("Hayes-Gough NCT: fixture W's 14 ft first story and 83,750 cu ft; FAR 3.0", () => {
+    const r = envelope("NCT-HAYES");
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+    expect(r.totals.volume).toBeCloseTo(83_750, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(3 * 2500, 6);
   });
 });

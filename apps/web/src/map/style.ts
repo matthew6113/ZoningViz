@@ -29,6 +29,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-NORTH BEACH": "#5aa58f",
   "NCT-MISSION": "#3f7f9c",
   "NCT-VALENCIA": "#5b93ad",
+  "NCD-INNER SUNSET": "#6bb39d",
+  "NCD-POLK": "#24786b",
+  "NCD-TARAVAL": "#4c9a86",
+  "NCD-UNION": "#1d5f56",
+  "NCT-HAYES": "#2e6f8e",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

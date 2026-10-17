@@ -18,6 +18,11 @@ import ncs from "./NC-S.json";
 import ncdExcelsior from "./NCD-EXCELSIOR.json";
 import ncdGeary from "./NCD-GEARY-BOULEVARD.json";
 import ncdNorthBeach from "./NCD-NORTH-BEACH.json";
+import ncdInnerSunset from "./NCD-INNER-SUNSET.json";
+import ncdPolk from "./NCD-POLK.json";
+import ncdTaraval from "./NCD-TARAVAL.json";
+import ncdUnion from "./NCD-UNION.json";
+import nctHayes from "./NCT-HAYES.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -43,7 +48,12 @@ const FILES: Record<string, unknown> = {
   // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
   "NCD-EXCELSIOR": ncdExcelsior,
   "NCD-GEARY BOULEVARD": ncdGeary,
+  "NCD-INNER SUNSET": ncdInnerSunset,
   "NCD-NORTH BEACH": ncdNorthBeach,
+  "NCD-POLK": ncdPolk,
+  "NCD-TARAVAL": ncdTaraval,
+  "NCD-UNION": ncdUnion,
+  "NCT-HAYES": nctHayes,
   "NCT-MISSION": nctMission,
   "NCT-VALENCIA": nctValencia,
 };
