@@ -89,6 +89,14 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 2. **Edge contact.** District lines follow lot lines and streets, so a plain polygon query also finds districts that only meet a lot's edge. The adapter queries with the lot shrunk by 1 ft instead (the intersection of eight copies of the lot shifted 1 ft outward in eight directions, coordinates rounded to 1e-7°). On 301 random RH/RM/NC lots, measured against the downloaded district shapes: all 463 real overlaps (the smallest 6.9% of the lot) were found, and all 9 edge contacts (0.001% of the lot or less) were dropped, at insets from 0.25 ft to 3 ft. No district shape has to be downloaded.
 3. **Long outlines.** When the shrunk lot's WKT is over 6,000 characters (or nothing is left of a sliver), the adapter fetches the districts crossing the lot's bounding box with their shapes and keeps those covering at least 0.1% of the lot, as for height districts. That download can reach several hundred KB, so it's kept for the few hundred lots with outlines of 150+ vertices.
 
+## Neighbors' front setbacks: not from building outlines (2026-10-17)
+
+§132(a) sets the front setback from the adjacent buildings' setbacks, which city data doesn't record. The Building Footprints layer (`ynuv-fyni`) was tried as a stand-in and rejected:
+- On 40 random RH lots, 52 sides had a building next door. Measured from the street line to the outline, 14 of them (27%) start in front of the property line, 7 by more than 3 ft (beyond what a bay window over the sidewalk explains), down to −7.0 ft; both neighbors of 1391 Hampshire St come out at about −9.5 ft. The outline and parcel layers are commonly offset by several feet, against a 10 ft maximum.
+- Outlines are roof outlines, so they include the bays, decks and garage extensions §132(b) leaves out. Errors run toward a shallower setback, i.e. a larger envelope than the code allows.
+
+So the setback stays at the rule's maximum, with the slider for the viewer's own figure.
+
 ## Height label parsing
 
 | Pattern | Result | Examples |
