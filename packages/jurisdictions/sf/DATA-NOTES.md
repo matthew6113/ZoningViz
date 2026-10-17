@@ -97,7 +97,8 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 - Sweep (`pnpm sweep --per-district 12 --seed 9 --program`, batch 1): all 60 lots in the five named districts produced envelopes. Bulk B and A cut nothing on the sampled lots ("already satisfied"); every sampled Geary lot is R-4 (50//85 and similar) and all grew under Housing Choice-SF. `--only CODE,CODE` sweeps chosen districts.
 - Batch 2 (`pnpm sweep --per-district 12 --seed 21 --split 0 --program --only "NCD-INNER SUNSET,NCD-POLK,NCD-TARAVAL,NCD-UNION,NCT-HAYES"`): all 60 lots produced envelopes; 26 asked for the front. Every sampled Inner Sunset, Polk, Taraval and Union lot is R-4 and grew under Housing Choice-SF (19 raised to the 65 ft corner/large-lot minimum); the Hayes lots are 40-X/50-X. Four Polk lots are mapped above the 85 ft R-4 podium, where the bulk card says R-4 bulk isn't modeled.
 - Batch 3 (`--per-district 12 --seed 31`, the five codes): all 60 lots produced envelopes; 14 asked for the front. Inner Clement, 24th Street – Noe Valley and Divisadero lots are all R-4 and grew under Housing Choice-SF; every sampled Mission Bernal and San Bruno Avenue lot is 40-X (their tables have no R-4 rows, VERIFY.md question 51). Two Mission Bernal lots rise more than 20 ft to the rear.
-- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3.
+- Batch 4 (`--per-district 12 --seed 41`, the five codes): all 60 lots produced envelopes; 19 asked for the front. Every sampled Outer Clement, Noriega and Upper Market lot and 11 of 12 Upper Fillmore lots are R-4 and grew under Housing Choice-SF; the 24th Street – Mission lots are X districts. One Upper Market lot rises more than 20 ft to the rear.
+- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3, 91.4% with batch 4.
 
 ## RTO coverage (2026-10-17)
 
