@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 3 (2026-10-17): drafts** (section below). NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE and NCT-DIVISADERO carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 26 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); and the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 31 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); and five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -167,7 +165,7 @@ Shared rules copied unchanged, as in batch 1. Under Housing Choice-SF, Inner Sun
 
 Same layout as batches 1 and 2. 24th Street – Noe Valley's zoning-layer code is "NCD-24TH-NOE-VALLEY" (hyphens, no spaces). All five tables were last amended by Ord. 37-26 (4/11/2026). Tables 740 and 741 (added by Ord. 7-20) have no Housing Choice-SF row (question 51).
 
-| Rule id | NCD-INNER CLEMENT (§716) | NCD-24TH-NOE-VALLEY (§728) | NCD-MISSION BERNAL (§740) | NCD-SAN BRUNO AVENUE (§741) | NCT-DIVISADERO (§759) | Proposed `effectiveDate` |
+| Rule id | NCD-INNER CLEMENT (§716) | NCD-24TH-NOE-VALLEY (§728) | NCD-MISSION BERNAL (§740) | NCD-SAN BRUNO AVENUE (§741) | NCT-DIVISADERO (§759) | `effectiveDate` (batch 9) |
 |---|---|---|---|---|---|---|
 | `use` | Form-based density; open space 80/100; lot mergers ≤ 50 ft frontage (§121.7) | Form-based; open space 80/100 | 1 home per 600 sq ft or nearest R district; open space 80/100 | 1 per 800 sq ft or nearest R district; open space 100/133; lots of 10,000 sq ft or more C (§121.1) | Form-based; GF commercial required district-wide (§145.4(b)(26)), GF residential C (note (1)); open space 100/133; lot mergers ≤ 100 ft except the blocks between Oak and Fell (§121.7, question 52); lots of 10,000 sq ft or more C in the Priority Equity Geographies SUD (note (11), §121.1) | 2026-04-11 |
 | `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | same | 14 ft in every district (§145.1(c)(4)(B), NCT) | (C) 2018-09-10; (B) 2019-01-12 |
@@ -355,3 +353,16 @@ Drafted the same day from the official PDF (Tables 723, 725, 730, 733 and 761 an
 | `far` | all five | §124(a)–(b), Table 124; district table | 1.8 (Inner Sunset), 2.5 (Polk, Taraval), 3.0 (Union, Hayes-Gough), non-residential only | 2026-01-12 |
 | `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
 | `ground-floor-bonus` (flag) | Taraval, Hayes-Gough | §263.20 | Up to 5 ft for a tall ground floor; NP in the other three | 2026-01-12 |
+
+### Batch 9: named NC districts, batch 3, confirmed 2026-10-17
+
+Drafted the same day from the official PDF (Tables 716, 728, 740, 741 and 759 and the sections they cite) and confirmed by the user in chat with the dates in the batch 3 table above; questions 49–52 stand as the cards describe them.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §716 / §728 / §740 / §741 / §759, §207 (and §121.1, §121.7, §145.4 where cited) | Matches each table's density, open space, ground-floor commercial, lot-size and lot-merger rows | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | four NCDs / Divisadero | §145.1(c)(4)(C) / (c)(4)(B) | 14 ft, 10 ft in 40- and 50-ft districts / 14 ft in every district | 2018-09-10 / 2019-01-12 |
+| `rear-yard` | 24th Street – Noe Valley / Inner Clement, San Bruno Avenue, Divisadero / Mission Bernal | §134(c)(2), (d)(1) / (d)(2) / (d)(3) | 25%, at least 15 ft: at grade and every story / above a non-residential first story | 2026-01-12 / 2026-01-12 / 2026-03-16 |
+| `far` | all five | §124(a)–(b) (Table 124 for Inner Clement and Noe Valley); district table | 1.8 (Inner Clement, Noe Valley), 3.6 (Mission Bernal), 2.5 (San Bruno Avenue, Divisadero), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `ground-floor-bonus` (flag) | all five | §263.20; Mission Bernal's "P in some districts" (question 49) | Up to 5 ft for a tall ground floor | 2026-01-12 |
