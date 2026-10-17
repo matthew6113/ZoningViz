@@ -95,6 +95,8 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 - All 44 parcel names match exactly one zoning-layer code. The layer has 121 (code, name) pairs in all; the one name shared by two codes ("PDR PRODUCTION, DISTRIBUTION, AND REPAIR": M-2 and PDR-2) is never a generic code's.
 - So `resolveNamedDistrict` (sf/zoning.ts) swaps a lot's generic code for the zoning layer's by name: the adapter with one grouped query (`select zoning,districtna group by zoning,districtna`, cached per adapter), and `pnpm build-tiles` with the same query before writing parcels, so the map's hover and click see the specific code too. A name that isn't found leaves the generic code (shown as not covered).
 - Sweep (`pnpm sweep --per-district 12 --seed 9 --program`, batch 1): all 60 lots in the five named districts produced envelopes. Bulk B and A cut nothing on the sampled lots ("already satisfied"); every sampled Geary lot is R-4 (50//85 and similar) and all grew under Housing Choice-SF. `--only CODE,CODE` sweeps chosen districts.
+- Batch 2 (`pnpm sweep --per-district 12 --seed 21 --split 0 --program --only "NCD-INNER SUNSET,NCD-POLK,NCD-TARAVAL,NCD-UNION,NCT-HAYES"`): all 60 lots produced envelopes; 26 asked for the front. Every sampled Inner Sunset, Polk, Taraval and Union lot is R-4 and grew under Housing Choice-SF (19 raised to the 65 ft corner/large-lot minimum); the Hayes lots are 40-X/50-X. Four Polk lots are mapped above the 85 ft R-4 podium, where the bulk card says R-4 bulk isn't modeled.
+- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2.
 
 ## RTO coverage (2026-10-17)
 
