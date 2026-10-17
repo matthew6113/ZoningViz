@@ -71,8 +71,9 @@ describe("named neighborhood commercial districts", () => {
       "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES",
       "NCD-24TH-NOE-VALLEY", "NCD-INNER CLEMENT", "NCD-MISSION BERNAL", "NCD-SAN BRUNO AVENUE", "NCT-DIVISADERO",
       "NCD-NORIEGA", "NCD-OUTER CLEMENT", "NCD-UPPER FILLMORE", "NCT-24TH-MISSION", "NCT-UPPER MARKET",
-      "NCD-BAYVIEW", "NCD-CASTRO", "NCD-HAIGHT", "NCD-PACIFIC", "NCT-OCEAN"];
+      "NCD-BAYVIEW", "NCD-CASTRO", "NCD-HAIGHT", "NCD-PACIFIC", "NCT-OCEAN",
+      "NCD-INNER TARAVAL STREET", "NCD-IRVING", "NCD-OUTER BALBOA STREET", "NCD-SACRAMENTO", "NCD-WEST PORTAL"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
-    expect(zoningCoverage("NCD-SACRAMENTO")).toEqual({ kind: "not_covered", code: "NCD-SACRAMENTO" });
+    expect(zoningCoverage("NCD-COLE VALLEY")).toEqual({ kind: "not_covered", code: "NCD-COLE VALLEY" });
   });
 });

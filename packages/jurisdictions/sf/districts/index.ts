@@ -38,6 +38,11 @@ import ncdCastro from "./NCD-CASTRO.json";
 import ncdHaight from "./NCD-HAIGHT.json";
 import ncdPacific from "./NCD-PACIFIC.json";
 import nctOcean from "./NCT-OCEAN.json";
+import ncdInnerTaraval from "./NCD-INNER-TARAVAL-STREET.json";
+import ncdIrving from "./NCD-IRVING.json";
+import ncdOuterBalboa from "./NCD-OUTER-BALBOA-STREET.json";
+import ncdSacramento from "./NCD-SACRAMENTO.json";
+import ncdWestPortal from "./NCD-WEST-PORTAL.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -69,16 +74,21 @@ const FILES: Record<string, unknown> = {
   "NCD-HAIGHT": ncdHaight,
   "NCD-INNER CLEMENT": ncdInnerClement,
   "NCD-INNER SUNSET": ncdInnerSunset,
+  "NCD-INNER TARAVAL STREET": ncdInnerTaraval,
+  "NCD-IRVING": ncdIrving,
   "NCD-MISSION BERNAL": ncdMissionBernal,
   "NCD-NORIEGA": ncdNoriega,
   "NCD-NORTH BEACH": ncdNorthBeach,
+  "NCD-OUTER BALBOA STREET": ncdOuterBalboa,
   "NCD-OUTER CLEMENT": ncdOuterClement,
   "NCD-PACIFIC": ncdPacific,
   "NCD-POLK": ncdPolk,
+  "NCD-SACRAMENTO": ncdSacramento,
   "NCD-SAN BRUNO AVENUE": ncdSanBruno,
   "NCD-TARAVAL": ncdTaraval,
   "NCD-UNION": ncdUnion,
   "NCD-UPPER FILLMORE": ncdUpperFillmore,
+  "NCD-WEST PORTAL": ncdWestPortal,
   "NCT-24TH-MISSION": nct24thMission,
   "NCT-DIVISADERO": nctDivisadero,
   "NCT-HAYES": nctHayes,

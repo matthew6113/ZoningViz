@@ -230,3 +230,26 @@ describe("named districts, batch 5", () => {
     expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
   });
 });
+
+describe("named districts, batch 6", () => {
+  it("Sacramento and West Portal: fixture X's ground-level rear yard and 75,000 cu ft; FAR 1.8; no ground-floor bonus", () => {
+    for (const code of ["NCD-SACRAMENTO", "NCD-WEST PORTAL"]) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers.aboveFt).toBeUndefined();
+      expect(r.totals.volume).toBeCloseTo(75_000, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+      expect(r.steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+    }
+  });
+
+  it("Irving, Outer Balboa and Inner Taraval: fixture H's shape; FAR 2.5; the bonus flagged (40-X and 50-X only in the last two)", () => {
+    for (const code of ["NCD-IRVING", "NCD-OUTER BALBOA STREET", "NCD-INNER TARAVAL STREET"]) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+      expect(step(r, "ground-floor-bonus").status).toBe("not_modeled");
+    }
+    expect(step(envelope("NCD-INNER TARAVAL STREET"), "ground-floor-bonus").rule.plain).toContain("zoned 40-X or 50-X");
+  });
+});

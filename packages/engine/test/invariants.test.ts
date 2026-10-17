@@ -82,6 +82,11 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["1225 Pacific Ave (0183038)", loadParcel("0183038"), "NCD-PACIFIC", {}],
   ["4917 3rd St, Bayview, irregular (5326011)", loadParcel("5326011"), "NCD-BAYVIEW", {}],
   ["1625 Ocean Ave (6935021)", loadParcel("6935021"), "NCT-OCEAN", {}],
+  ["3542 Sacramento St (1010012)", loadParcel("1010012"), "NCD-SACRAMENTO", {}],
+  ["323 West Portal Ave, irregular (3012022)", loadParcel("3012022"), "NCD-WEST PORTAL", {}],
+  ["2545 Irving St (1781044)", loadParcel("1781044"), "NCD-IRVING", {}],
+  ["3145 Balboa St, Outer Balboa (1612024)", loadParcel("1612024"), "NCD-OUTER BALBOA STREET", {}],
+  ["410 Taraval St, Inner Taraval (2343042)", loadParcel("2343042"), "NCD-INNER TARAVAL STREET", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

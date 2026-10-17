@@ -49,6 +49,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-HAIGHT": "#62ab95",
   "NCD-PACIFIC": "#80bfab",
   "NCT-OCEAN": "#3d7894",
+  "NCD-INNER TARAVAL STREET": "#4a9581",
+  "NCD-IRVING": "#327d6c",
+  "NCD-OUTER BALBOA STREET": "#6db8a1",
+  "NCD-SACRAMENTO": "#22665a",
+  "NCD-WEST PORTAL": "#58a690",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

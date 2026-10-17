@@ -11,7 +11,9 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Status: every rule in all 41 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); and five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Named NC districts, batch 6 (2026-10-17): drafts** (section below). NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, NCD-OUTER BALBOA STREET and NCD-INNER TARAVAL STREET carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
+
+**Status: every rule in the other 41 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); and five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -200,6 +202,19 @@ Same layout as the earlier batches. Ocean Avenue NCT's zoning-layer code is "NCT
 | `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
 | `ground-floor-bonus` (flag) | §263.20: P | "P in some districts" (question 55) | NP, no flag | NP, no flag | P | 2026-01-12 |
 
+## Named NC districts, batch 6 (drafted 2026-10-17 from the official PDF, through Ord. 131-26)
+
+Same layout as the earlier batches; all five are NCDs. Zoning-layer codes: NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, "NCD-OUTER BALBOA STREET" and "NCD-INNER TARAVAL STREET". All five tables were last amended by Ord. 37-26 (4/11/2026).
+
+| Rule id | NCD-SACRAMENTO (§724) | NCD-WEST PORTAL (§729) | NCD-IRVING (§732) | NCD-OUTER BALBOA STREET (§736) | NCD-INNER TARAVAL STREET (§745) | Proposed `effectiveDate` |
+|---|---|---|---|---|---|---|
+| `use` | Form-based density; open space 100/133 | same | same | same | same | 2026-04-11 |
+| `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | same | same | same | same | 2018-09-10 |
+| `rear-yard` | 25%, ≥ 15 ft, at grade and every story ((d)(1)) | (d)(1) | from the 2nd story ((d)(2)) | (d)(2) | (d)(2) | 2026-01-12 |
+| `far` | 1.8 (Table 124) | 1.8 (Table 124) | 2.5 (Table 124) | 2.5 (Table 736; not in Table 124) | 2.5 (Table 745; not in Table 124) | 2026-01-12 |
+| `front-setback` (flag) | §132(e), as NC | same | same | same | same | 2026-01-12 |
+| `ground-floor-bonus` (flag) | §263.20: NP, no flag | NP, no flag | P | P on lots zoned 40-X or 50-X (question 59) | same as Outer Balboa | 2026-01-12 |
+
 ## NC-1, NC-2, NC-3, NC-S
 
 | Rule id | Value | Check | Drafted from | Likely effective date |
@@ -277,6 +292,7 @@ Same layout as the earlier batches. Ocean Avenue NCT's zoning-layer code is "NCT
 56. **Pacific Avenue's ground floor.** Table 726 says ground-floor commercial is "Not Required", but §145.4(b)(29) requires it on Pacific Avenue between Van Ness Avenue and Jones Street "on lots where the last known ground floor use was a commercial or retail use". The use card follows §145.4.
 57. **Pacific Avenue's lot-size row.** Table 726 requires conditional use for developments on lots of 2,500 sq ft or more and cites §121.1, which doesn't list Pacific Avenue (as question 45). The card follows the district table.
 58. **Bayview's use-card date.** Ord. 130-26 (eff. 8/23/2026) amended Table 737 and its note (7) on the Third Street Alcohol Restricted Use District, so the use card would be dated 2026-08-23 rather than Ord. 37-26's 2026-04-11.
+59. **The 40-X/50-X bonus rows.** Tables 736 (Outer Balboa) and 745 (Inner Taraval) permit the §263.20 bonus only for "Active Ground Floor Uses zoned 40-X or 50-X", narrower than §263.20(b)(1)'s 30-X, 40-X, 50-X and R-4 (40, 50 or 80 ft) districts. Their flags quote the table.
 
 ## Special use district notes (`sf/specialUse.json`)
 
