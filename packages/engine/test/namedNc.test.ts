@@ -201,3 +201,32 @@ describe("named districts, batch 4", () => {
     expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
   });
 });
+
+describe("named districts, batch 5", () => {
+  it("Haight and Pacific: fixture X's ground-level rear yard and 75,000 cu ft; FAR 1.8 and 1.5; no ground-floor bonus", () => {
+    for (const [code, ratio] of [["NCD-HAIGHT", 1.8], ["NCD-PACIFIC", 1.5]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers.aboveFt).toBeUndefined();
+      expect(r.totals.volume).toBeCloseTo(75_000, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+      expect(r.steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+    }
+  });
+
+  it("Castro and Bayview: fixture H's shape; FAR 3.0 and 3.6; the bonus flagged", () => {
+    for (const [code, ratio] of [["NCD-CASTRO", 3], ["NCD-BAYVIEW", 3.6]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+      expect(step(r, "ground-floor-bonus").status).toBe("not_modeled");
+    }
+  });
+
+  it("Ocean Avenue NCT: fixture W's 14 ft first story and 83,750 cu ft; FAR 2.5", () => {
+    const r = envelope("NCT-OCEAN");
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+    expect(r.totals.volume).toBeCloseTo(83_750, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+  });
+});

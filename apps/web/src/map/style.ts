@@ -44,6 +44,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-UPPER FILLMORE": "#6aa996",
   "NCT-24TH-MISSION": "#356f93",
   "NCT-UPPER MARKET": "#5487a8",
+  "NCD-BAYVIEW": "#3b8574",
+  "NCD-CASTRO": "#287063",
+  "NCD-HAIGHT": "#62ab95",
+  "NCD-PACIFIC": "#80bfab",
+  "NCT-OCEAN": "#3d7894",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

@@ -33,6 +33,11 @@ import ncdOuterClement from "./NCD-OUTER-CLEMENT.json";
 import ncdUpperFillmore from "./NCD-UPPER-FILLMORE.json";
 import nct24thMission from "./NCT-24TH-MISSION.json";
 import nctUpperMarket from "./NCT-UPPER-MARKET.json";
+import ncdBayview from "./NCD-BAYVIEW.json";
+import ncdCastro from "./NCD-CASTRO.json";
+import ncdHaight from "./NCD-HAIGHT.json";
+import ncdPacific from "./NCD-PACIFIC.json";
+import nctOcean from "./NCT-OCEAN.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -57,14 +62,18 @@ const FILES: Record<string, unknown> = {
   "NC-S": ncs,
   // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
   "NCD-24TH-NOE-VALLEY": ncd24thNoeValley,
+  "NCD-BAYVIEW": ncdBayview,
+  "NCD-CASTRO": ncdCastro,
   "NCD-EXCELSIOR": ncdExcelsior,
   "NCD-GEARY BOULEVARD": ncdGeary,
+  "NCD-HAIGHT": ncdHaight,
   "NCD-INNER CLEMENT": ncdInnerClement,
   "NCD-INNER SUNSET": ncdInnerSunset,
   "NCD-MISSION BERNAL": ncdMissionBernal,
   "NCD-NORIEGA": ncdNoriega,
   "NCD-NORTH BEACH": ncdNorthBeach,
   "NCD-OUTER CLEMENT": ncdOuterClement,
+  "NCD-PACIFIC": ncdPacific,
   "NCD-POLK": ncdPolk,
   "NCD-SAN BRUNO AVENUE": ncdSanBruno,
   "NCD-TARAVAL": ncdTaraval,
@@ -74,6 +83,7 @@ const FILES: Record<string, unknown> = {
   "NCT-DIVISADERO": nctDivisadero,
   "NCT-HAYES": nctHayes,
   "NCT-MISSION": nctMission,
+  "NCT-OCEAN": nctOcean,
   "NCT-UPPER MARKET": nctUpperMarket,
   "NCT-VALENCIA": nctValencia,
 };

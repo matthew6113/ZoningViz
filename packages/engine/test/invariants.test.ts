@@ -77,6 +77,11 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["1245 Noriega St (2056033)", loadParcel("2056033"), "NCD-NORIEGA", {}],
   ["2718 24th St, 24th Street - Mission, 65-X (4211016)", loadParcel("4211016"), "NCT-24TH-MISSION", {}],
   ["2355 Market St, 75//160-R-4, front 1 (3563044)", loadParcel("3563044"), "NCT-UPPER MARKET", { frontSide: 1 }],
+  ["558 Castro St (2695010)", loadParcel("2695010"), "NCD-CASTRO", {}],
+  ["1367 Haight St (1243031)", loadParcel("1243031"), "NCD-HAIGHT", {}],
+  ["1225 Pacific Ave (0183038)", loadParcel("0183038"), "NCD-PACIFIC", {}],
+  ["4917 3rd St, Bayview, irregular (5326011)", loadParcel("5326011"), "NCD-BAYVIEW", {}],
+  ["1625 Ocean Ave (6935021)", loadParcel("6935021"), "NCT-OCEAN", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
