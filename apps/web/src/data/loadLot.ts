@@ -2,7 +2,9 @@ import { syntheticLot, type DistrictFile, type ParcelInput } from "@zoningviz/en
 import {
   createSfAdapter,
   loadDistrict,
+  specialUseFacts,
   toParcelInput,
+  type SpecialUseFact,
   type SfAdapter,
   type SfBuilding,
   type SfParcel,
@@ -21,6 +23,8 @@ export interface LotFacts {
   heightDistricts: { label: string; detail: string; share: number | null }[];
   lotAreaSqFt: number;
   unitCount: number;
+  /** Special use districts the lot lies in (none are modeled); null when they couldn't be checked. */
+  specialUse: SpecialUseFact[] | null;
   asOf: { label: string; date: string | null }[];
   warnings: string[];
 }
@@ -118,6 +122,7 @@ function loadFixture(id: string, fixture: { title: string; width: number; depth:
       heightDistricts: [{ label: FIXTURE_HEIGHT_DISTRICT.label, detail: `${FIXTURE_HEIGHT_DISTRICT.heightFt} ft`, share: 1 }],
       lotAreaSqFt: fixture.width * fixture.depth,
       unitCount: 0,
+      specialUse: [],
       asOf: [],
       warnings: ["A synthetic test lot from SPEC.md, not a real parcel. Its neighbors are placeholders."],
     },
@@ -148,9 +153,11 @@ function parcelFacts(parcel: SfParcel, buildingsAsOf: string | null): LotFacts {
     })),
     lotAreaSqFt: parcel.lotAreaSqFt,
     unitCount: parcel.unitBlklots.length,
+    specialUse: specialUseFacts(parcel),
     asOf: [
       { label: "Parcels", date: parcel.asOf.parcels },
       { label: "Height districts", date: parcel.asOf.heightDistricts },
+      { label: "Special use districts", date: parcel.asOf.specialUseDistricts },
       { label: "Buildings (2010 LiDAR heights)", date: buildingsAsOf },
     ],
     warnings: parcel.warnings,

@@ -134,7 +134,7 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 4. **§261(c)(2).** Next to taller neighbors, the front plane is raised to the average height of the adjacent buildings. That isn't modeled because neighbor heights aren't reliable enough.
 5. **§133(b) and (c).** Buildings 25 ft tall or less may shift width so that one side yard is 3 ft, and neighbors may agree to build to a shared line. Neither is modeled.
 6. **Overlays that change these rules for opted-in projects.**
-   - The §249.94 Family and Senior Housing Opportunity SUD covers most RH lots. It changes height, the rear yard and the front plane for corner lots. Not detected yet.
+   - The §249.94 Family and Senior Housing Opportunity SUD covers the high- and highest-resource areas of the Housing Element's map (§249.94(b)), which hold many RH lots. It changes height (40 ft where mapped 40, over §261(b)), allows a rear-yard unit, and on corner lots with 5 or more homes allows 65 ft with a 25% rear yard and no front plane. Since 2026-10-16 every special use district a lot lies in is listed on the fact card (not modeled), and §249.94 has a draft note (`sf/specialUse.json`, below). Its envelope isn't drawn.
    - Housing Choice-SF (§206.10) on R-4 lots is modeled on request (the `local-program` card; questions 28–36).
 7. **URLs.** The drafts' `url`s point at amlegal section pages found by search (node ids from a dev mirror for §133, §260 and §261.1). None was opened, because amlegal blocks automated access. *Settled for verified rules:* they link to the gocodebook page their text was checked against.
 8. **"Average ground elevation" (§261(b), (c)).** The code doesn't define it. The engine averages the ground along each lot line from a 1 m LiDAR terrain model (USGS 3DEP, 2023). The 2590 Pacific Ave determination (S9) averaged surveyed spot elevations at the lot corners and let a retaining wall just inside the rear line stand in for it. Check which method the Planning Department uses, and whether existing or finished grade.
@@ -166,6 +166,16 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 34. **§263.21 vertical elements.** (d)(1)(I) lets them exceed the height limit "consistent with" §263.21(c), which itself runs through §329, and (d)(3) switches §329 off. Not drawn.
 35. **§261.1.** §206.10 switches off "Section 261" only; §261.1 (narrow streets and alleys) still applies by its text. It stays a flag.
 36. **Citywide Design Standards.** Bulletin No. 11 says Design Standard C.6 limits many R-district HC-SF envelopes at the rear (side setbacks above the ground floor, 30 ft between 55% and 30% of lot depth). That's a design standard, not Planning Code, and wasn't read at its source; not drawn, and named in `notDrawn`.
+
+37. **§249.94's exclusions.** (c)(1)(A) leaves out lots in the Telegraph Hill – North Beach Residential SUD (§249.49), which the note checks by name, and the North Beach SUD (§780.3), which has been repealed and isn't on the map. (c)(1)(B) and (c)(4)(B)(ii)–(iii) depend on the area bounded by the Great Highway, Lincoln Way, 19th Avenue and Sloat Boulevard; the app doesn't check it and says so.
+
+## Special use district notes (`sf/specialUse.json`)
+
+Drafts until confirmed, like the rules. Each note's text was drafted from the official PDF (through Ord. 131-26).
+
+| Note | Citation | Values | Proposed `effectiveDate` |
+|---|---|---|---|
+| Family and Senior Housing Opportunity SUD | §249.94(c)(1), (c)(4)(A), (d)(1)–(3), (d)(6) | Who: RH districts in the SUD except the Telegraph Hill – North Beach Residential SUD; RM-1 only in the Great Highway / Lincoln Way / 19th Avenue / Sloat Boulevard area. Up to 4 homes; corner lots 6 or 1 per 1,000 sq ft, whichever is more. The 4th home must be a rear-yard building ((c)(4)(A)(i)); corner lots can't build there ((ii)). Rear-yard building: lot ≥ 2,400 sq ft, 4 ft from side and rear lines, 25 ft from the main building, ≤ 20 ft tall. Height 40 ft where the map allows 40, notwithstanding §261(b); §261(c) still applies. Corner lots with ≥ 5 homes: 65 ft, no §261(c), rear yard 25% (≥ 15 ft) | 2024-04-13 (Ord. 41-24 amended (c)(1), (c)(4)(A), (d)(1)(A)–(B), (d)(3) and added (d)(6); Ord. 170-25 changed only (e)(2)) |
 
 ## Verification log
 

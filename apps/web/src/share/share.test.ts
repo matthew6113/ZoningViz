@@ -23,6 +23,7 @@ const facts = (title: string, zoningCode: string, label: string): LotFacts => ({
   heightDistricts: [{ label, detail: "", share: 1 }],
   lotAreaSqFt: 2500,
   unitCount: 0,
+  specialUse: [],
   asOf: [],
   warnings: [],
 });
@@ -59,6 +60,20 @@ describe("storyboard", () => {
     const draft = { ...fixtureA, steps: fixtureA.steps.map((s, i) => (i === 5 ? { ...s, rule: { ...s.rule, verified: false } } : s)) };
     expect(storyboardCaption({ ...ctxA, result: draft }).footer).toContain("1 of 11 rules are unverified drafts.");
     expect(viewCaption({ ...ctxA, result: draft }, 6).unverified).toBe(true);
+  });
+
+  it("names the special use districts the lot lies in, none of which is modeled", () => {
+    expect(board.footer.some((line) => line.startsWith("Special use"))).toBe(false);
+    const specialUse = ["Family and Senior Housing Opportunity SUD", "Central Neighborhoods Large Residence"].map((name) => ({
+      name,
+      title: name,
+      url: null,
+      note: null,
+      applies: null,
+    }));
+    expect(storyboardCaption({ ...ctxA, facts: { ...ctxA.facts, specialUse } }).footer).toContain(
+      "Special use districts (not modeled): Family and Senior Housing Opportunity SUD, Central Neighborhoods Large Residence.",
+    );
   });
 
   it("links to the lot from the start, keeping the options but not the map view", () => {

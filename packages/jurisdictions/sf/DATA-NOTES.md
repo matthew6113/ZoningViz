@@ -11,6 +11,7 @@ What the SF adapter relies on, checked against `https://data.sf.gov`, and where 
 | Zoning Districts | `3i4a-hu95` | `zoning`, `districtna`, `gen`, `the_geom` (also `zoning_sim`, `url`, `codesectio`) | Used when a parcel's `zoning_code` is blank, and as the map's zoning tint (10,617 polygons; `gen` is Residential / Mixed Use / Commercial / Public / Industrial). |
 | Addresses with Units (EAS) | `ramy-di5m` | `address`, `parcel_number`, `unit_number`, `longitude`, `latitude` | Address search. `starts_with(address,'667 HAMP') AND unit_number IS NULL` answers in about 0.3 s. Numbered streets are zero-padded (`752 04TH AVE`), as in the parcel layer. It finds corner lots by their second street too. `parcel_number` can be a condo unit's block/lot; the adapter resolves it to the land record. |
 | Assessor Secured Property Tax Rolls | `wv5m-vpq2` | `lot_area` | Used only for one-off cross-checks; the app doesn't read it. |
+| Zoning Map – Special Use Districts | `5yf5-ms5f` | `name`, `url` (amlegal link to the code section), `the_geom` (MultiPolygon) | 145 rows, about 2 MB as GeoJSON; some districts come in several pieces with the same name. Besides SUDs it holds restricted use districts and subdistricts (alcohol, fringe financial, formula retail). The largest pieces are 8–10k vertices (Priority Equity Geographies SUD 9,832; Family and Senior Housing Opportunity SUD 7,967). Another dataset with the same title, `rxfc-8aap`, has more columns and was updated less recently; the app uses `5yf5-ms5f`. |
 | Building Footprints | `ynuv-fyni` | `sf16_bldgid`, `mblr` ("SF" + block/lot), `hgt_median_m` (median LiDAR height above ground, meters, 2010 survey), `shape`, `data_as_of` | Context only. `getBuildings()` fetches the lot's bbox + 150 ft and drops buildings standing on the lot itself. The app keeps only the lot's own block, so buildings across the street don't block the street-side camera. The dataset is dated 2023-09-11, but the heights date from 2010. |
 
 Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` (Unix seconds). Parcel rows also carry `data_as_of`.
@@ -81,6 +82,12 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
    - Each grid is capped at 1,000 points.
 5. **Measuring.** Single samples at lot corners vary by ±5 ft near buildings. Averages along a whole lot line are stable: 667 Hampshire's front line averages 54.4 ft with the street at 53.5 ft.
 6. **Sweep (`pnpm sweep --per-district 50 --seed 3`, terrain on).** In RH-1(D) and RH-1, about 1 lot in 8 has its rear 20 ft or more higher than its front, and about 1 in 10 has it 20 ft or more lower. RH-2 and RH-3 are mostly within 20 ft.
+
+## Special use districts (2026-10-16)
+
+1. **Listed, never modeled.** `getParcelByBlockLot` returns `specialUseDistricts` (name and code link, one per name, sorted), or null when the layer can't be read; the lot still loads then. `specialUse.ts` adds a note for the districts in `specialUse.json` (so far §249.94) saying what they allow and, from the lot's zoning, whether the lot can use them.
+2. **Edge contact.** District lines follow lot lines and streets, so a plain polygon query also finds districts that only meet a lot's edge. The adapter queries with the lot shrunk by 1 ft instead (the intersection of eight copies of the lot shifted 1 ft outward in eight directions, coordinates rounded to 1e-7°). On 301 random RH/RM/NC lots, measured against the downloaded district shapes: all 463 real overlaps (the smallest 6.9% of the lot) were found, and all 9 edge contacts (0.001% of the lot or less) were dropped, at insets from 0.25 ft to 3 ft. No district shape has to be downloaded.
+3. **Long outlines.** When the shrunk lot's WKT is over 6,000 characters (or nothing is left of a sliver), the adapter fetches the districts crossing the lot's bounding box with their shapes and keeps those covering at least 0.1% of the lot, as for height districts. That download can reach several hundred KB, so it's kept for the few hundred lots with outlines of 150+ vertices.
 
 ## Height label parsing
 

@@ -14,7 +14,7 @@ import {
   type FetchJson,
 } from "./datasf";
 import { parseHeightLabel } from "./heightLabel";
-import type { SfAddressMatch, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfZoning } from "./types";
+import type { SfAddressMatch, SfBuildings, SfHeightDistrict, SfNeighbor, SfParcel, SfSpecialUseDistrict, SfZoning } from "./types";
 import { addressOf, displayAddress, normalizeAddressQuery } from "./address";
 import { getTerrain } from "./terrain";
 import { zoningCodes } from "./zoning";
@@ -36,6 +36,12 @@ interface ParcelRow {
   data_as_of?: string;
 }
 
+interface SpecialUseRow {
+  name?: string;
+  url?: string;
+  the_geom?: MultiPolygon | Polygon;
+}
+
 interface HeightRow {
   height: string;
   gen_hght?: string;
@@ -50,6 +56,12 @@ const MAX_WKT_CHARS = 6000;
 // Districts covering less than this fraction of the lot are treated as boundary
 // contact (shared edges, digitizing slivers). A data-cleaning tolerance, not a zoning value.
 const MIN_DISTRICT_SHARE = 0.001;
+
+// Special use districts are looked up with the lot shrunk by this much on every side, so a
+// district that only meets the lot's edge isn't reported. On 301 random lots a 1 ft inset kept
+// every real overlap and dropped every edge contact (sf/DATA-NOTES.md). A data-cleaning
+// tolerance, not a zoning value.
+const SPECIAL_USE_INSET_FT = 1;
 
 // Most ids are block + lot ("4025007", "0792T001A"), but about 140 land records
 // use other ids: common areas ("5335ACOMH"), open space ("4991OS1"), vacated
@@ -137,13 +149,18 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
 
     if (!land.active) warnings.push(`Parcel ${land.blklot} is retired (not an active record).`);
 
-    const [unitBlklots, zoning, heights, heightAsOf] = await Promise.all([
+    const [unitBlklots, zoning, heights, heightAsOf, specialUse, specialUseAsOf] = await Promise.all([
       unitsOf(land),
       zoningOf(land, centroid, warnings),
       heightDistrictsOf(geometry, lotAreaSqFt),
       datasetAsOf(DATASETS.heightBulkDistricts),
+      // Special use districts are only listed, so a failure costs a fact, not the lot.
+      specialUseDistrictsOf(geometry, lotAreaSqFt).catch(() => null),
+      datasetAsOf(DATASETS.specialUseDistricts).catch(() => null),
     ]);
     warnings.push(...heights.warnings);
+    if (specialUse) warnings.push(...specialUse.warnings);
+    else warnings.push("Special use districts couldn't be checked.");
 
     return {
       blklot: land.blklot,
@@ -154,10 +171,11 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
       address: addressOf(land),
       zoning,
       heightDistricts: heights.districts,
+      specialUseDistricts: specialUse?.districts ?? null,
       geometry,
       centroid,
       lotAreaSqFt,
-      asOf: { parcels: land.data_as_of?.slice(0, 10) ?? null, heightDistricts: heightAsOf },
+      asOf: { parcels: land.data_as_of?.slice(0, 10) ?? null, heightDistricts: heightAsOf, specialUseDistricts: specialUseAsOf },
       warnings,
     };
   }
@@ -266,6 +284,39 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
     return { districts, warnings: [...warnings, ...labelWarnings(districts)] };
   }
 
+  async function specialUseDistrictsOf(
+    geometry: MultiPolygon,
+    lotAreaSqFt: number,
+  ): Promise<{ districts: SfSpecialUseDistrict[]; warnings: string[] }> {
+    const inset = insetBy(geometry, SPECIAL_USE_INSET_FT);
+    const insetWkt = inset && multiPolygonWkt(inset);
+    if (insetWkt && insetWkt.length <= MAX_WKT_CHARS) {
+      const found = await rows<SpecialUseRow>(
+        soqlUrl(DATASETS.specialUseDistricts, { select: "name,url", where: `intersects(the_geom,${soqlString(insetWkt)})` }),
+      );
+      return { districts: distinctSpecialUse(found), warnings: [] };
+    }
+
+    // Too detailed for a URL, or too thin to shrink: fetch the districts around the lot's
+    // bounding box with their shapes and measure the overlap here, as for height districts.
+    const warnings: string[] = [];
+    const found = await rows<SpecialUseRow>(
+      soqlUrl(DATASETS.specialUseDistricts, { select: "name,url,the_geom", where: `intersects(the_geom,${soqlString(bboxWkt(geometry))})` }),
+    );
+    const inside = found.filter((row) => {
+      if (!row.the_geom) return false;
+      try {
+        const piece = polygonClipping.intersection(clipCoords(geometry), clipCoords(row.the_geom));
+        const area = piece.length ? multiPolygonArea(projectMultiPolygon({ type: "MultiPolygon", coordinates: piece }, EPSG_2227)) : 0;
+        return area / lotAreaSqFt >= MIN_DISTRICT_SHARE;
+      } catch {
+        warnings.push(`Could not measure how much of the lot lies in the special use district "${row.name}"; it's listed anyway.`);
+        return true;
+      }
+    });
+    return { districts: distinctSpecialUse(inside), warnings };
+  }
+
   async function getNeighbors(parcel: SfParcel): Promise<SfNeighbor[]> {
     const box = paddedBboxWkt(parcel, NEIGHBOR_PAD_FT);
     const found = await rows<ParcelRow>(
@@ -347,6 +398,45 @@ export function createSfAdapter(options: { fetchJson?: FetchJson; terrainRetryDe
     getBuildings,
     searchAddresses,
     getTerrain: (parcel) => getTerrain(get, parcel, options.terrainRetryDelaysMs),
+  };
+}
+
+/** One entry per district name (several districts are mapped as separate pieces), sorted by name. */
+function distinctSpecialUse(found: SpecialUseRow[]): SfSpecialUseDistrict[] {
+  const byName = new Map<string, SfSpecialUseDistrict>();
+  for (const row of found) {
+    const name = row.name?.trim();
+    if (name && !byName.has(name)) byName.set(name, { name, url: row.url?.trim() || null });
+  }
+  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * The lot shrunk by about `feet` on every side: what's left of it after eight copies,
+ * shifted that far in eight directions, are intersected with it. Null when nothing is left.
+ * Coordinates are rounded to 1e-7° (under half an inch) to keep the query short.
+ */
+function insetBy(geometry: MultiPolygon, feet: number): MultiPolygon | null {
+  const lat = geometry.coordinates[0]![0]![0]![1]!;
+  const dLat = feet / FT_PER_DEGREE_LAT;
+  const dLon = dLat / Math.cos((lat * Math.PI) / 180);
+  const lot = clipCoords(geometry);
+  const shifted = Array.from({ length: 8 }, (_, k): ClipMultiPolygon => {
+    const dx = Math.cos((k * Math.PI) / 4) * dLon;
+    const dy = Math.sin((k * Math.PI) / 4) * dLat;
+    return lot.map((polygon) => polygon.map((ring) => ring.map(([x, y]): [number, number] => [x + dx, y + dy])));
+  });
+  let inset: ClipMultiPolygon;
+  try {
+    inset = polygonClipping.intersection(lot, ...shifted);
+  } catch {
+    return null;
+  }
+  if (inset.length === 0) return null;
+  const round = (v: number) => Math.round(v * 1e7) / 1e7;
+  return {
+    type: "MultiPolygon",
+    coordinates: inset.map((polygon) => polygon.map((ring) => ring.map(([x, y]) => [round(x), round(y)]))),
   };
 }
 

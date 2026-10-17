@@ -130,6 +130,11 @@ button.link { border: none; padding: 0; background: none; color: var(--accent); 
 .fact-card dt, .summary dt { color: var(--muted); }
 .fact-card dd, .summary dd { margin: 0; }
 .badge { display: inline-block; margin-left: 6px; font-size: 0.75rem; padding: 1px 6px; border-radius: 999px; background: #eef1f5; color: var(--accent); }
+.special-use + .special-use { margin-top: 6px; }
+.special-use .chip { margin-right: 4px; }
+.special-use .applies { margin: 2px 0 0; }
+.special-use details { margin-top: 2px; font-size: 0.85rem; }
+.special-use details p { margin: 4px 0 0; }
 .notes { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
 .notes ul { padding-left: 1.1em; margin: 6px 0 0; }
 .intro { font-size: 0.92rem; }

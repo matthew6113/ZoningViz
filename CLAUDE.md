@@ -20,7 +20,7 @@ Also:
 - Build one phase at a time (see SPEC.md "Build phases"). Don't start a phase until the previous phase's "done when" is true and the user has approved its plan.
 - A rule with `verified: false` always shows an "unverified" tag in the UI.
 - Red is reserved for removed volume. Never use it for anything else.
-- Overlays the app can't model (special use districts, SB 9, state density bonus, cross-slope strips) are detected and flagged, never silently ignored. Slope itself is modeled since Phase 6 (§260/§261 from 3DEP ground). R-4 lots show the base envelope by default; the Housing Choice-SF envelope (§206.10) is drawn only when the viewer switches it on.
+- Overlays the app can't model (special use districts, SB 9, state density bonus, cross-slope strips) are detected and flagged, never silently ignored. Every special use district a lot lies in is listed on the fact card as "not modeled"; a few have a note in `sf/specialUse.json` (§249.94 so far) that says what they allow and whether the lot's zoning can use them, held to the same rules as district files (cited, `verified: false` until checked). Slope itself is modeled since Phase 6 (§260/§261 from 3DEP ground). R-4 lots show the base envelope by default; the Housing Choice-SF envelope (§206.10) is drawn only when the viewer switches it on.
 
 ## Stack
 
@@ -91,6 +91,7 @@ packages/jurisdictions/         # @zoningviz/jurisdictions (depends on engine, n
   sf/adapter.ts                 # createSfAdapter(): getParcelByBlockLot, getParcelAt, getNeighbors, getBuildings, searchAddresses
   sf/address.ts                 # address labels ("752 4th Ave") and search-query normalization
   sf/zoning.ts                  # zoningCodes ("RH-2|RH-2" -> RH-2), zoningCoverage (covered / not covered / split / unknown)
+  sf/specialUse.ts, .json       # notes on special use districts (§249.94) and whether a lot can use them
   sf/tiles.ts                   # tile feature properties and paging queries (the contract between build-tiles and the map)
   sf/datasf.ts                  # dataset IDs, SoQL helpers, EPSG:2227 definition
   sf/heightLabel.ts             # "40-X" / "40//85-R-4" parser; anything else is "unparsed"
@@ -119,6 +120,7 @@ Base: `https://data.sf.gov/resource/<id>.json` or `.geojson` (formerly data.sfgo
 | Building Footprints | `ynuv-fyni` | Scene context only: outlines with LiDAR `hgt_median_m` (2010 survey); the app shows buildings on the lot's own block |
 | USGS 3DEP elevation | ImageServer `getSamples` | Ground for the slope rules and the drawn terrain: 1 m bare-earth LiDAR (survey `CA_SanFrancisco_B23`, 2023-04-20), meters → US survey feet. Takes EPSG:2227 points, ≤ 1,000 per POST, CORS open; about 3% of requests 502, so they're retried. Not DataSF: `elevation.nationalmap.gov` |
 | Addresses (EAS) | `ramy-di5m` | Address search: `starts_with(address, …) AND unit_number IS NULL`; numbered streets are zero-padded (`752 04TH AVE`) |
+| Special Use Districts | `5yf5-ms5f` | `name`, `url`, `the_geom`: queried with the lot shrunk by 1 ft so districts that only meet its edge are left out; listed on the fact card, never modeled |
 
 Verified facts (details in `packages/jurisdictions/sf/DATA-NOTES.md`):
 - **R-4 (Family Zoning Plan) labels are `base//local-R-4`. `gen_hght` is the local-program height, not the base.** Never use `gen_hght` as an R-4 cap; the base exists only in the label. Unparseable labels are flagged, not guessed.

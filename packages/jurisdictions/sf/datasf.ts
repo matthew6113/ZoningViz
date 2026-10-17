@@ -13,6 +13,8 @@ export const DATASETS = {
   buildingFootprints: "ynuv-fyni",
   /** The city's address list (Enterprise Addressing System), for address search. */
   addresses: "ramy-di5m",
+  /** Zoning Map - Special Use Districts: one row per district piece (`name`, `url` to the code, `the_geom`). */
+  specialUseDistricts: "5yf5-ms5f",
 } as const;
 
 export type DatasetId = (typeof DATASETS)[keyof typeof DATASETS];

@@ -10,3 +10,4 @@ export { toParcelInput } from "./engineInput";
 export { ELEVATION_SERVICE, getTerrain } from "./terrain";
 export { availableDistricts, loadDistrict } from "./districts";
 export { coverageNote, zoningCodes, zoningCoverage, type ZoningCoverage } from "./zoning";
+export { SPECIAL_USE_NOTES, specialUseFacts, type SpecialUseFact, type SpecialUseNote } from "./specialUse";

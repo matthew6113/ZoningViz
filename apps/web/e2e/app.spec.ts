@@ -334,6 +334,18 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   // USGS 3DEP ground, measured along the lot lines (replayed).
   await expect(page.getByTestId("ground")).toContainText(/Rear 3\d\.\d ft lower than front · level with or below the street/);
   await expect(page.locator(".fact-card")).toContainText("USGS 3DEP 1 m LiDAR (CA_SanFrancisco_B23): 2023-04-20");
+  // Special use districts are listed, not modeled; §249.94 says what it allows and who can use it.
+  const specialUse = page.getByTestId("special-use");
+  await expect(specialUse.locator(".special-use")).toHaveCount(2);
+  const fsho = specialUse.locator(".special-use").first();
+  await expect(fsho.getByRole("link", { name: "Family and Senior Housing Opportunity SUD" })).toHaveAttribute("href", /amlegal\.com/);
+  await expect(fsho).toContainText("not modeled");
+  await expect(fsho.locator(".tag-unverified")).toBeVisible();
+  await expect(fsho.locator(".applies")).toHaveText("RH-1(D) lots here can use it (§249.94(c)(1)).");
+  await fsho.getByText("What it allows").click();
+  await expect(fsho.locator("details")).toContainText("The height limit is 40 ft where the height map allows 40 ft");
+  await expect(specialUse.locator(".special-use").nth(1)).toHaveText(/^Central Neighborhoods Large Residence not modeled$/);
+  await page.locator(".fact-card").screenshot({ path: `${SHOTS}/clarendon-special-use.png` });
   await expect(label(page)).toHaveText("Rule 5 of 12: RH-1(D) dwelling cap");
   await expect(currentSentence(page)).toHaveText(
     /^RH-1\(D\) dwelling cap: the rear lot line averages 3\d\.\d ft lower than the front \(.*\), 20 ft or more, so 30 ft instead of 35 ft\.$/,
@@ -419,6 +431,7 @@ test("Housing Choice-SF: 1345 Clement St (NC-1, 40//65-R-4) switches to 65 ft an
   test.setTimeout(180_000); // see expectSceneDrawn: two engine runs and a scrub on a lot with buildings and terrain
   await page.goto("/?parcel=1446048&step=3");
   await expect(page.locator(".fact-card h2")).toHaveText("1345–1347 Clement St");
+  await expect(page.getByTestId("special-use").locator(".applies")).toContainText("this lot is NC-1, so it can't use this.");
   await expect(label(page)).toHaveText("Rule 3 of 12: Housing Choice-SF");
   await expect(currentSentence(page)).toHaveText(
     "Housing Choice-SF: off. Under it, the height limit would be 65 ft instead of 40 ft; the rear yard would follow the program's own rule (§206.10(d)(1)(E)(i)–(ii)). Turn it on to see that envelope.",

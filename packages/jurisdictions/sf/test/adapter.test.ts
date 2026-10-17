@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createSfAdapter, normalizeBlklot } from "../adapter";
+import { DATASETS } from "../datasf";
 import { withDiskCache } from "../node/cache";
 
 // Replays DataSF responses recorded on 2026-10-10 (see sf/DATA-NOTES.md). Any
@@ -45,7 +46,7 @@ describe("getParcelByBlockLot", () => {
         geometry: p.geometry,
       },
     ]);
-    expect(p.asOf).toEqual({ parcels: "2026-10-01", heightDistricts: "2026-10-10" });
+    expect(p.asOf).toEqual({ parcels: "2026-10-01", heightDistricts: "2026-10-10", specialUseDistricts: "2026-10-16" });
   });
 
   it("resolves a condo unit's block/lot to the land parcel", async () => {
@@ -82,6 +83,113 @@ describe("getParcelAt", () => {
     expect(p.heightDistricts.map((d) => d.parsed)).toEqual([
       { kind: "r4", baseHeightFt: 40, localProgramHeightFt: 40 },
     ]);
+  });
+});
+
+// Special use district lookups were recorded on 2026-10-16, after the rest.
+describe("special use districts", () => {
+  it("lists the districts a lot lies in, with their code links", async () => {
+    const p = (await adapter.getParcelByBlockLot("0044030"))!;
+    expect(p.specialUseDistricts).toEqual([
+      {
+        name: "Family and Senior Housing Opportunity SUD",
+        url: "https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_planning/0-0-0-68325",
+      },
+    ]);
+    const mission = (await adapter.getParcelByBlockLot("4276045"))!;
+    // One entry per name, sorted, though some districts are mapped in several pieces.
+    expect(mission.specialUseDistricts!.map((d) => d.name)).toEqual([
+      "Calle 24 SUD",
+      "Fringe Financial Services RUD",
+      "Mission Alcohol Restrict",
+      "Priority Equity Geographies SUD",
+      "Within 1/4 Mile of an Existing Fringe Financial Service",
+    ]);
+  });
+
+  // A 50 x 100 ft lot near 37.75° N, as DataSF would serve it. With `perSide` > 1 each side
+  // is cut into that many pieces with every other point nudged 0.02 ft (a detailed outline,
+  // like a surveyed curve, makes a long query).
+  const LON = -122.45;
+  const LAT = 37.75;
+  const FT_LAT = 1 / 364_000;
+  const FT_LON = FT_LAT / Math.cos((LAT * Math.PI) / 180);
+  const box = (x0: number, y0: number, x1: number, y1: number, perSide = 1) => {
+    const corners: [number, number][] = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    const ring: [number, number][] = [];
+    corners.forEach(([ax, ay], i) => {
+      const [bx, by] = corners[(i + 1) % 4]!;
+      for (let k = 0; k < perSide; k++) {
+        const t = k / perSide;
+        const nudge = k % 2 ? 0.02 : 0;
+        ring.push([LON + (ax + (bx - ax) * t + nudge) * FT_LON, LAT + (ay + (by - ay) * t + nudge) * FT_LAT]);
+      }
+    });
+    ring.push(ring[0]!);
+    return { type: "Polygon" as const, coordinates: [ring] };
+  };
+
+  function stubAdapter(perSide: number, specialUse: (url: string) => unknown) {
+    const urls: string[] = [];
+    const lot = createSfAdapter({
+      fetchJson: async (url) => {
+        urls.push(url);
+        if (url.includes("/api/views/")) return { rowsUpdatedAt: 1760572800 };
+        if (url.includes(DATASETS.specialUseDistricts)) return specialUse(url);
+        if (url.includes(DATASETS.heightBulkDistricts)) return [{ height: "40-X", gen_hght: "40" }];
+        if (url.includes("%24select=blklot")) return []; // condo units
+        return [
+          {
+            blklot: "9999001",
+            mapblklot: "9999001",
+            active: true,
+            zoning_code: "RH-2",
+            shape: box(0, 0, 50, 100, perSide),
+            centroid_longitude: String(LON + 25 * FT_LON),
+            centroid_latitude: String(LAT + 50 * FT_LAT),
+          },
+        ];
+      },
+    });
+    return { lot, urls };
+  }
+
+  it("asks with the lot shrunk by a foot, so districts that only meet its edge aren't listed", async () => {
+    const { lot, urls } = stubAdapter(1, () => [{ name: "Some SUD", url: "https://example.org/sud" }]);
+    const p = (await lot.getParcelByBlockLot("9999001"))!;
+    expect(p.specialUseDistricts).toEqual([{ name: "Some SUD", url: "https://example.org/sud" }]);
+    const query = new URL(urls.find((u) => u.includes(DATASETS.specialUseDistricts))!).searchParams;
+    expect(query.get("$select")).toBe("name,url");
+    const points = [...query.get("$where")!.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [
+      (Number(m[1]) - LON) / FT_LON,
+      (Number(m[2]) - LAT) / FT_LAT,
+    ]);
+    for (const [x, y] of points) {
+      expect(Math.min(x!, 50 - x!, y!, 100 - y!)).toBeGreaterThan(0.9);
+      expect(Math.min(x!, 50 - x!, y!, 100 - y!)).toBeLessThan(1.1);
+    }
+  });
+
+  it("measures the overlap itself when the lot's outline is too detailed for a query", async () => {
+    const { lot, urls } = stubAdapter(100, () => [
+      { name: "Half SUD", url: "https://example.org/half", the_geom: box(-50, -10, 25, 110) },
+      { name: "Next Door SUD", url: "https://example.org/next", the_geom: box(50, -10, 120, 110) },
+    ]);
+    const p = (await lot.getParcelByBlockLot("9999001"))!;
+    expect(p.specialUseDistricts).toEqual([{ name: "Half SUD", url: "https://example.org/half" }]);
+    const query = new URL(urls.find((u) => u.includes(DATASETS.specialUseDistricts))!).searchParams;
+    expect(query.get("$select")).toBe("name,url,the_geom");
+    expect(query.get("$where")).toMatch(/^intersects\(the_geom,'POLYGON\(\(/); // the bounding box
+  });
+
+  it("still loads the lot when the layer can't be read", async () => {
+    const { lot } = stubAdapter(1, () => {
+      throw new Error("503 Service Unavailable");
+    });
+    const p = (await lot.getParcelByBlockLot("9999001"))!;
+    expect(p.specialUseDistricts).toBeNull();
+    expect(p.warnings).toContain("Special use districts couldn't be checked.");
+    expect(p.heightDistricts.map((d) => d.label)).toEqual(["40-X"]);
   });
 });
 

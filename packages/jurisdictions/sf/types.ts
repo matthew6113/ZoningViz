@@ -35,6 +35,14 @@ export interface SfHeightDistrict {
   geometry: MultiPolygon | null;
 }
 
+/** A special use district the lot lies in (DataSF's Special Use Districts layer). */
+export interface SfSpecialUseDistrict {
+  /** The layer's `name`, e.g. "Family and Senior Housing Opportunity SUD". */
+  name: string;
+  /** The layer's link to the code section, when it has one. */
+  url: string | null;
+}
+
 export interface SfParcel {
   /** The land record's block/lot. For condo stacks this equals `mapblklot`. */
   blklot: string;
@@ -47,13 +55,18 @@ export interface SfParcel {
   address: SfAddress;
   zoning: SfZoning;
   heightDistricts: SfHeightDistrict[];
+  /**
+   * Special use districts reaching into the lot (more than about a foot past its edge), sorted
+   * by name; null when the layer couldn't be read. None of them is modeled.
+   */
+  specialUseDistricts: SfSpecialUseDistrict[] | null;
   /** WGS84 lon/lat, as served by DataSF. */
   geometry: MultiPolygon;
   centroid: { lon: number; lat: number };
   /** Planar area in EPSG:2227 square feet, holes subtracted. */
   lotAreaSqFt: number;
   /** ISO dates the source datasets were last updated. */
-  asOf: { parcels: string | null; heightDistricts: string | null };
+  asOf: { parcels: string | null; heightDistricts: string | null; specialUseDistricts: string | null };
   warnings: string[];
 }
 

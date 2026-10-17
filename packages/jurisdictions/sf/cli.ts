@@ -6,6 +6,7 @@
 import { createSfAdapter } from "./adapter";
 import { parseCliArgs } from "./node/args";
 import { devFetchJson } from "./node/cache";
+import { specialUseFacts, type SpecialUseFact } from "./specialUse";
 import type { SfHeightDistrict, SfParcel } from "./types";
 
 const USAGE = "Usage: pnpm parcel <blklot> | pnpm parcel --at <lon> <lat>   [--json] [--no-cache]";
@@ -58,12 +59,21 @@ function format(p: SfParcel): string {
     ["Lot area", `${Math.round(p.lotAreaSqFt).toLocaleString("en-US")} sq ft (computed in EPSG:2227)`],
     ["Centroid", `${p.centroid.lon.toFixed(6)}, ${p.centroid.lat.toFixed(6)}`],
   ];
+  const specialUse = specialUseFacts(p);
+  rows.push([
+    "Special use",
+    specialUse === null ? "couldn't be checked" : specialUse.length ? specialUse.map(formatSpecialUse).join("\n") : "none",
+  ]);
   if (p.unitBlklots.length) {
     const shown = p.unitBlklots.slice(0, 8).join(", ");
     const more = p.unitBlklots.length > 8 ? `, … (${p.unitBlklots.length - 8} more)` : "";
     rows.push(["Condo stack", `${p.unitBlklots.length} unit records: ${shown}${more}`]);
   }
-  rows.push(["Data as of", `parcels ${p.asOf.parcels ?? "unknown"} · height districts ${p.asOf.heightDistricts ?? "unknown"}`]);
+  rows.push([
+    "Data as of",
+    `parcels ${p.asOf.parcels ?? "unknown"} · height districts ${p.asOf.heightDistricts ?? "unknown"} · ` +
+      `special use districts ${p.asOf.specialUseDistricts ?? "unknown"}`,
+  ]);
   if (p.warnings.length) rows.push(["Notes", p.warnings.map((w) => `• ${w}`).join("\n")]);
 
   const header = `${p.address.label ?? "(no street address)"}  ·  block/lot ${p.blklot}${p.active ? "" : "  ·  RETIRED"}`;
@@ -73,6 +83,11 @@ function format(p: SfParcel): string {
     return [k.padEnd(width) + first, ...rest.map((line) => " ".repeat(width) + line)].join("\n");
   });
   return [header, "", ...body].join("\n");
+}
+
+function formatSpecialUse(f: SpecialUseFact): string {
+  const head = `${f.title} (not modeled${f.note && !f.note.verified ? "; note unverified" : ""})`;
+  return f.applies ? `${head}: ${f.applies.sentence}` : head;
 }
 
 function formatHeight(d: SfHeightDistrict): string {

@@ -1,4 +1,5 @@
 import type { LotInfo, LotTerrain } from "@zoningviz/engine";
+import type { SpecialUseFact } from "@zoningviz/jurisdictions/sf";
 import type { LotFacts } from "../data/loadLot";
 import { num } from "./format";
 
@@ -50,6 +51,16 @@ export function FactCard({ facts, lot, notes }: { facts: LotFacts; lot: LotInfo 
             </dd>
           </>
         )}
+        {!facts.synthetic && (
+          <>
+            <dt>Special use</dt>
+            <dd data-testid="special-use">
+              {facts.specialUse === null && "couldn't be checked"}
+              {facts.specialUse?.length === 0 && "none"}
+              {facts.specialUse?.map((f) => <SpecialUse key={f.name} fact={f} />)}
+            </dd>
+          </>
+        )}
         {facts.unitCount > 0 && (
           <>
             <dt>Condo units</dt>
@@ -80,6 +91,37 @@ export function FactCard({ facts, lot, notes }: { facts: LotFacts; lot: LotInfo 
         </details>
       )}
     </section>
+  );
+}
+
+/**
+ * A special use district the lot lies in. None is modeled; a district with a note
+ * (specialUse.json) says what it allows and whether this lot's zoning can use it.
+ */
+function SpecialUse({ fact }: { fact: SpecialUseFact }) {
+  const { note, applies } = fact;
+  return (
+    <div className="special-use">
+      {fact.url ? (
+        <a href={fact.url} target="_blank" rel="noreferrer">
+          {fact.title}
+        </a>
+      ) : (
+        fact.title
+      )}{" "}
+      <span className="chip">not modeled</span>
+      {note && !note.verified && <span className="tag-unverified">unverified</span>}
+      {applies && <p className={`applies applies-${applies.status}`}>{applies.sentence}</p>}
+      {note && (
+        <details>
+          <summary>What it allows</summary>
+          <p>{note.plain}</p>
+          <p className="muted">
+            {note.citation} · {note.effectiveDate === null ? "effective date not checked" : `in effect since ${note.effectiveDate}`}
+          </p>
+        </details>
+      )}
+    </div>
   );
 }
 

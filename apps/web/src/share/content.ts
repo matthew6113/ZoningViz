@@ -200,6 +200,7 @@ function footer(ctx: ShareContext): string[] {
   return [
     HONESTY_LINE,
     unverified > 0 ? `${unverified} of ${rules.length} rules are unverified drafts.` : `All ${rules.length} rules are verified.`,
+    ...(ctx.facts.specialUse?.length ? [`Special use districts (not modeled): ${ctx.facts.specialUse.map((f) => f.title).join(", ")}.`] : []),
     ...(dated.length ? [`Data as of: ${dated.map((a) => `${a.label} ${a.date}`).join(" · ")}`] : []),
   ];
 }
