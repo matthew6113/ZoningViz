@@ -340,10 +340,11 @@ test("a hillside lot measures its slope: 124 Clarendon Ave falls from the street
   const fsho = specialUse.locator(".special-use").first();
   await expect(fsho.getByRole("link", { name: "Family and Senior Housing Opportunity SUD" })).toHaveAttribute("href", /amlegal\.com/);
   await expect(fsho).toContainText("not modeled");
-  await expect(fsho.locator(".tag-unverified")).toBeVisible();
+  await expect(fsho.locator(".tag-unverified")).toHaveCount(0);
   await expect(fsho.locator(".applies")).toHaveText("RH-1(D) lots here can use it (§249.94(c)(1)).");
   await fsho.getByText("What it allows").click();
   await expect(fsho.locator("details")).toContainText("The height limit is 40 ft where the height map allows 40 ft");
+  await expect(fsho.locator("details")).toContainText("in effect since 2024-04-13");
   await expect(specialUse.locator(".special-use").nth(1)).toHaveText(/^Central Neighborhoods Large Residence not modeled$/);
   await expect(label(page)).toHaveText("Rule 5 of 12: RH-1(D) dwelling cap");
   await expect(currentSentence(page)).toHaveText(
@@ -397,17 +398,16 @@ test("an RM-2 lot: 619 Chestnut St keeps a 30% rear yard, and its floor-area lim
   await page.screenshot({ path: `${SHOTS}/chestnut-rm2-result.png` });
 });
 
-test("an RTO-C lot: 3249 Webster St, drafted rules tagged unverified, 65 ft under Housing Choice-SF", async ({ page }) => {
+test("an RTO-C lot: 3249 Webster St, a 25% rear yard at every level, 65 ft under Housing Choice-SF", async ({ page }) => {
   test.setTimeout(180_000); // two engine runs on a lot with buildings and terrain (see expectSceneDrawn)
   await page.goto("/?parcel=0492027&step=5");
   await expect(page.locator(".fact-card h2")).toHaveText("3249 Webster St");
   await expect(label(page)).toHaveText("Rule 5 of 11: Rear yard");
   await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 66.8 ft lot depth = 16.7 ft.");
-  // RTO rules are drafts until checked against the code, and say so.
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible();
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-01-12");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("drawn at every level");
   await expect(page.locator("[data-rule=sidewalk-setback]")).toContainText("Not modeled");
-  await expect(page.locator("[data-rule=mapped-height] .tag-unverified")).toHaveCount(0);
 
   await toResult(page);
   const summary = page.getByTestId("summary");

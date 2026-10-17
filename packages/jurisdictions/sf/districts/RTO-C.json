@@ -11,8 +11,8 @@
       "params": {},
       "citation": "§209.4 (Table 209.4), §207, §303(r)",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-209.-description-and-purpose-of-residential-and-residential-commercial-districts/sec.-209.4.-rto-residential-transit-oriented-districts",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-04-11"
     },
     {
       "id": "height-reference",
@@ -56,8 +56,8 @@
       },
       "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(E), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "mapped-height",
@@ -84,8 +84,8 @@
       },
       "citation": "§134(c)(2), §134(d)(2); Table 209.4",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "front-setback",
@@ -99,8 +99,8 @@
       },
       "citation": "§132(a), (c), (d); Table 209.4",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2025-01-19"
     },
     {
       "id": "bulk",
@@ -208,8 +208,8 @@
       },
       "citation": "§124(a)–(b), Table 124; Table 209.4",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#124",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "sidewalk-setback",
@@ -219,8 +219,8 @@
       "params": {},
       "citation": "§132(e); Table 209.4",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#132",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "narrow-street",

@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**RTO-1, RTO-M and RTO-C (added 2026-10-17) are drafts** (section below): their district-specific rules are `verified: false`, while the rules every district file shares (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copied unchanged from the verified files, because the consistency tests keep the copies identical.
-
-**Status (2026-10-14): every rule in the 13 RH, RM and NC files is verified** against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 16 files is verified**: the 13 RH, RM and NC files on 2026-10-14, and RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6). The RTO files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, and Housing Choice-SF in RTO-1/RTO-M) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -121,7 +119,7 @@ Unchanged under the program: front setbacks (except a 19th Avenue sidewalk optio
 
 Table 209.4 covers all three. It was last amended by Ord. 37-26 ("Table 209.4 amended", 4/11/2026). The `use` cards' link is built from the §209.1 and §209.2 pages' pattern and hasn't been opened.
 
-| Rule id | Value | Check | Proposed `effectiveDate` |
+| Rule id | Value | Check | `effectiveDate` (batch 6) |
 |---|---|---|---|
 | `use` | RTO-1: 1 unit per 600 sq ft of lot area as of right, C above (§207(a)); a unit of 500 sq ft or less with one room plus kitchen and bath counts as ¾ (note (8)); corner shops reaching ≤ 50 ft from the corner (§231). RTO-M and RTO-C: form-based density; RTO-M corner shops ≤ 100 ft; RTO-C allows more non-residential uses, ground floor commercial not required. Open space per unit: 80/106, 100/133, 60/80 sq ft private/common. All: new buildings on lots of 10,000 sq ft or more need C (§303(r)) | Table 209.4, §207, §303(r) | 2026-04-11 (Ord. 37-26, as for the other use cards) |
 | `rear-yard` | RTO-1, RTO-M: 30% of lot depth, at least 15 ft, at grade and every story (§134(c)(1) and (d)(1) name both; the rule is RM-1's unchanged). RTO-C: 25%, at least 15 ft, from the second story up and at the first story if it has a dwelling ((c)(2), (d)(2)); drawn at every level, because §145.1(c)(4) sets no ground-floor height for RTO (question 39) | §134(c)(1)–(2), (d)(1)–(2); Table 209.4 | 2026-01-12 (Ord. 245-25 amended (c)(1), (d)(1)–(2)) |
@@ -152,7 +150,7 @@ Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to e
 4. **§261(c)(2).** Next to taller neighbors, the front plane is raised to the average height of the adjacent buildings. That isn't modeled because neighbor heights aren't reliable enough.
 5. **§133(b) and (c).** Buildings 25 ft tall or less may shift width so that one side yard is 3 ft, and neighbors may agree to build to a shared line. Neither is modeled.
 6. **Overlays that change these rules for opted-in projects.**
-   - The §249.94 Family and Senior Housing Opportunity SUD covers the high- and highest-resource areas of the Housing Element's map (§249.94(b)), which hold many RH lots. It changes height (40 ft where mapped 40, over §261(b)), allows a rear-yard unit, and on corner lots with 5 or more homes allows 65 ft with a 25% rear yard and no front plane. Since 2026-10-16 every special use district a lot lies in is listed on the fact card (not modeled), and §249.94 has a draft note (`sf/specialUse.json`, below). Its envelope isn't drawn.
+   - The §249.94 Family and Senior Housing Opportunity SUD covers the high- and highest-resource areas of the Housing Element's map (§249.94(b)), which hold many RH lots. It changes height (40 ft where mapped 40, over §261(b)), allows a rear-yard unit, and on corner lots with 5 or more homes allows 65 ft with a 25% rear yard and no front plane. Since 2026-10-16 every special use district a lot lies in is listed on the fact card (not modeled), and §249.94 has a note (`sf/specialUse.json`, below; confirmed in batch 6). Its envelope isn't drawn.
    - Housing Choice-SF (§206.10) on R-4 lots is modeled on request (the `local-program` card; questions 28–36).
 7. **URLs.** The drafts' `url`s point at amlegal section pages found by search (node ids from a dev mirror for §133, §260 and §261.1). None was opened, because amlegal blocks automated access. *Settled for verified rules:* they link to the gocodebook page their text was checked against.
 8. **"Average ground elevation" (§261(b), (c)).** The code doesn't define it. The engine averages the ground along each lot line from a 1 m LiDAR terrain model (USGS 3DEP, 2023). The 2590 Pacific Ave determination (S9) averaged surveyed spot elevations at the lot corners and let a retaining wall just inside the rear line stand in for it. Check which method the Planning Department uses, and whether existing or finished grade.
@@ -193,9 +191,9 @@ Shared rules copied unchanged and why they reach RTO: §250 and §260 apply to e
 
 ## Special use district notes (`sf/specialUse.json`)
 
-Drafts until confirmed, like the rules. Each note's text was drafted from the official PDF (through Ord. 131-26).
+Held to the same rules as the district files. Each note's text was drafted from the official PDF (through Ord. 131-26); the §249.94 note was confirmed 2026-10-17.
 
-| Note | Citation | Values | Proposed `effectiveDate` |
+| Note | Citation | Values | `effectiveDate` |
 |---|---|---|---|
 | Family and Senior Housing Opportunity SUD | §249.94(c)(1), (c)(4)(A), (d)(1)–(3), (d)(6) | Who: RH districts in the SUD except the Telegraph Hill – North Beach Residential SUD; RM-1 only in the Great Highway / Lincoln Way / 19th Avenue / Sloat Boulevard area. Up to 4 homes; corner lots 6 or 1 per 1,000 sq ft, whichever is more. The 4th home must be a rear-yard building ((c)(4)(A)(i)); corner lots can't build there ((ii)). Rear-yard building: lot ≥ 2,400 sq ft, 4 ft from side and rear lines, 25 ft from the main building, ≤ 20 ft tall. Height 40 ft where the map allows 40, notwithstanding §261(b); §261(c) still applies. Corner lots with ≥ 5 homes: 65 ft, no §261(c), rear yard 25% (≥ 15 ft) | 2024-04-13 (Ord. 41-24 amended (c)(1), (c)(4)(A), (d)(1)(A)–(B), (d)(3) and added (d)(6); Ord. 170-25 changed only (e)(2)) |
 
@@ -258,3 +256,17 @@ The tables were last amended by Ord. 37-26 ("Table amended", 4/11/2026); the tab
 | Rule | Files | Citation | Result | `effectiveDate` |
 |---|---|---|---|---|
 | `local-program` | all 13 (three variants: RH-1(D)/RH-1/RH-1(S)/RH-2 waive the §261 rules; NC replace the rear yard; RH-3 and RM change neither) | §206.10(b), (d)(1)(A), (C), (E), (F), (G); §263.19(b)(2) | Matches: the height after "//"; 65 ft on a Corner Lot or a Lot larger than 8,000 sq ft; "Section 261 shall not apply"; NC rear yard 18% or 15 ft with none at the ground floor; §135 and §140 don't apply; FAR doesn't limit residential uses; the (b)(1)–(10) eligibility list; the not-drawn bonuses ((e)(7): +10 ft, or +30 ft with (e)(6); +20 ft for 100% affordable; 15% adjustments under (d)(1)(M)) | 2026-01-12 (Ord. 245-25 added §206.10 and §263.19(b)) |
+
+### Batch 6: RTO districts and the §249.94 note, confirmed 2026-10-17
+
+Drafted the same day from the official PDF (Table 209.4 and the sections it cites) and confirmed by the user in chat with the dates proposed in the RTO and special-use tables above.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | RTO-1, RTO-M, RTO-C | Table 209.4, §207, §303(r) | Matches the table's density, open space, corner-commercial and large-project rows | 2026-04-11 (Ord. 37-26, as for the other use cards) |
+| `rear-yard` | RTO-1, RTO-M / RTO-C | §134(c)(1), (d)(1) / (c)(2), (d)(2) | 30% (at least 15 ft) at every level / 25% (at least 15 ft) from the second story, drawn at every level (question 39) | 2026-01-12 |
+| `front-setback` | all three | §132(a), (c), (d); Table 209.4 | As RM: shallowest adjacent setback, up to 10 ft | 2025-01-19 |
+| `sidewalk-setback` (flag) | RTO-C | §132(e); Table 209.4 | As NC's flag | 2026-01-12 |
+| `far` | all three | §124(a)–(b), Table 124; Table 209.4 | 1.8, non-residential only (question 38) | 2026-01-12 |
+| `local-program` | RTO-C | §206.10(d)(1)(E)(i)–(ii) | 18% rear yard (at least 15 ft), drawn at every level | 2026-01-12 |
+| §249.94 note | `sf/specialUse.json` | §249.94(c)(1), (c)(4)(A), (d)(1)–(3), (d)(6) | Who qualifies, homes per lot, rear-yard building, 40 ft over §261(b), corner-lot 65 ft option | 2024-04-13 (Ord. 41-24) |

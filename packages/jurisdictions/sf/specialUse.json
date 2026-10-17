@@ -6,8 +6,8 @@
       "title": "Family and Senior Housing Opportunity SUD",
       "plain": "An opt-in path for projects of two or more homes whose owner and project meet its conditions (among them, how long the lot has been owned and protections for tenants). Such a project may have up to 4 homes; on a corner lot, 6, or 1 per 1,000 sq ft of lot area if that's more. A fourth home has to be a separate rear-yard building: on a lot of at least 2,400 sq ft, at most 20 ft tall, 4 ft from the side and rear lot lines and 25 ft from the main building (corner lots can't build in the rear yard). The height limit is 40 ft where the height map allows 40 ft, even where §261(b)'s dwelling limits are lower; the front height plane (§261(c)) still applies. A corner-lot project of 5 or more homes may go to 65 ft, with a rear yard of 25% of the lot depth (at least 15 ft) and no front height plane. Merging two or three lots allows more homes in some districts. None of this is drawn here.",
       "citation": "§249.94(c)(1), (c)(4)(A), (d)(1)–(3), (d)(6)",
-      "verified": false,
-      "effectiveDate": null,
+      "verified": true,
+      "effectiveDate": "2024-04-13",
       "eligibility": {
         "citation": "§249.94(c)(1)",
         "zoning": ["RH-1(D)", "RH-1", "RH-1(S)", "RH-2", "RH-3"],

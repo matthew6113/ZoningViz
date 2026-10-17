@@ -25,7 +25,7 @@ describe("specialUseFacts", () => {
   it("lists noted districts first and the rest by name, with the layer's links", () => {
     const facts = specialUseFacts(lot(["RH-2"], ["Central Neighborhoods Large Residence", FSHO]))!;
     expect(facts.map((f) => f.name)).toEqual([FSHO, "Central Neighborhoods Large Residence"]);
-    expect(facts[0]!.note).toMatchObject({ citation: expect.stringMatching(/^§249\.94/), verified: false, effectiveDate: null });
+    expect(facts[0]!.note).toMatchObject({ citation: expect.stringMatching(/^§249\.94/), verified: true, effectiveDate: "2024-04-13" });
     expect(facts[0]!.url).toBe(`https://example.org/${encodeURIComponent(FSHO)}`);
     expect(facts[1]).toMatchObject({ note: null, applies: null });
   });

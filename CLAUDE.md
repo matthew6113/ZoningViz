@@ -8,7 +8,7 @@ Pick a San Francisco parcel; show in 3D how each zoning rule carves a translucen
 
 Zoning identification is a data lookup (the parcel record carries `zoning_code`), never an AI judgment.
 
-v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17, drafts). The named NCD/NCT districts (each with its own control table) aren't covered.
+v1 scope: SF only, districts RH-1(D), RH-1, RH-2, RH-3, flat lots, static browser app with no backend. Phase 6 added sloping ground, RM-1–RM-4 and NC-1/NC-2/NC-3/NC-S; RTO-1, RTO-M and RTO-C followed (2026-10-17). The named NCD/NCT districts (each with its own control table) aren't covered.
 
 ## Working rules
 
@@ -20,7 +20,7 @@ Also:
 - Build one phase at a time (see SPEC.md "Build phases"). Don't start a phase until the previous phase's "done when" is true and the user has approved its plan.
 - A rule with `verified: false` always shows an "unverified" tag in the UI.
 - Red is reserved for removed volume. Never use it for anything else.
-- Overlays the app can't model (special use districts, SB 9, state density bonus, cross-slope strips) are detected and flagged, never silently ignored. Every special use district a lot lies in is listed on the fact card as "not modeled"; a few have a note in `sf/specialUse.json` (§249.94 so far) that says what they allow and whether the lot's zoning can use them, held to the same rules as district files (cited, `verified: false` until checked). Slope itself is modeled since Phase 6 (§260/§261 from 3DEP ground). R-4 lots show the base envelope by default; the Housing Choice-SF envelope (§206.10) is drawn only when the viewer switches it on.
+- Overlays the app can't model (special use districts, SB 9, state density bonus, cross-slope strips) are detected and flagged, never silently ignored. Every special use district a lot lies in is listed on the fact card as "not modeled"; a few have a note in `sf/specialUse.json` (§249.94 so far) that says what they allow and whether the lot's zoning can use them, held to the same rules as district files (cited, `verified: false` until checked; the §249.94 note is verified). Slope itself is modeled since Phase 6 (§260/§261 from 3DEP ground). R-4 lots show the base envelope by default; the Housing Choice-SF envelope (§206.10) is drawn only when the viewer switches it on.
 
 ## Stack
 
@@ -154,7 +154,7 @@ type Rule = {
 };
 ```
 
-Verification (done 2026-10-14, every rule in the 13 RH, RM and NC files; the RTO files' own rules are drafts, see VERIFY.md): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
+Verification (every rule in all 16 files: the RH, RM and NC files 2026-10-14, the RTO files and the §249.94 note 2026-10-17): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|
@@ -242,7 +242,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
   - [x] Bulk letters: Table 270 `bulk` rule in every district, one fitting box above the bulk height; fixtures K, L, N
   - [x] Family Zoning Plan local-program unlock: `local_program` rule (Housing Choice-SF, §206.10) in every district, `?program=1` switch on R-4 lots, summary comparison; fixtures O–T
   - [x] Share images: "Save image" (this view with its rule card) and "Storyboard" (a tile per cut, start to result) as PNGs
-- [x] Since Phase 6: special use districts listed on the fact card (§249.94 note, draft); RTO-1, RTO-M, RTO-C district files (Table 209.4, drafts); fixtures U and V
+- [x] Since Phase 6: special use districts listed on the fact card (§249.94 note); RTO-1, RTO-M, RTO-C district files (Table 209.4); fixtures U and V; all verified 2026-10-17
 
 ## Web app notes
 
