@@ -43,6 +43,11 @@ import ncdIrving from "./NCD-IRVING.json";
 import ncdOuterBalboa from "./NCD-OUTER-BALBOA-STREET.json";
 import ncdSacramento from "./NCD-SACRAMENTO.json";
 import ncdWestPortal from "./NCD-WEST-PORTAL.json";
+import ncdCortland from "./NCD-CORTLAND-AVENUE.json";
+import nctFillmore from "./NCT-FILLMORE.json";
+import nctFolsom from "./NCT-FOLSOM.json";
+import nctGlenPark from "./NCT-GLEN-PARK.json";
+import nctSoma from "./NCT-SOMA.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -69,6 +74,7 @@ const FILES: Record<string, unknown> = {
   "NCD-24TH-NOE-VALLEY": ncd24thNoeValley,
   "NCD-BAYVIEW": ncdBayview,
   "NCD-CASTRO": ncdCastro,
+  "NCD-CORTLAND AVENUE": ncdCortland,
   "NCD-EXCELSIOR": ncdExcelsior,
   "NCD-GEARY BOULEVARD": ncdGeary,
   "NCD-HAIGHT": ncdHaight,
@@ -91,9 +97,13 @@ const FILES: Record<string, unknown> = {
   "NCD-WEST PORTAL": ncdWestPortal,
   "NCT-24TH-MISSION": nct24thMission,
   "NCT-DIVISADERO": nctDivisadero,
+  "NCT-FILLMORE": nctFillmore,
+  "NCT-FOLSOM": nctFolsom,
+  "NCT-GLEN PARK": nctGlenPark,
   "NCT-HAYES": nctHayes,
   "NCT-MISSION": nctMission,
   "NCT-OCEAN": nctOcean,
+  "NCT-SOMA": nctSoma,
   "NCT-UPPER MARKET": nctUpperMarket,
   "NCT-VALENCIA": nctValencia,
 };

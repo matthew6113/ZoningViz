@@ -175,7 +175,7 @@ test("a lot outside the covered districts says so", async ({ page }) => {
   // 840 Cole St: a named neighborhood commercial district, each of which has its own control table.
   await page.goto("/?parcel=1268029");
   // Parcels say only "NCD"; the zoning layer names the district.
-  await expect(page.locator(".notice")).toContainText("Zoned NCD-COLE VALLEY. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-BAYVIEW, NCD-CASTRO, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-HAIGHT, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-INNER TARAVAL STREET, NCD-IRVING, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER BALBOA STREET, NCD-OUTER CLEMENT, NCD-PACIFIC, NCD-POLK, NCD-SACRAMENTO, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCD-WEST PORTAL, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-HAYES, NCT-MISSION, NCT-OCEAN, NCT-UPPER MARKET, NCT-VALENCIA only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned NCD-COLE VALLEY. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RTO-1, RTO-M, RTO-C, NC-1–NC-3, NC-S, NCD-24TH-NOE-VALLEY, NCD-BAYVIEW, NCD-CASTRO, NCD-CORTLAND AVENUE, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-HAIGHT, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-INNER TARAVAL STREET, NCD-IRVING, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER BALBOA STREET, NCD-OUTER CLEMENT, NCD-PACIFIC, NCD-POLK, NCD-SACRAMENTO, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCD-WEST PORTAL, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-FILLMORE, NCT-FOLSOM, NCT-GLEN PARK, NCT-HAYES, NCT-MISSION, NCT-OCEAN, NCT-SOMA, NCT-UPPER MARKET, NCT-VALENCIA only so far");
   await expect(page.locator(".fact-card")).toContainText("NCD-COLE VALLEY");
 });
 
@@ -516,6 +516,20 @@ test("a named NCD with a ground-level rear yard: 3542 Sacramento St is Sacrament
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");
   await expect(summary).toContainText("10,534 sq ft");
+  await expectSceneDrawn(page);
+});
+
+test("a named NCT: 2789 Diamond St is Glen Park NCT, with a 14 ft shop floor at 40 ft", async ({ page }) => {
+  await page.goto("/?parcel=6742026&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("2789–2791 Diamond St");
+  await expect(page.locator(".fact-card")).toContainText("NCT-GLEN PARK");
+  await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
+  await expect(currentSentence(page)).toHaveText(/^Rear yard: 25% of 100 ft lot depth = 25 ft\. It starts above the 14 ft first story/);
+  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await toResult(page);
+  const summary = page.getByTestId("summary");
+  await expect(summary).toContainText("4 stories");
+  await expect(summary).toContainText("8,125 sq ft");
   await expectSceneDrawn(page);
 });
 

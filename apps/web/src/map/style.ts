@@ -54,6 +54,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-OUTER BALBOA STREET": "#6db8a1",
   "NCD-SACRAMENTO": "#22665a",
   "NCD-WEST PORTAL": "#58a690",
+  "NCD-CORTLAND AVENUE": "#428a77",
+  "NCT-FILLMORE": "#2b6888",
+  "NCT-FOLSOM": "#4c84a3",
+  "NCT-GLEN PARK": "#6a9fba",
+  "NCT-SOMA": "#38739a",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

@@ -253,3 +253,24 @@ describe("named districts, batch 6", () => {
     expect(step(envelope("NCD-INNER TARAVAL STREET"), "ground-floor-bonus").rule.plain).toContain("zoned 40-X or 50-X");
   });
 });
+
+describe("named districts, batch 7", () => {
+  it("Cortland Avenue: fixture H's shape; FAR 2.5; the bonus flagged as the table words it", () => {
+    const r = envelope("NCD-CORTLAND AVENUE");
+    expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+    expect(r.totals.volume).toBeCloseTo(81_250, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2.5 * 2500, 6);
+    expect(step(r, "ground-floor-bonus").rule.plain).toContain('"in some districts"');
+  });
+
+  it("Fillmore, SoMa, Glen Park and Folsom NCTs: fixture W's 14 ft first story and 83,750 cu ft", () => {
+    for (const [code, ratio] of [["NCT-FILLMORE", 3.6], ["NCT-SOMA", 2.5], ["NCT-GLEN PARK", 2.5], ["NCT-FOLSOM", 2.5]] as const) {
+      const r = envelope(code);
+      expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 14 });
+      expect(r.totals.volume).toBeCloseTo(83_750, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+    }
+    expect(envelope("NCT-FOLSOM").steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+  });
+});

@@ -87,6 +87,11 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["2545 Irving St (1781044)", loadParcel("1781044"), "NCD-IRVING", {}],
   ["3145 Balboa St, Outer Balboa (1612024)", loadParcel("1612024"), "NCD-OUTER BALBOA STREET", {}],
   ["410 Taraval St, Inner Taraval (2343042)", loadParcel("2343042"), "NCD-INNER TARAVAL STREET", {}],
+  ["317 Cortland Ave (5667015)", loadParcel("5667015"), "NCD-CORTLAND AVENUE", {}],
+  ["1400 Fillmore St, 160-F, bulk cut (0725029)", loadParcel("0725029"), "NCT-FILLMORE", {}],
+  ["1040 Folsom St, SoMa NCT (3731019)", loadParcel("3731019"), "NCT-SOMA", {}],
+  ["2789 Diamond St, Glen Park (6742026)", loadParcel("6742026"), "NCT-GLEN PARK", {}],
+  ["1220 Folsom St, Folsom Street NCT (3729091)", loadParcel("3729091"), "NCT-FOLSOM", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
