@@ -100,7 +100,8 @@ Dataset as-of dates come from `GET /api/views/<id>.json`, field `rowsUpdatedAt` 
 - Batch 4 (`--per-district 12 --seed 41`, the five codes): all 60 lots produced envelopes; 19 asked for the front. Every sampled Outer Clement, Noriega and Upper Market lot and 11 of 12 Upper Fillmore lots are R-4 and grew under Housing Choice-SF; the 24th Street – Mission lots are X districts. One Upper Market lot rises more than 20 ft to the rear.
 - Batch 5 (`--per-district 12 --seed 51`, the five codes): all 60 lots produced envelopes; 22 asked for the front. One Castro lot (3582085) is in a B bulk district and got the first bulk cut on a named-district lot; every Bayview lot is 40-X (no R-4 rows in Table 737). Three lots rise more than 20 ft to the rear (one Bayview, two Pacific Avenue).
 - Batch 6 (`--per-district 12 --seed 61`, the five codes): all 60 lots produced envelopes; 14 asked for the front. Every sampled lot is R-4 and grew under Housing Choice-SF. One Sacramento lot got no 3DEP ground in that run (drawn flat, with the card note) and one rises 31 ft to the rear.
-- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3, 91.4% with batch 4, 91.7% with batch 5, 92.0% with batch 6.
+- Batch 7 (`--per-district 12 --seed 71`, the five codes): all 60 lots produced envelopes; 29 asked for the front. Fillmore Street NCT lots carry A, B and F bulk letters, and five got bulk cuts; only the Glen Park lots are R-4. Three lots got no 3DEP ground in that run (drawn flat, with the card note).
+- Land parcels with a rule file: about 88.2% before named districts, 89.6% with batch 1, 90.4% with batch 2, 91.0% with batch 3, 91.4% with batch 4, 91.7% with batch 5, 92.0% with batch 6, 92.3% with batch 7.
 
 ## RTO coverage (2026-10-17)
 
