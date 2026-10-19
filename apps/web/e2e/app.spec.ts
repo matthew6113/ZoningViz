@@ -540,9 +540,10 @@ test("a named NCD: 1737 Buchanan St is Japantown NCD, with the Buchanan Street s
   await expect(page.locator(".fact-card")).toContainText("NCD-JAPANTOWN");
   await expect(label(page)).toHaveText("Rule 6 of 13: Rear yard");
   await expect(currentSentence(page)).toHaveText(/^Rear yard: 25% of 75\.5 ft lot depth = 18\.9 ft\. It starts above the 10 ft first story/);
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toHaveCount(1);
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-03-16");
   await expect(page.locator("[data-rule=buchanan-setback]")).toContainText("1 foot for every foot of height above 35 feet");
-  await expect(page.locator("[data-rule=buchanan-setback] .tag-unverified")).toHaveCount(1);
+  await expect(page.locator("[data-rule=buchanan-setback] footer")).toContainText("in effect since 2026-04-11");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("6 stories");

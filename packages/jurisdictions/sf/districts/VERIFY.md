@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 8 (2026-10-19): drafts** (section below). NCD-BROADWAY, NCD-JAPANTOWN, NCD-LELAND, NCD-LOWER HAIGHT STREET and NCD-JUDAH carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 51 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11); and five more (NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, NCD-OUTER BALBOA STREET, NCD-INNER TARAVAL STREET) on 2026-10-18 (batch 12); and five more (NCD-CORTLAND AVENUE, NCT-FILLMORE, NCT-SOMA, NCT-GLEN PARK, NCT-FOLSOM) on 2026-10-19 (batch 13). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 56 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11); and five more (NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, NCD-OUTER BALBOA STREET, NCD-INNER TARAVAL STREET) on 2026-10-18 (batch 12); five more (NCD-CORTLAND AVENUE, NCT-FILLMORE, NCT-SOMA, NCT-GLEN PARK, NCT-FOLSOM) on 2026-10-19 (batch 13); and five more (NCD-BROADWAY, NCD-JAPANTOWN, NCD-LELAND, NCD-LOWER HAIGHT STREET, NCD-JUDAH) on 2026-10-19 (batch 14). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -500,3 +498,17 @@ Drafted 2026-10-18 from the official PDF (Tables 738, 753, 756, 757 and 760 and 
 | `far` | all five | §124(a)–(b) (Table 124 except Cortland); district table | 2.5 (Cortland, SoMa, Glen Park, Folsom), 3.6 (Fillmore), non-residential only | 2026-01-12 |
 | `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
 | `ground-floor-bonus` (flag) | Cortland, Fillmore, SoMa, Glen Park | §263.20; Cortland's "P in some districts" (question 60) | Up to 5 ft for a tall ground floor; NP in Folsom | 2026-01-12 |
+
+### Batch 14: named NC districts, batch 8, confirmed 2026-10-19
+
+Drafted 2026-10-19 from the official PDF (Tables 714, 721, 734, 743 and 746 and the sections they cite) and confirmed by the user in chat with the dates in the batch 8 table above; questions 62–66 stand as the cards describe them.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §714 / §721 / §746 / §743 / §734, §207 (and §121.1, §145.4 where cited) | Matches each table's density, open space and ground-floor commercial rows and §121.1's lot-size limits | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | all five | §145.1(c)(4)(C) | 14 ft, 10 ft in 40- and 50-ft districts | 2018-09-10 |
+| `rear-yard` | Broadway, Japantown / Lower Haight, Judah / Leland | §134(c)(2), (d)(3) / (d)(2) / §134(c)(2) and Table 746 (question 62) | 25%, at least 15 ft, above a non-residential first story | 2026-03-16 / 2026-01-12 / 2026-04-11 |
+| `far` | all five | §124(a)–(b) (Table 124 for Broadway and Judah); district table | 2.5 (Broadway, Leland, Lower Haight, Judah), 3.6 (Japantown), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `buchanan-setback` (flag) | Japantown | Table 721 (question 64) | 1 ft back per ft above 35 ft on Buchanan Street between Post and Sutter; not drawn | 2026-04-11 |
+| `ground-floor-bonus` (flag) | Japantown, Leland, Lower Haight, Judah | §263.20; Lower Haight's 40-X/50-X row (question 59) | Up to 5 ft for a tall ground floor; NP in Broadway | 2026-01-12 |
