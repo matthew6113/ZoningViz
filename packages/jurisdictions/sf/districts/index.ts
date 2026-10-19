@@ -48,6 +48,11 @@ import nctFillmore from "./NCT-FILLMORE.json";
 import nctFolsom from "./NCT-FOLSOM.json";
 import nctGlenPark from "./NCT-GLEN-PARK.json";
 import nctSoma from "./NCT-SOMA.json";
+import ncdBroadway from "./NCD-BROADWAY.json";
+import ncdJapantown from "./NCD-JAPANTOWN.json";
+import ncdJudah from "./NCD-JUDAH.json";
+import ncdLeland from "./NCD-LELAND.json";
+import ncdLowerHaight from "./NCD-LOWER-HAIGHT-STREET.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -73,6 +78,7 @@ const FILES: Record<string, unknown> = {
   // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
   "NCD-24TH-NOE-VALLEY": ncd24thNoeValley,
   "NCD-BAYVIEW": ncdBayview,
+  "NCD-BROADWAY": ncdBroadway,
   "NCD-CASTRO": ncdCastro,
   "NCD-CORTLAND AVENUE": ncdCortland,
   "NCD-EXCELSIOR": ncdExcelsior,
@@ -82,6 +88,10 @@ const FILES: Record<string, unknown> = {
   "NCD-INNER SUNSET": ncdInnerSunset,
   "NCD-INNER TARAVAL STREET": ncdInnerTaraval,
   "NCD-IRVING": ncdIrving,
+  "NCD-JAPANTOWN": ncdJapantown,
+  "NCD-JUDAH": ncdJudah,
+  "NCD-LELAND": ncdLeland,
+  "NCD-LOWER HAIGHT STREET": ncdLowerHaight,
   "NCD-MISSION BERNAL": ncdMissionBernal,
   "NCD-NORIEGA": ncdNoriega,
   "NCD-NORTH BEACH": ncdNorthBeach,

@@ -59,6 +59,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCT-FOLSOM": "#4c84a3",
   "NCT-GLEN PARK": "#6a9fba",
   "NCT-SOMA": "#38739a",
+  "NCD-BROADWAY": "#2d7566",
+  "NCD-JAPANTOWN": "#4f9e89",
+  "NCD-JUDAH": "#70b49f",
+  "NCD-LELAND": "#36806f",
+  "NCD-LOWER HAIGHT STREET": "#5ca792",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

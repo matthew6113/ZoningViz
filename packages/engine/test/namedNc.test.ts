@@ -274,3 +274,35 @@ describe("named districts, batch 7", () => {
     expect(envelope("NCT-FOLSOM").steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
   });
 });
+
+describe("named districts, batch 8", () => {
+  it("Broadway, Japantown, Leland, Lower Haight and Judah: fixture H's shape at 40-X; FAR from each table", () => {
+    for (const [code, ratio] of [["NCD-BROADWAY", 2.5], ["NCD-JAPANTOWN", 3.6], ["NCD-LELAND", 2.5], ["NCD-LOWER HAIGHT STREET", 2.5], ["NCD-JUDAH", 2.5]] as const) {
+      const r = envelope(code);
+      expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(10);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+    }
+    expect(envelope("NCD-BROADWAY").steps.map((s) => s.rule.id)).not.toContain("ground-floor-bonus");
+  });
+
+  it("Japantown flags the Buchanan Street setback after the sidewalk setback", () => {
+    const r = envelope("NCD-JAPANTOWN", 50);
+    const ids = r.steps.map((s) => s.rule.id);
+    expect(ids.indexOf("buchanan-setback")).toBe(ids.indexOf("front-setback") + 1);
+    expect(step(r, "buchanan-setback").status).toBe("not_modeled");
+  });
+
+  it("Leland's rear yard follows Table 746, which §134(d) doesn't list", () => {
+    expect(step(envelope("NCD-LELAND"), "rear-yard").rule.citation).toBe("§134(c)(2); Table 746");
+  });
+
+  it("Lower Haight and Judah under Housing Choice-SF: fixture Q's 139,550 cu ft", () => {
+    for (const code of ["NCD-LOWER HAIGHT STREET", "NCD-JUDAH"]) {
+      const on = r4Envelope(code);
+      expect(step(on, "rear-yard").numbers).toMatchObject({ rearYardFt: 18, aboveFt: 14 });
+      expect(on.totals.volume).toBeCloseTo(139_550, 3);
+    }
+  });
+});

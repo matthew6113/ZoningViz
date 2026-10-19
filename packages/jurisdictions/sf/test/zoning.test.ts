@@ -73,7 +73,8 @@ describe("named neighborhood commercial districts", () => {
       "NCD-NORIEGA", "NCD-OUTER CLEMENT", "NCD-UPPER FILLMORE", "NCT-24TH-MISSION", "NCT-UPPER MARKET",
       "NCD-BAYVIEW", "NCD-CASTRO", "NCD-HAIGHT", "NCD-PACIFIC", "NCT-OCEAN",
       "NCD-INNER TARAVAL STREET", "NCD-IRVING", "NCD-OUTER BALBOA STREET", "NCD-SACRAMENTO", "NCD-WEST PORTAL",
-      "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA"];
+      "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA",
+      "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
     expect(zoningCoverage("NCD-COLE VALLEY")).toEqual({ kind: "not_covered", code: "NCD-COLE VALLEY" });
   });
