@@ -11,9 +11,7 @@ The values were drafted from secondary sources. To verify a rule:
 2. Check the value against it.
 3. Set `verified: true` and set `effectiveDate` (see the convention below). The schema refuses `verified: true` without a date.
 
-**Named NC districts, batch 7 (2026-10-18): drafts** (section below). NCD-CORTLAND AVENUE, NCT-FILLMORE, NCT-SOMA, NCT-GLEN PARK and NCT-FOLSOM carry `verified: false` on their own rules; their shared rules are copies of the verified ones.
-
-**Status: every rule in the other 46 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11); and five more (NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, NCD-OUTER BALBOA STREET, NCD-INNER TARAVAL STREET) on 2026-10-18 (batch 12). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
+**Status: every rule in all 51 files is verified**: the 13 RH, RM and NC files on 2026-10-14; RTO-1, RTO-M and RTO-C on 2026-10-17 (batch 6); the first five named NC districts (NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-NORTH BEACH, NCT-MISSION, NCT-VALENCIA) on 2026-10-17 (batch 7); the next five (NCD-INNER SUNSET, NCD-POLK, NCD-TARAVAL, NCD-UNION, NCT-HAYES) on 2026-10-17 (batch 8); five more (NCD-INNER CLEMENT, NCD-24TH-NOE-VALLEY, NCD-MISSION BERNAL, NCD-SAN BRUNO AVENUE, NCT-DIVISADERO) on 2026-10-17 (batch 9); five more (NCD-OUTER CLEMENT, NCD-UPPER FILLMORE, NCD-NORIEGA, NCT-24TH-MISSION, NCT-UPPER MARKET) on 2026-10-17 (batch 10); five more (NCT-OCEAN, NCD-BAYVIEW, NCD-PACIFIC, NCD-HAIGHT, NCD-CASTRO) on 2026-10-17 (batch 11); and five more (NCD-SACRAMENTO, NCD-WEST PORTAL, NCD-IRVING, NCD-OUTER BALBOA STREET, NCD-INNER TARAVAL STREET) on 2026-10-18 (batch 12); and five more (NCD-CORTLAND AVENUE, NCT-FILLMORE, NCT-SOMA, NCT-GLEN PARK, NCT-FOLSOM) on 2026-10-19 (batch 13). Later files' shared rules (height reference, mapped height, bulk, narrow streets, cross-slope, Housing Choice-SF) are copies of the verified ones, kept identical by the consistency tests. Rules were checked against the official Planning Code text (amlegal, current through Ord. 131-26, effective 8/23/2026). The verification log at the end of this file lists each batch, what changed and how each rule is dated. The tables below are the drafting record.
 
 ## Sources used for the drafts (October 2026)
 
@@ -219,7 +217,7 @@ Same layout as the earlier batches; all five are NCDs. Zoning-layer codes: NCD-S
 
 Same layout as the earlier batches. Zoning-layer codes: "NCD-CORTLAND AVENUE", NCT-FILLMORE, NCT-SOMA, "NCT-GLEN PARK" and NCT-FOLSOM. All five tables were last amended by Ord. 37-26 (4/11/2026). Table 738 (Cortland, added by Ord. 7-20) has no Housing Choice-SF row (question 60).
 
-| Rule id | NCD-CORTLAND AVENUE (§738) | NCT-FILLMORE (§760) | NCT-SOMA (§753) | NCT-GLEN PARK (§756) | NCT-FOLSOM (§757) | Proposed `effectiveDate` |
+| Rule id | NCD-CORTLAND AVENUE (§738) | NCT-FILLMORE (§760) | NCT-SOMA (§753) | NCT-GLEN PARK (§756) | NCT-FOLSOM (§757) | `effectiveDate` (batch 13) |
 |---|---|---|---|---|---|---|
 | `use` | 1 home per 800 sq ft or nearest R district; open space 100/133 | Form-based; GF commercial required on Fillmore from Bush to McAllister (§145.4(b)(21)), GF residential C there (note (1)); open space 80/100; lot mergers ≤ 100 ft (§121.7); lots of 10,000 sq ft or more C in the Priority Equity Geographies SUD (note (7), §121.1) | Form-based; GF commercial required on 6th Street (§145.4(b)(18)), GF residential C there (note (1)); open space 80/100; lots of 10,000 sq ft or more C (§121.1) | Form-based; GF commercial required on Diamond and Chenery (§145.4(b)(22)–(23)), GF residential C there (note (1)); open space 100/133 | Form-based; open space 80/100, roof decks don't qualify (question 61); lots of 10,000 sq ft or more C (§121.1); lot mergers ≤ 100 ft (§121.7) | 2026-04-11 |
 | `ground-floor` | 14 ft, 10 ft in 40/50 ft districts (§145.1(c)(4)(C)) | 14 ft in every district (§145.1(c)(4)(B), NCT) | same | same | same | (C) 2018-09-10; (B) 2019-01-12 |
@@ -468,3 +466,16 @@ Drafted 2026-10-17 from the official PDF (Tables 724, 729, 732, 736 and 745 and 
 | `far` | all five | §124(a)–(b) (Table 124 for Sacramento, West Portal, Irving); district table | 1.8 (Sacramento, West Portal), 2.5 (Irving, Outer Balboa, Inner Taraval), non-residential only | 2026-01-12 |
 | `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
 | `ground-floor-bonus` (flag) | Irving, Outer Balboa, Inner Taraval | §263.20; district table | Up to 5 ft for a tall ground floor (40-X/50-X lots in Outer Balboa and Inner Taraval); NP in Sacramento and West Portal | 2026-01-12 |
+
+### Batch 13: named NC districts, batch 7, confirmed 2026-10-19
+
+Drafted 2026-10-18 from the official PDF (Tables 738, 753, 756, 757 and 760 and the sections they cite) and confirmed by the user in chat with the dates in the batch 7 table above; questions 60–61 stand as the cards describe them.
+
+| Rule | Files | Citation | Result | `effectiveDate` |
+|---|---|---|---|---|
+| `use` | all five | §738 / §760 / §753 / §756 / §757, §207 (and §121.1, §121.7, §145.4, §249.39(c)(2)(B) where cited) | Matches each table's density, open space, ground-floor commercial, lot-size and lot-merger rows | 2026-04-11 (Ord. 37-26) |
+| `ground-floor` | Cortland / four NCTs | §145.1(c)(4)(C) / (c)(4)(B) | 14 ft, 10 ft in 40- and 50-ft districts / 14 ft in every district | 2018-09-10 / 2019-01-12 |
+| `rear-yard` | Cortland, Glen Park, Folsom / Fillmore, SoMa | §134(c)(2), (d)(2) / (d)(3) | 25%, at least 15 ft, above a non-residential first story | 2026-01-12 / 2026-03-16 |
+| `far` | all five | §124(a)–(b) (Table 124 except Cortland); district table | 2.5 (Cortland, SoMa, Glen Park, Folsom), 3.6 (Fillmore), non-residential only | 2026-01-12 |
+| `front-setback` (flag) | all five | §132(e) | As NC | 2026-01-12 |
+| `ground-floor-bonus` (flag) | Cortland, Fillmore, SoMa, Glen Park | §263.20; Cortland's "P in some districts" (question 60) | Up to 5 ft for a tall ground floor; NP in Folsom | 2026-01-12 |
