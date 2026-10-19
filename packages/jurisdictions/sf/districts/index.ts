@@ -57,6 +57,9 @@ import ncdColeValley from "./NCD-COLE-VALLEY.json";
 import ncdInnerBalboa from "./NCD-INNER-BALBOA-STREET.json";
 import ncdLakeside from "./NCD-LAKESIDE-VILLAGE.json";
 import ncdLowerPolk from "./NCD-LOWER-POLK-STREET.json";
+import nct1 from "./NCT-1.json";
+import nct2 from "./NCT-2.json";
+import nct3 from "./NCT-3.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -79,6 +82,9 @@ const FILES: Record<string, unknown> = {
   "NC-2": nc2,
   "NC-3": nc3,
   "NC-S": ncs,
+  "NCT-1": nct1,
+  "NCT-2": nct2,
+  "NCT-3": nct3,
   // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
   "NCD-24TH-NOE-VALLEY": ncd24thNoeValley,
   "NCD-BAYVIEW": ncdBayview,

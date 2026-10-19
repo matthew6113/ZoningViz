@@ -32,7 +32,7 @@ describe("zoning codes on the parcel record", () => {
   it("explains why a lot has no envelope", () => {
     expect(coverageNote(zoningCoverage("RH-2"))).toBeNull();
     expect(coverageNote(zoningCoverage("RH-1|RH-2"))).toBe("This lot is split between RH-1 and RH-2. Split-zoned lots aren't modeled yet.");
-    expect(coverageNote(zoningCoverage("NCT-3"), ["RH-2"])).toBe("Zoned NCT-3. Rule files exist for RH-2 only so far, so its envelope isn't shown.");
+    expect(coverageNote(zoningCoverage("C-3-O"), ["RH-2"])).toBe("Zoned C-3-O. Rule files exist for RH-2 only so far, so its envelope isn't shown.");
   });
 
   it("shortens runs of a numbered family in the covered list", () => {
@@ -66,7 +66,7 @@ describe("named neighborhood commercial districts", () => {
     expect(index.has("PDR PRODUCTION, DISTRIBUTION, AND REPAIR")).toBe(false);
   });
 
-  it("covers the named districts that have rule files", () => {
+  it("covers the named districts and NCT-1 to NCT-3, which have rule files", () => {
     const covered = ["NCD-EXCELSIOR", "NCD-GEARY BOULEVARD", "NCD-NORTH BEACH", "NCT-MISSION", "NCT-VALENCIA",
       "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES",
       "NCD-24TH-NOE-VALLEY", "NCD-INNER CLEMENT", "NCD-MISSION BERNAL", "NCD-SAN BRUNO AVENUE", "NCT-DIVISADERO",
@@ -75,7 +75,8 @@ describe("named neighborhood commercial districts", () => {
       "NCD-INNER TARAVAL STREET", "NCD-IRVING", "NCD-OUTER BALBOA STREET", "NCD-SACRAMENTO", "NCD-WEST PORTAL",
       "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA",
       "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
-      "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET"];
+      "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET",
+      "NCT-1", "NCT-2", "NCT-3"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
     expect(zoningCoverage("C-3-O")).toEqual({ kind: "not_covered", code: "C-3-O" });
   });

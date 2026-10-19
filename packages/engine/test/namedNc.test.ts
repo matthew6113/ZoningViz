@@ -335,3 +335,30 @@ describe("named districts, batch 9", () => {
     }
   });
 });
+
+describe("NCT-1, NCT-2 and NCT-3", () => {
+  it("NCT-1: fixture Y's rear yard at grade under a 14 ft first story; FAR 1.8", () => {
+    const r = envelope("NCT-1");
+    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
+    expect(step(r, "rear-yard").rule.params).toMatchObject({ appliesAt: "grade_and_every_story" });
+    expect(r.totals.volume).toBeCloseTo(75_000, 3);
+    expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+  });
+
+  it("NCT-2 and NCT-3: fixture W's yard above a 14 ft first story; FAR 2.5 and 3.6", () => {
+    for (const [code, ratio] of [["NCT-2", 2.5], ["NCT-3", 3.6]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 14 });
+      expect(r.totals.volume).toBeCloseTo(83_750, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+    }
+  });
+
+  it("under Housing Choice-SF all three take fixture Q's 139,550 cu ft", () => {
+    for (const code of ["NCT-1", "NCT-2", "NCT-3"]) {
+      const on = r4Envelope(code);
+      expect(step(on, "rear-yard").numbers).toMatchObject({ rearYardFt: 18, aboveFt: 14 });
+      expect(on.totals.volume).toBeCloseTo(139_550, 3);
+    }
+  });
+});

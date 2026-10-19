@@ -23,6 +23,10 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NC-2": "#2f8fa8",
   "NC-3": "#1f6a7f",
   "NC-S": "#7a9cb3",
+  // NCT-1 to NCT-3: the NC cyans, a shade toward blue.
+  "NCT-1": "#5aa9cf",
+  "NCT-2": "#2b82b0",
+  "NCT-3": "#1d5f86",
   // Named NCD and NCT districts: deep teals and blue-greens, apart from NC's cyans.
   "NCD-EXCELSIOR": "#3d8c7a",
   "NCD-GEARY BOULEVARD": "#2c6e63",

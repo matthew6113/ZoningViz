@@ -101,6 +101,9 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["843 Polk St, Lower Polk (0718003)", loadParcel("0718003"), "NCD-LOWER POLK STREET", {}],
   ["2555 Ocean Ave, Lakeside Village (7226021B)", loadParcel("7226021B"), "NCD-LAKESIDE VILLAGE", {}],
   ["840 Cole St, Cole Valley (1268029)", loadParcel("1268029"), "NCD-COLE VALLEY", {}],
+  ["2225 San Jose Ave, NCT-1 (6964011)", loadParcel("6964011"), "NCT-1", {}],
+  ["808 22nd St, NCT-2 (4107011)", loadParcel("4107011"), "NCT-2", {}],
+  ["2066 Market St, NCT-3 (3536005)", loadParcel("3536005"), "NCT-3", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
