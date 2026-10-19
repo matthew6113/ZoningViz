@@ -573,7 +573,8 @@ test("an NCT-2 lot: 808 22nd St has a 14 ft shop floor at 45 ft, and its rear ya
   await expect(label(page)).toHaveText("Rule 6 of 12: Rear yard");
   await expect(currentSentence(page)).toHaveText(/^Rear yard: 25% of 91\.3 ft lot depth = 22\.8 ft\. It starts above the 14 ft first story/);
   await expect(page.locator("[data-rule=use] .sentence")).toContainText("22nd Street between Third and Minnesota Streets");
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-01-12");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");
