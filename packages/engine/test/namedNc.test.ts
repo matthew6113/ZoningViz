@@ -306,3 +306,32 @@ describe("named districts, batch 8", () => {
     }
   });
 });
+
+describe("named districts, batch 9", () => {
+  it("Inner Balboa and Lower Polk: fixture H's shape at 40-X; FAR 2.5 and 3.6", () => {
+    for (const [code, ratio] of [["NCD-INNER BALBOA STREET", 2.5], ["NCD-LOWER POLK STREET", 3.6]] as const) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").numbers).toMatchObject({ rearYardFt: 25, aboveFt: 10 });
+      expect(r.totals.volume).toBeCloseTo(81_250, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(ratio * 2500, 6);
+    }
+  });
+
+  it("Lakeside Village and Cole Valley: fixture X's rear yard at grade; FAR 1.8; the bonus flagged as the tables word it", () => {
+    for (const code of ["NCD-LAKESIDE VILLAGE", "NCD-COLE VALLEY"]) {
+      const r = envelope(code);
+      expect(step(r, "rear-yard").rule.params).toMatchObject({ appliesAt: "grade_and_every_story" });
+      expect(r.totals.volume).toBeCloseTo(75_000, 3);
+      expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(1.8 * 2500, 6);
+      expect(step(r, "ground-floor-bonus").rule.plain).toContain('"in some districts"');
+    }
+  });
+
+  it("under Housing Choice-SF all four take fixture Q's 139,550 cu ft", () => {
+    for (const code of ["NCD-INNER BALBOA STREET", "NCD-LOWER POLK STREET", "NCD-LAKESIDE VILLAGE", "NCD-COLE VALLEY"]) {
+      const on = r4Envelope(code);
+      expect(step(on, "rear-yard").numbers).toMatchObject({ rearYardFt: 18, aboveFt: 14 });
+      expect(on.totals.volume).toBeCloseTo(139_550, 3);
+    }
+  });
+});

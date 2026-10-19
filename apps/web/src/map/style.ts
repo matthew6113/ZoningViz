@@ -64,6 +64,10 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "NCD-JUDAH": "#70b49f",
   "NCD-LELAND": "#36806f",
   "NCD-LOWER HAIGHT STREET": "#5ca792",
+  "NCD-COLE VALLEY": "#3f8e7b",
+  "NCD-INNER BALBOA STREET": "#64ad98",
+  "NCD-LAKESIDE VILLAGE": "#2a7364",
+  "NCD-LOWER POLK STREET": "#4b9884",
   // RTO: mauves, light to dark (neighborhood, Mission, commercial).
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",

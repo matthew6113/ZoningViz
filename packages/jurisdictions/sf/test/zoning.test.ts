@@ -74,8 +74,9 @@ describe("named neighborhood commercial districts", () => {
       "NCD-BAYVIEW", "NCD-CASTRO", "NCD-HAIGHT", "NCD-PACIFIC", "NCT-OCEAN",
       "NCD-INNER TARAVAL STREET", "NCD-IRVING", "NCD-OUTER BALBOA STREET", "NCD-SACRAMENTO", "NCD-WEST PORTAL",
       "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA",
-      "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET"];
+      "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
+      "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
-    expect(zoningCoverage("NCD-COLE VALLEY")).toEqual({ kind: "not_covered", code: "NCD-COLE VALLEY" });
+    expect(zoningCoverage("C-3-O")).toEqual({ kind: "not_covered", code: "C-3-O" });
   });
 });

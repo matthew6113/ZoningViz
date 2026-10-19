@@ -97,6 +97,10 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["140 Leland Ave (6247010)", loadParcel("6247010"), "NCD-LELAND", {}],
   ["412 Haight St, Lower Haight (0849010)", loadParcel("0849010"), "NCD-LOWER HAIGHT STREET", {}],
   ["2520 Judah St (1785036)", loadParcel("1785036"), "NCD-JUDAH", {}],
+  ["531 Balboa St, Inner Balboa (1638031)", loadParcel("1638031"), "NCD-INNER BALBOA STREET", {}],
+  ["843 Polk St, Lower Polk (0718003)", loadParcel("0718003"), "NCD-LOWER POLK STREET", {}],
+  ["2555 Ocean Ave, Lakeside Village (7226021B)", loadParcel("7226021B"), "NCD-LAKESIDE VILLAGE", {}],
+  ["840 Cole St, Cole Valley (1268029)", loadParcel("1268029"), "NCD-COLE VALLEY", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

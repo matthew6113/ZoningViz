@@ -53,6 +53,10 @@ import ncdJapantown from "./NCD-JAPANTOWN.json";
 import ncdJudah from "./NCD-JUDAH.json";
 import ncdLeland from "./NCD-LELAND.json";
 import ncdLowerHaight from "./NCD-LOWER-HAIGHT-STREET.json";
+import ncdColeValley from "./NCD-COLE-VALLEY.json";
+import ncdInnerBalboa from "./NCD-INNER-BALBOA-STREET.json";
+import ncdLakeside from "./NCD-LAKESIDE-VILLAGE.json";
+import ncdLowerPolk from "./NCD-LOWER-POLK-STREET.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -80,18 +84,22 @@ const FILES: Record<string, unknown> = {
   "NCD-BAYVIEW": ncdBayview,
   "NCD-BROADWAY": ncdBroadway,
   "NCD-CASTRO": ncdCastro,
+  "NCD-COLE VALLEY": ncdColeValley,
   "NCD-CORTLAND AVENUE": ncdCortland,
   "NCD-EXCELSIOR": ncdExcelsior,
   "NCD-GEARY BOULEVARD": ncdGeary,
   "NCD-HAIGHT": ncdHaight,
+  "NCD-INNER BALBOA STREET": ncdInnerBalboa,
   "NCD-INNER CLEMENT": ncdInnerClement,
   "NCD-INNER SUNSET": ncdInnerSunset,
   "NCD-INNER TARAVAL STREET": ncdInnerTaraval,
   "NCD-IRVING": ncdIrving,
   "NCD-JAPANTOWN": ncdJapantown,
   "NCD-JUDAH": ncdJudah,
+  "NCD-LAKESIDE VILLAGE": ncdLakeside,
   "NCD-LELAND": ncdLeland,
   "NCD-LOWER HAIGHT STREET": ncdLowerHaight,
+  "NCD-LOWER POLK STREET": ncdLowerPolk,
   "NCD-MISSION BERNAL": ncdMissionBernal,
   "NCD-NORIEGA": ncdNoriega,
   "NCD-NORTH BEACH": ncdNorthBeach,
