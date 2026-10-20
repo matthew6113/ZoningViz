@@ -18,6 +18,9 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "RM-2": "#d3b436",
   "RM-3": "#ae9529",
   "RM-4": "#84731f",
+  // RC: olives, light to dark.
+  "RC-3": "#a3a14a",
+  "RC-4": "#76752c",
   // NC: cyans and slate.
   "NC-1": "#63b6c9",
   "NC-2": "#2f8fa8",
@@ -76,6 +79,9 @@ export const DISTRICT_COLORS: Record<string, string> = {
   "RTO-1": "#c48bbf",
   "RTO-M": "#a25d9c",
   "RTO-C": "#7d3f78",
+  // RED: slate blues.
+  "RED": "#7f7fa6",
+  "RED-MX": "#5d5d8a",
 };
 export const OTHER_RESIDENTIAL = "#b9b4a3";
 export const OTHER_ZONING = "#c5c8ce";

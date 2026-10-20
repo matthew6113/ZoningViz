@@ -60,6 +60,10 @@ import ncdLowerPolk from "./NCD-LOWER-POLK-STREET.json";
 import nct1 from "./NCT-1.json";
 import nct2 from "./NCT-2.json";
 import nct3 from "./NCT-3.json";
+import rc3 from "./RC-3.json";
+import rc4 from "./RC-4.json";
+import red from "./RED.json";
+import redMx from "./RED-MX.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -75,9 +79,13 @@ const FILES: Record<string, unknown> = {
   "RM-2": rm2,
   "RM-3": rm3,
   "RM-4": rm4,
+  "RC-3": rc3,
+  "RC-4": rc4,
   "RTO-1": rto1,
   "RTO-M": rtoM,
   "RTO-C": rtoC,
+  "RED": red,
+  "RED-MX": redMx,
   "NC-1": nc1,
   "NC-2": nc2,
   "NC-3": nc3,

@@ -51,7 +51,8 @@ describe("district schema", () => {
     "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA",
     "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
     "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET",
-    "NCT-1", "NCT-2", "NCT-3"];
+    "NCT-1", "NCT-2", "NCT-3",
+    "RC-3", "RC-4", "RED", "RED-MX"];
   it.each(DRAFTS)("accepts the %s file, every rule cited and dated only once verified", (code) => {
     const district = loadDistrict(code);
     expect(district.district).toBe(code);

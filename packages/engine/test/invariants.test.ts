@@ -104,6 +104,10 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["2225 San Jose Ave, NCT-1 (6964011)", loadParcel("6964011"), "NCT-1", {}],
   ["808 22nd St, NCT-2 (4107011)", loadParcel("4107011"), "NCT-2", {}],
   ["2066 Market St, NCT-3 (3536005)", loadParcel("3536005"), "NCT-3", {}],
+  ["2243 Van Ness Ave, RC-3 (0570004)", loadParcel("0570004"), "RC-3", {}],
+  ["348 Hyde St, RC-4 (0334032)", loadParcel("0334032"), "RC-4", {}],
+  ["69 Moss St, RED (3731060)", loadParcel("3731060"), "RED", {}],
+  ["720 Clementina St, RED-MX (3729043)", loadParcel("3729043"), "RED-MX", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],

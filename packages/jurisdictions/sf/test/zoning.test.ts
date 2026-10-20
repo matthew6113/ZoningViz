@@ -66,7 +66,7 @@ describe("named neighborhood commercial districts", () => {
     expect(index.has("PDR PRODUCTION, DISTRIBUTION, AND REPAIR")).toBe(false);
   });
 
-  it("covers the named districts and NCT-1 to NCT-3, which have rule files", () => {
+  it("covers the districts added since the RH, RM and NC files", () => {
     const covered = ["NCD-EXCELSIOR", "NCD-GEARY BOULEVARD", "NCD-NORTH BEACH", "NCT-MISSION", "NCT-VALENCIA",
       "NCD-INNER SUNSET", "NCD-POLK", "NCD-TARAVAL", "NCD-UNION", "NCT-HAYES",
       "NCD-24TH-NOE-VALLEY", "NCD-INNER CLEMENT", "NCD-MISSION BERNAL", "NCD-SAN BRUNO AVENUE", "NCT-DIVISADERO",
@@ -76,7 +76,8 @@ describe("named neighborhood commercial districts", () => {
       "NCD-CORTLAND AVENUE", "NCT-FILLMORE", "NCT-FOLSOM", "NCT-GLEN PARK", "NCT-SOMA",
       "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
       "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET",
-      "NCT-1", "NCT-2", "NCT-3"];
+      "NCT-1", "NCT-2", "NCT-3",
+      "RC-3", "RC-4", "RED", "RED-MX"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
     expect(zoningCoverage("C-3-O")).toEqual({ kind: "not_covered", code: "C-3-O" });
   });
