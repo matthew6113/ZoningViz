@@ -590,7 +590,8 @@ test("a RED lot: 69 Moss St keeps its rear yard at ground level and flags the la
   await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 75 ft lot depth = 18.8 ft.");
   await expect(page.locator("[data-rule=rear-yard] .plain")).toContainText("at ground level and on every floor");
   await expect(page.locator("[data-rule=large-lots]")).toContainText("mid-block alley");
-  await expect(page.locator("[data-rule=rear-yard] .tag-unverified")).toBeVisible(); // drafts until checked
+  await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2024-01-14");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories");
