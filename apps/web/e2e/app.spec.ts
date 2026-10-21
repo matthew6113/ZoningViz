@@ -465,7 +465,8 @@ test("a named district whose code has no spaces: 4017 24th St is NCD-24TH-NOE-VA
   await expect(currentSentence(page)).toHaveText("Rear yard: 25% of 114 ft lot depth = 28.5 ft.");
   await expect(page.locator("[data-rule=rear-yard] footer")).toContainText("in effect since 2026-01-12");
   await expect(page.locator("[data-rule=ground-floor] .sentence")).toContainText("at least 14 ft floor to floor, in every height district");
-  await expect(page.locator(".tag-unverified")).toHaveCount(1);
+  await expect(page.locator("[data-rule=ground-floor] footer")).toContainText("in effect since 2026-04-11");
+  await expect(page.locator(".tag-unverified")).toHaveCount(0);
   await toResult(page);
   const summary = page.getByTestId("summary");
   await expect(summary).toContainText("4 stories at 10 ft floor-to-floor, 14 ft ground floor");

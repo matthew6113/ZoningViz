@@ -154,7 +154,7 @@ type Rule = {
 };
 ```
 
-Verification (every rule in all 68 files except RED's `ground-floor` draft, added 2026-10-21: the RH, RM and NC files 2026-10-14; the RTO files, the §249.94 note and twenty-five named NC districts 2026-10-17; five more 2026-10-18; seventeen more 2026-10-19; RC-3, RC-4, RED and RED-MX 2026-10-20; C-2 2026-10-21): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
+Verification (every rule in all 68 files: the RH, RM and NC files 2026-10-14; the RTO files, the §249.94 note and twenty-five named NC districts 2026-10-17; five more 2026-10-18; seventeen more 2026-10-19; RC-3, RC-4, RED and RED-MX 2026-10-20; C-2 and RED's ground floor 2026-10-21): each value was compared with the official Planning Code PDF from amlegal (current through Ord. 131-26), which the user keeps in a private repo (amlegal's terms bar redistributing it; never commit it here), and the user confirmed each batch in chat. A verified rule is dated by the latest ordinance that amended a cited subsection (else the section's latest amendment; a table that only restates a section is dated by that section), and its card shows "in effect since" that date. Rules link to the gocodebook mirror page with the same text. New or changed rules start as drafts (`verified: false`, `effectiveDate: null`; the schema refuses `verified: true` without a date) until checked the same way. VERIFY.md's log lists each batch.
 
 | Kind | Effect on volume | Params seen in SPEC.md |
 |---|---|---|
@@ -260,7 +260,7 @@ Real lots recorded for the invariants, with their 3DEP terrain: 4025007, 4025006
 - [x] Named NC districts, batch 9 (2026-10-19): Inner Balboa Street, Lower Polk Street, Lakeside Village, Cole Valley; verified 2026-10-19; the "not covered" e2e example is now 444 Battery St (C-3-O)
 - [x] NCT-1, NCT-2, NCT-3 (2026-10-19): Tables 750–752; verified 2026-10-19
 - [x] RC-3, RC-4, RED, RED-MX (2026-10-20): Tables 209.3, 834, 835; verified 2026-10-20
-- [x] C-2 with lot coverage (2026-10-21): `lot_coverage` rule kind and `street_band` cut (§134(d)(6)), `far` that counts homes, Table 210.1, fixture Z; verified 2026-10-21. RED gained a 14 ft `ground-floor` rule (Table 834), a draft
+- [x] C-2 with lot coverage (2026-10-21): `lot_coverage` rule kind and `street_band` cut (§134(d)(6)), `far` that counts homes, Table 210.1, fixture Z; verified 2026-10-21. RED gained a 14 ft `ground-floor` rule (Table 834), verified 2026-10-21
 
 ## Web app notes
 
