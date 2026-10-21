@@ -64,6 +64,7 @@ import rc3 from "./RC-3.json";
 import rc4 from "./RC-4.json";
 import red from "./RED.json";
 import redMx from "./RED-MX.json";
+import c2 from "./C-2.json";
 import nctMission from "./NCT-MISSION.json";
 import nctValencia from "./NCT-VALENCIA.json";
 
@@ -93,6 +94,7 @@ const FILES: Record<string, unknown> = {
   "NCT-1": nct1,
   "NCT-2": nct2,
   "NCT-3": nct3,
+  "C-2": c2,
   // Named NC districts, by their zoning-layer codes (sf/zoning.ts, resolveNamedDistrict).
   "NCD-24TH-NOE-VALLEY": ncd24thNoeValley,
   "NCD-BAYVIEW": ncdBayview,

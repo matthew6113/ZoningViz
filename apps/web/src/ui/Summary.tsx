@@ -1,5 +1,5 @@
 import type { EnvelopeTotals } from "@zoningviz/engine";
-import type { FarBudget, ProgramComparison } from "../state/steps";
+import { farCapText, type FarBudget, type ProgramComparison } from "../state/steps";
 import { gain, num } from "./format";
 
 export type { FarBudget, ProgramComparison } from "../state/steps";
@@ -35,9 +35,9 @@ export function Summary({ totals, floorToFloorFt, firstStoryFt, far, program = n
         <dd>{num(totals.grossFloorAreaSqFt)} sq ft</dd>
         {far && (
           <>
-            <dt>Non-residential cap</dt>
+            <dt>{farCapText(far).label}</dt>
             <dd data-testid="far-cap">
-              {num(far.budgetSqFt)} sq ft <span className="muted">(FAR {far.ratio}; homes aren't limited)</span>
+              {num(far.budgetSqFt)} sq ft <span className="muted">({farCapText(far).note})</span>
             </dd>
           </>
         )}

@@ -1,5 +1,5 @@
 import type { Manifold, ManifoldToplevel } from "manifold-3d";
-import { centroidOf, findStreetSides, isCornerLot, lotFrame, toPlanar, translate } from "./geometry/lot";
+import { centroidOf, depthForRearArea, findStreetSides, isCornerLot, lotFrame, toPlanar, translate } from "./geometry/lot";
 import {
   bottomOf,
   crossSection,
@@ -23,7 +23,16 @@ import {
   type GroundMeasurements,
   type HeightReference,
 } from "./geometry/terrain";
-import { applyCut, cutPlanesFor, dimensionsFor, planBulk, referenceBand, uncoveredArea, type CutContext } from "./rules/regions";
+import {
+  applyCut,
+  cutPlanesFor,
+  dimensionsFor,
+  planBulk,
+  referenceBand,
+  streetBandArea,
+  uncoveredArea,
+  type CutContext,
+} from "./rules/regions";
 import {
   describeBulkPlan,
   ft,
@@ -166,6 +175,7 @@ function computeEnvelope(
     bottomFt: 0,
     reference,
     ground: terrain?.ground ?? null,
+    streetSides: candidates.map((c) => c.path),
   };
   if (zones.length > 1) {
     const gap = uncoveredArea(cutCtx);
@@ -219,6 +229,10 @@ function computeEnvelope(
     reference: reference.kind,
     firstStory,
     program,
+    areas: {
+      depthForRearArea: (areaSqFt) => depthForRearArea(lot, frame, areaSqFt),
+      streetBandSqFt: (withinFt) => streetBandArea(cutCtx, withinFt),
+    },
   };
   const steps: Step[] = [];
   let currentSolid: Solid = start;

@@ -32,6 +32,8 @@ export interface CutContext {
   reference: HeightReference;
   /** Ground elevation (curb datum), or null for a flat lot at z = 0. */
   ground: Ground | null;
+  /** The lot's street sides (paths along the lot outline), for limits measured from a street. */
+  streetSides: XY[][];
 }
 
 /** Everything below `reference(d) + h(d)`, where d is depth behind the front line. */
@@ -94,6 +96,18 @@ export function applyCut(prev: Manifold, cut: Cut, ctx: CutContext): [Manifold, 
         ctx.reference.kind === "upslope" ? splitBelowSurface(rear, ctx, () => aboveFt) : splitHalfSpace(rear, [0, 0, -1], [0, 0, aboveFt]);
       const next = front.add(low);
       [front, rear, low].forEach((o) => o.delete());
+      return [next, removed];
+    }
+    case "street_band": {
+      const band = streetBandPrism(ctx, cut.withinFt);
+      if (cut.aboveFt === undefined) return splitBy(prev, band);
+      // As for a rear yard above the first story: beyond the band, keep only what lies below the first story's top.
+      const aboveFt = cut.aboveFt;
+      const [inside, outside] = splitBy(prev, band);
+      const [low, removed] =
+        ctx.reference.kind === "upslope" ? splitBelowSurface(outside, ctx, () => aboveFt) : splitHalfSpace(outside, [0, 0, -1], [0, 0, aboveFt]);
+      const next = inside.add(low);
+      [inside, outside, low].forEach((o) => o.delete());
       return [next, removed];
     }
     case "min_depth":
@@ -271,24 +285,7 @@ function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_st
     [edges.right, cut.rightFt],
   ] as const) {
     if (width <= 0) continue;
-    for (const e of list) {
-      // A hairline sliver along the edge, grown by the yard width: every point within `width` of the line.
-      const t = SLIVER_FT / 2;
-      const [mx, my] = [e.inward[0] * t, e.inward[1] * t];
-      const sliver = new wasm.CrossSection(
-        [
-          [
-            [e.a[0] - mx, e.a[1] - my],
-            [e.b[0] - mx, e.b[1] - my],
-            [e.b[0] + mx, e.b[1] + my],
-            [e.a[0] + mx, e.a[1] + my],
-          ],
-        ],
-        "NonZero", // either winding
-      );
-      bands.push(sliver.offset(width - t, "Round", 2, BAND_SEGMENTS));
-      sliver.delete();
-    }
+    for (const e of list) bands.push(segmentBand(wasm, e.a, e.b, width));
   }
   // Nothing to remove: a copy of prev (the caller deletes prev) and an empty piece.
   if (bands.length === 0) return [prev.translate([0, 0, 0]), prev.trimByPlane([0, 0, 1], ctx.bigFt * 10)];
@@ -298,6 +295,69 @@ function keepOutsideSideYards(prev: Manifold, cut: Extract<Cut, { type: "side_st
   const allowed = tallPrism(allowedSection, ctx.bigFt);
   [...bands, band, lotSection, allowedSection].forEach((o) => o.delete());
   return splitBy(prev, allowed);
+}
+
+/** A hairline sliver along a→b grown by `width` (round ends): every point within `width` of the segment. */
+function segmentBand(wasm: ManifoldToplevel, a: XY, b: XY, width: number): CrossSection {
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const t = SLIVER_FT / 2;
+  const [mx, my] = [(-(b[1] - a[1]) / length) * t, ((b[0] - a[0]) / length) * t];
+  const sliver = new wasm.CrossSection(
+    [
+      [
+        [a[0] - mx, a[1] - my],
+        [b[0] - mx, b[1] - my],
+        [b[0] + mx, b[1] + my],
+        [a[0] + mx, a[1] + my],
+      ],
+    ],
+    "NonZero", // either winding
+  );
+  const band = sliver.offset(width - t, "Round", 2, BAND_SEGMENTS);
+  sliver.delete();
+  return band;
+}
+
+/** The part of the lot within `withinFt` of a street side, in plan. */
+function streetBandSection(ctx: Pick<CutContext, "wasm" | "lot" | "streetSides">, withinFt: number): CrossSection {
+  const { wasm } = ctx;
+  const bands: CrossSection[] = [];
+  for (const path of ctx.streetSides) {
+    for (let i = 1; i < path.length; i++) {
+      const [a, b] = [path[i - 1]!, path[i]!];
+      if (Math.hypot(b[0] - a[0], b[1] - a[1]) > 1e-6) bands.push(segmentBand(wasm, a, b, withinFt));
+    }
+  }
+  const lotSection = crossSection(wasm, ctx.lot);
+  const union = wasm.CrossSection.union(bands);
+  const section = lotSection.intersect(union);
+  [...bands, union, lotSection].forEach((o) => o.delete());
+  return section;
+}
+
+function streetBandPrism(ctx: CutContext, withinFt: number): Manifold {
+  const section = streetBandSection(ctx, withinFt);
+  const prism = tallPrism(section, ctx.bigFt);
+  section.delete();
+  return prism;
+}
+
+/** The lot's area within `withinFt` of a street side, in square feet. */
+export function streetBandArea(ctx: Pick<CutContext, "wasm" | "lot" | "streetSides">, withinFt: number): number {
+  const section = streetBandSection(ctx, withinFt);
+  const area = section.area();
+  section.delete();
+  return area;
+}
+
+/** Each street side's chord with its inward unit normal, for dimension lines and cut planes. */
+function streetChords(ctx: Pick<CutContext, "streetSides">): { a: XY; b: XY; inward: XY }[] {
+  return ctx.streetSides.flatMap((path) => {
+    const [a, b] = [path[0]!, path[path.length - 1]!];
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (length < 1e-6) return [];
+    return [{ a, b, inward: [-(b[1] - a[1]) / length, (b[0] - a[0]) / length] as XY }]; // the lot lies left of a CCW outline
+  });
 }
 
 /** The longest edge on each side, for dimension lines and cut planes. */
@@ -395,6 +455,21 @@ export function dimensionsFor(cut: Cut, ctx: CutContext, zoneCenters: XY[]): Dim
         { from: [bx, by, reference.at(frame.depthFt)], to: [bx, by, top(frame.depthFt)], label: `${ft(cut.aboveFt)} first story` },
       ];
     }
+    case "street_band": {
+      // In from the middle of each street side, at the first story's top when the limit starts there.
+      const z = (p: XY): number => (cut.aboveFt === undefined ? groundZ(...p) : reference.at(frame.toFrame(p)[1]) + cut.aboveFt);
+      const lines: Dimension[] = streetChords(ctx).map(({ a, b, inward }) => {
+        const from: XY = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+        const to: XY = [from[0] + inward[0] * cut.withinFt, from[1] + inward[1] * cut.withinFt];
+        return { from: [from[0], from[1], z(from)], to: [to[0], to[1], z(to)], label: `${ft(cut.withinFt)} from the street` };
+      });
+      if (cut.aboveFt !== undefined) {
+        const [bx, by] = frame.toWorld(0, frame.depthFt);
+        const z0 = reference.at(frame.depthFt);
+        lines.push({ from: [bx, by, z0], to: [bx, by, z0 + cut.aboveFt], label: `${ft(cut.aboveFt)} first story` });
+      }
+      return lines;
+    }
     case "min_depth":
       return cut.depthFt > 0 ? [{ from: at(mid, 0, "ground"), to: at(mid, cut.depthFt, "ground"), label: ft(cut.depthFt) }] : [];
     case "plane": {
@@ -482,6 +557,13 @@ export function cutPlanesFor(cut: Cut, ctx: CutContext): CutPlane[] {
     }
     case "min_depth":
       return [vertical(cut.depthFt)];
+    case "street_band":
+      // A plane along each street side, set in by the band width, from the first story's top (or the bottom) up.
+      return streetChords(ctx).map(({ a, b, inward }) => {
+        const origin: XY = [a[0] + inward[0] * cut.withinFt, a[1] + inward[1] * cut.withinFt];
+        const z = cut.aboveFt === undefined ? bottom : reference.at(frame.toFrame(origin)[1]) + cut.aboveFt;
+        return { origin: [origin[0], origin[1], z], u: [b[0] - a[0], b[1] - a[1], 0], v: [0, 0, Math.max(top - z, 0)] };
+      });
     case "side_strips": {
       // A plane along each side's longest lot line, set in by the yard width.
       const sides = longestSideEdges(ctx);

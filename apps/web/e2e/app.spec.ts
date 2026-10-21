@@ -174,7 +174,7 @@ test("corner lot 2550 19th St asks which side is the front", async ({ page }) =>
 test("a lot outside the covered districts says so", async ({ page }) => {
   // 444 Battery St: downtown office (C-3-O), which has no rule file.
   await page.goto("/?parcel=0204019");
-  await expect(page.locator(".notice")).toContainText("Zoned C-3-O. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RC-3, RC-4, RTO-1, RTO-M, RTO-C, RED, RED-MX, NC-1–NC-3, NC-S, NCT-1–NCT-3, NCD-24TH-NOE-VALLEY, NCD-BAYVIEW, NCD-BROADWAY, NCD-CASTRO, NCD-COLE VALLEY, NCD-CORTLAND AVENUE, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-HAIGHT, NCD-INNER BALBOA STREET, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-INNER TARAVAL STREET, NCD-IRVING, NCD-JAPANTOWN, NCD-JUDAH, NCD-LAKESIDE VILLAGE, NCD-LELAND, NCD-LOWER HAIGHT STREET, NCD-LOWER POLK STREET, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER BALBOA STREET, NCD-OUTER CLEMENT, NCD-PACIFIC, NCD-POLK, NCD-SACRAMENTO, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCD-WEST PORTAL, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-FILLMORE, NCT-FOLSOM, NCT-GLEN PARK, NCT-HAYES, NCT-MISSION, NCT-OCEAN, NCT-SOMA, NCT-UPPER MARKET, NCT-VALENCIA only so far");
+  await expect(page.locator(".notice")).toContainText("Zoned C-3-O. Rule files exist for RH-1(D), RH-1, RH-1(S), RH-2, RH-3, RM-1–RM-4, RC-3, RC-4, RTO-1, RTO-M, RTO-C, RED, RED-MX, NC-1–NC-3, NC-S, NCT-1–NCT-3, C-2, NCD-24TH-NOE-VALLEY, NCD-BAYVIEW, NCD-BROADWAY, NCD-CASTRO, NCD-COLE VALLEY, NCD-CORTLAND AVENUE, NCD-EXCELSIOR, NCD-GEARY BOULEVARD, NCD-HAIGHT, NCD-INNER BALBOA STREET, NCD-INNER CLEMENT, NCD-INNER SUNSET, NCD-INNER TARAVAL STREET, NCD-IRVING, NCD-JAPANTOWN, NCD-JUDAH, NCD-LAKESIDE VILLAGE, NCD-LELAND, NCD-LOWER HAIGHT STREET, NCD-LOWER POLK STREET, NCD-MISSION BERNAL, NCD-NORIEGA, NCD-NORTH BEACH, NCD-OUTER BALBOA STREET, NCD-OUTER CLEMENT, NCD-PACIFIC, NCD-POLK, NCD-SACRAMENTO, NCD-SAN BRUNO AVENUE, NCD-TARAVAL, NCD-UNION, NCD-UPPER FILLMORE, NCD-WEST PORTAL, NCT-24TH-MISSION, NCT-DIVISADERO, NCT-FILLMORE, NCT-FOLSOM, NCT-GLEN PARK, NCT-HAYES, NCT-MISSION, NCT-OCEAN, NCT-SOMA, NCT-UPPER MARKET, NCT-VALENCIA only so far");
   await expect(page.locator(".fact-card")).toContainText("C-3-O");
 });
 
@@ -597,6 +597,26 @@ test("a RED lot: 69 Moss St keeps its rear yard at ground level and flags the la
   await expect(summary).toContainText("4 stories");
   await expect(summary).toContainText("5,400 sq ft");
   await expectSceneDrawn(page);
+});
+
+test("a C-2 lot: 2237 Powell St leaves 20% of the lot open above its shop floor, and its FAR counts homes", async ({ page }) => {
+  await page.goto("/?parcel=0041002&step=6");
+  await expect(page.locator(".fact-card h2")).toHaveText("2237–2241 Powell St");
+  await expect(page.locator(".fact-card")).toContainText("C-2");
+  await expect(label(page)).toHaveText("Rule 6 of 10: Lot coverage");
+  await expect(currentSentence(page)).toHaveText(
+    /^Lot coverage: levels with homes may cover at most 80% of the 2,750 sq ft lot \(2,200 sq ft\), or all of it where every home on the level is within 40 ft of a street \(here that band is only 1,600 sq ft\)\. The open 550 sq ft is drawn across the back, 13\.7 ft deep/,
+  );
+  await expect(page.locator(".dimension-label").filter({ hasText: "10 ft first story" })).toHaveCount(1);
+  await expect(page.locator("[data-rule=lot-coverage] .eye")).toHaveCount(1);
+  await expect(page.locator("[data-rule=lot-coverage] .tag-unverified")).toHaveCount(1);
+  await expect(page.locator("[data-rule=narrow-street]")).toHaveCount(0);
+  await expectSceneDrawn(page);
+  await page.screenshot({ path: `${SHOTS}/powell-c2-lot-coverage.png` });
+
+  await toResult(page);
+  await expect(page.getByTestId("summary")).toContainText("Floor area cap");
+  await expect(page.getByTestId("far-cap")).toContainText("9,900 sq ft (FAR 3.6; homes count)");
 });
 
 test("an NC-2 lot: 2385 Folsom St has a 14 ft shop floor, and its rear yard starts above it", async ({ page }) => {

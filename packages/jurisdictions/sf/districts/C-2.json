@@ -1,0 +1,252 @@
+{
+  "jurisdiction": "sf",
+  "district": "C-2",
+  "name": "Community Business",
+  "rules": [
+    {
+      "id": "use",
+      "kind": "info",
+      "title": "Shops, services and homes",
+      "plain": "C-2 lots are for shops and services serving nearby neighborhoods, and homes are allowed: as many as the nearest R district allows, and never fewer than one per 800 square feet of lot area. Density is form-based (limited only by what fits in the allowed building) on lots in an R-4 height district and on lots east of or fronting Franklin and 13th Streets north of Townsend Street, outside the Northeast Waterfront and Jackson Square historic districts. Homes need the same open space as in that nearest R district. Front setbacks and side yards aren't required.",
+      "params": {},
+      "citation": "§210.1 (Table 210.1 and note 8), §207, §135",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts#210.1",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "height-reference",
+      "kind": "height_reference",
+      "title": "Where height is measured from",
+      "plain": "Height is measured from the curb at the middle of the building's street front. On a lot that slopes up from the street, only the first 10 feet back are measured from the curb, and the rest from the average ground at the two sides of each cross-section; on a lot that slopes down, the curb is used for the first 100 feet, or halfway to the street behind if that's farther.",
+      "params": {
+        "downslopeCurbDepthFeet": 100,
+        "upslopeCurbWithinFeet": 10
+      },
+      "citation": "§260(a)(1)(A)–(C), §261(a)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
+    },
+    {
+      "id": "local-program",
+      "kind": "local_program",
+      "title": "Housing Choice-SF",
+      "plain": "On lots in the Family Zoning Plan's R-4 districts, a housing project can opt into Housing Choice-SF. It may then be as tall as the second number in the R-4 height label (65 ft in 40//65-R-4), and at least 65 ft on a corner lot or a lot larger than 8,000 sq ft. Levels with homes may cover 82% of the lot instead of 80%, with no limit at the ground floor, and FAR no longer limits its homes. Open space and exposure requirements don't apply.",
+      "params": {
+        "minHeight": {
+          "feet": 65,
+          "onCornerLot": true,
+          "lotAreaOverSqFt": 8000
+        },
+        "waives": [],
+        "replaces": [
+          {
+            "ruleId": "lot-coverage",
+            "params": {
+              "maxCoverage": 0.82,
+              "appliesAt": "above_first_story",
+              "streetExemptionFeet": 40
+            },
+            "citation": "§206.10(d)(1)(E)(ii), (iv)"
+          },
+          {
+            "ruleId": "far",
+            "params": {
+              "ratio": 3.6,
+              "appliesTo": "non_residential"
+            },
+            "citation": "§206.10(d)(1)(A)"
+          }
+        ],
+        "assumes": "a project that adds homes (2 or more units, at least two-thirds residential, no other density bonus) and doesn't demolish a historic building, a hotel or a building with more than 2 rent-controlled units",
+        "notDrawn": "the optional height bonuses (up to 30 ft), 20 ft more for 100% affordable projects, §263.20's 5 ft for tall ground floors, the 15% adjustments to other standards and the Citywide Design Standards"
+      },
+      "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(E), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "mapped-height",
+      "kind": "height_cap",
+      "title": "Height limit",
+      "plain": "No part of a building may be taller than the height limit mapped for this lot's height and bulk district.",
+      "params": {
+        "source": "heightDistrict"
+      },
+      "citation": "§250",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#250",
+      "verified": true,
+      "effectiveDate": "2016-08-28"
+    },
+    {
+      "id": "ground-floor",
+      "kind": "ground_story",
+      "title": "Ground floor height",
+      "plain": "A shop or other non-residential ground floor must be at least 14 feet from floor to floor, or 10 feet in 40- and 50-foot height districts.",
+      "params": {
+        "minFloorToFloorFeet": 14,
+        "exceptions": [
+          {
+            "heightDistrictFeet": [
+              40,
+              50
+            ],
+            "minFloorToFloorFeet": 10
+          }
+        ]
+      },
+      "citation": "§145.1(c)(4)(C); Table 210.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-145.-frontages-outdoor-activity-areas-walkup-facilities-and-ground-floor-uses-and-standa/sec.-145.1.-street-frontages-in-neighborhood-commercial-residential-commercial-commercial-and",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "lot-coverage",
+      "kind": "lot_coverage",
+      "title": "Lot coverage",
+      "plain": "From the lowest story with homes up, a building may cover at most 80% of the lot; the rest must stay open to the sky and, where the neighbors have rear yards, adjoin them. A level may cover the whole lot if it holds only lobbies and circulation, or if all its homes are within 40 feet of a lot line on a street or alley. With shops on the ground floor, the limit starts at the second story.",
+      "params": {
+        "maxCoverage": 0.8,
+        "appliesAt": "above_first_story",
+        "streetExemptionFeet": 40
+      },
+      "citation": "§134(d)(6); Table 210.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "bulk",
+      "kind": "bulk",
+      "title": "Bulk limits",
+      "plain": "Above a height set by the lot's bulk district (the letter after the height, as in 65-A), no floor may be longer, or longer corner to corner, than the district allows.",
+      "params": {
+        "letters": {
+          "A": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "B": {
+            "aboveFeet": 50,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "C": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          },
+          "D": {
+            "aboveFeet": 40,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "E": {
+            "aboveFeet": 65,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "F": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 140
+          },
+          "G": {
+            "aboveFeet": 80,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "H": {
+            "aboveFeet": 100,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "I": {
+            "aboveFeet": 150,
+            "lengthFeet": 170,
+            "diagonalFeet": 200
+          },
+          "J": {
+            "aboveFeet": 40,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "K": {
+            "aboveFeet": 60,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "L": {
+            "aboveFeet": 80,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "M": {
+            "aboveFeet": 100,
+            "lengthFeet": 250,
+            "diagonalFeet": 300
+          },
+          "N": {
+            "aboveFeet": 40,
+            "lengthFeet": 50,
+            "diagonalFeet": 100
+          },
+          "T": {
+            "aboveFeet": 80,
+            "lengthFeet": 110,
+            "diagonalFeet": 125
+          }
+        },
+        "noLimit": [
+          "X"
+        ],
+        "podiumOnly": {
+          "R-4": 85
+        }
+      },
+      "citation": "§270(a), Table 270; §102 (Plan Dimensions); §270(i)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#270",
+      "verified": true,
+      "effectiveDate": "2026-03-16"
+    },
+    {
+      "id": "far",
+      "kind": "far",
+      "title": "Floor area limit",
+      "plain": "All floor area, homes included, may total up to 3.6 times the lot area. The ratio is 4.8 on a lot nearer to an RM-4 or RC-4 district than to any other R district, 10.0 on a lot nearer to a C-3 district than to any R district, and 5.0 in the Waterfront and Washington-Broadway special use districts; those aren't checked here, so the basic 3.6 is shown.",
+      "params": {
+        "ratio": 3.6,
+        "appliesTo": "all_uses"
+      },
+      "citation": "§124(a)–(c), (e), Table 124; Table 210.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#124",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "large-lots",
+      "kind": "flag",
+      "title": "Large lots",
+      "plain": "A lot of two acres or more, or with 200 feet or more of frontage on a block face 400 feet or longer, must be divided into smaller blocks by new streets or mid-block alleys before new construction. That isn't shown.",
+      "params": {},
+      "citation": "§270.3(c)–(d); Table 210.1",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
+      "id": "cross-slope",
+      "kind": "flag",
+      "title": "Cross-slope",
+      "plain": "Where the height limit is 65 feet or less and the street slopes along the lot's front, or the ground slopes across a lot that rises from the street, by more than 5%, a wide building is measured from several points, each covering at most 65 feet (35 to 55 on steeper slopes; on R-4 lots up to 85 feet tall, 55 to 85). It doesn't apply where §270 bulk limits apply. This view measures from one point.",
+      "params": {},
+      "citation": "§260(a)(3)–(4), Tables 260-1 and 260-2",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts#260",
+      "verified": true,
+      "effectiveDate": "2026-01-12"
+    }
+  ]
+}

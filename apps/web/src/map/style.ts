@@ -82,6 +82,8 @@ export const DISTRICT_COLORS: Record<string, string> = {
   // RED: slate blues.
   "RED": "#7f7fa6",
   "RED-MX": "#5d5d8a",
+  // C-2: magenta.
+  "C-2": "#b03a8f",
 };
 export const OTHER_RESIDENTIAL = "#b9b4a3";
 export const OTHER_ZONING = "#c5c8ce";

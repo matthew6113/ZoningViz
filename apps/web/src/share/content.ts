@@ -1,6 +1,6 @@
 import type { Step } from "@zoningviz/engine";
 import type { LotFacts } from "../data/loadLot";
-import { farBudget, lastPosition, positionLabel, type OkResult, type ProgramComparison } from "../state/steps";
+import { farBudget, farCapText, lastPosition, positionLabel, type OkResult, type ProgramComparison } from "../state/steps";
 import { gain, num } from "../ui/format";
 
 // What a share image says, as plain data: no drawing here, so it can be tested
@@ -184,7 +184,10 @@ function resultLines({ result, program }: ShareContext): string[] {
     `${num(totals.percentSurvived, 1)}% of the block survived`,
   ];
   const far = farBudget(result.steps);
-  if (far) lines.push(`Non-residential cap ${num(far.budgetSqFt)} sq ft (FAR ${far.ratio}; homes aren't limited)`);
+  if (far) {
+    const { label, note } = farCapText(far);
+    lines.push(`${label} ${num(far.budgetSqFt)} sq ft (${note})`);
+  }
   if (program) {
     lines.push(
       `Without ${program.title}: ${num(program.without.grossFloorAreaSqFt)} sq ft in ${storiesText(program.without.stories)} (${gain(totals, program.without)})`,

@@ -116,6 +116,12 @@ describe("view caption", () => {
     expect(caption.body).toContain("Without Housing Choice-SF: 8,125 sq ft in 4 stories (+4,625 sq ft, +2 stories with the program)");
     expect(caption.body).toContain("Non-residential cap 6,250 sq ft (FAR 2.5; homes aren't limited)");
   });
+
+  it("says homes count toward C-2's FAR (fixture Z)", () => {
+    const z = compute("C-2", { label: "40-X", heightFt: 40, bulk: "X" });
+    const caption = viewCaption({ ...ctxA, facts: facts("Z", "C-2", "40-X"), result: z }, z.steps.length + 1);
+    expect(caption.body).toContain("Floor area cap 9,000 sq ft (FAR 3.6; homes count)");
+  });
 });
 
 describe("helpers", () => {

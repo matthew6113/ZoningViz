@@ -239,6 +239,41 @@ export function lotFrame(lot: PlanarMultiPolygon, front: FrontCandidate): LotFra
   };
 }
 
+/** The lot's area more than `depth` behind the front line (each ring clipped to that half-plane). */
+export function areaBehind(lot: PlanarMultiPolygon, frame: LotFrame, depth: number): number {
+  let area = 0;
+  for (const polygon of lot) {
+    for (const ring of polygon) {
+      // Sutherland–Hodgman against one half-plane: right for area even on concave rings, with holes (clockwise) subtracting.
+      const local = ring.map((p) => frame.toFrame(p));
+      const clipped: XY[] = [];
+      for (let i = 0; i < local.length; i++) {
+        const a = local[i]!;
+        const b = local[(i + 1) % local.length]!;
+        const aIn = a[1] > depth;
+        const bIn = b[1] > depth;
+        if (aIn) clipped.push(a);
+        if (aIn !== bIn) clipped.push(lerp(a, b, (depth - a[1]) / (b[1] - a[1])));
+      }
+      if (clipped.length >= 3) area += signedRingArea(clipped);
+    }
+  }
+  return area;
+}
+
+/** How far back from the front line the lot runs before the part behind that line is `areaSqFt` (bisection). */
+export function depthForRearArea(lot: PlanarMultiPolygon, frame: LotFrame, areaSqFt: number): number {
+  const ds = lot.flat(2).map((p) => frame.toFrame(p)[1]);
+  let [near, far] = [Math.min(...ds), Math.max(...ds)];
+  if (areaSqFt <= 0) return far;
+  for (let i = 0; i < 60 && far - near > 1e-9; i++) {
+    const mid = (near + far) / 2;
+    if (areaBehind(lot, frame, mid) > areaSqFt) near = mid;
+    else far = mid;
+  }
+  return (near + far) / 2;
+}
+
 // ---------- small helpers ----------
 
 function largestPolygon(multi: PlanarMultiPolygon): PlanarPolygon {

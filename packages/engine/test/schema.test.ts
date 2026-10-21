@@ -52,7 +52,7 @@ describe("district schema", () => {
     "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
     "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET",
     "NCT-1", "NCT-2", "NCT-3",
-    "RC-3", "RC-4", "RED", "RED-MX"];
+    "RC-3", "RC-4", "RED", "RED-MX", "C-2"];
   it.each(DRAFTS)("accepts the %s file, every rule cited and dated only once verified", (code) => {
     const district = loadDistrict(code);
     expect(district.district).toBe(code);
@@ -78,7 +78,7 @@ describe("district schema", () => {
 
   it.each([
     ["a verified rule without an effective date", [rule({ verified: true })], /effective date/],
-    ["an unknown kind", [rule({ kind: "lot_coverage" })], /kind/],
+    ["an unknown kind", [rule({ kind: "open_space" })], /kind/],
     ["duplicate ids", [rule({}), rule({})], /duplicate rule id/],
     ["a malformed URL", [rule({ url: "not a url" })], /url/i],
     ["a missing plain sentence", [rule({ plain: "" })], /plain/],

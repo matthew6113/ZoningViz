@@ -15,8 +15,14 @@ describe("district files", () => {
   });
 
   it.each(["height-reference", "mapped-height", "narrow-street", "cross-slope"])("all carry the same %s rule", (id) => {
-    const [first, ...rest] = shared(id);
+    // §261.1's narrow-street limits cover R, RTO, NC, NCT and Eastern Neighborhoods mixed-use districts, not C districts.
+    const copies = shared(id).filter(({ code }) => !(id === "narrow-street" && code.startsWith("C-")));
+    const [first, ...rest] = copies;
     for (const { code, rule } of rest) expect(rule, `${code}'s ${id} differs`).toEqual(first!.rule);
+  });
+
+  it("leave the narrow-street rule out of C districts only (§261.1)", () => {
+    for (const { code, rule } of shared("narrow-street")) expect(rule === undefined, code).toBe(code.startsWith("C-"));
   });
 
   it("all carry Housing Choice-SF right after the height reference, with the same height floor and card text", () => {
@@ -33,7 +39,7 @@ describe("district files", () => {
     for (const copy of common) expect(copy).toEqual(common[0]);
   });
 
-  it("waive exactly the §261(b) and §261(c) rules, and replace NC, RC, RTO-C and RED rear yards (§206.10(d)(1)(E))", () => {
+  it("waive exactly the §261(b) and §261(c) rules, replace NC, RC, RTO-C and RED rear yards (§206.10(d)(1)(E)), and C lot coverage and FAR", () => {
     for (const code of availableDistricts()) {
       const rules = loadDistrict(code)!.rules;
       const program = rules.find((r) => r.kind === "local_program");
@@ -41,7 +47,8 @@ describe("district files", () => {
       const section261 = rules.filter((r) => /§261\((b|c)\)/.test(r.citation)).map((r) => r.id);
       expect(program.params.waives.map((w) => w.ruleId), code).toEqual(section261);
       const replaced = code.startsWith("NC") || code.startsWith("RC-") || code.startsWith("RED") || code === "RTO-C";
-      expect(program.params.replaces.map((r) => r.ruleId), code).toEqual(replaced ? ["rear-yard"] : []);
+      const expected = code.startsWith("C-") ? ["lot-coverage", "far"] : replaced ? ["rear-yard"] : [];
+      expect(program.params.replaces.map((r) => r.ruleId), code).toEqual(expected);
     }
   });
 
@@ -49,7 +56,7 @@ describe("district files", () => {
     for (const code of availableDistricts()) {
       const kinds = loadDistrict(code)!.rules.map((r) => r.kind);
       const bulk = kinds.indexOf("bulk");
-      for (const kind of ["rear_yard", "front_setback", "side_yard", "sky_plane", "height_cap", "height_by_slope"] as const) {
+      for (const kind of ["rear_yard", "lot_coverage", "front_setback", "side_yard", "sky_plane", "height_cap", "height_by_slope"] as const) {
         if (kinds.includes(kind)) expect(kinds.lastIndexOf(kind), `${code}: ${kind} after bulk`).toBeLessThan(bulk);
       }
     }

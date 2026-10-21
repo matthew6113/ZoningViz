@@ -77,7 +77,7 @@ describe("named neighborhood commercial districts", () => {
       "NCD-BROADWAY", "NCD-JAPANTOWN", "NCD-JUDAH", "NCD-LELAND", "NCD-LOWER HAIGHT STREET",
       "NCD-COLE VALLEY", "NCD-INNER BALBOA STREET", "NCD-LAKESIDE VILLAGE", "NCD-LOWER POLK STREET",
       "NCT-1", "NCT-2", "NCT-3",
-      "RC-3", "RC-4", "RED", "RED-MX"];
+      "RC-3", "RC-4", "RED", "RED-MX", "C-2"];
     for (const code of covered) expect(zoningCoverage(code)).toEqual({ kind: "covered", code });
     expect(zoningCoverage("C-3-O")).toEqual({ kind: "not_covered", code: "C-3-O" });
   });

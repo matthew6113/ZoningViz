@@ -28,10 +28,20 @@ export interface ProgramComparison {
 export interface FarBudget {
   ratio: number;
   budgetSqFt: number;
+  /** True where the ratio limits all floor area, homes included (C districts); else it limits non-residential uses only. */
+  homesCount: boolean;
 }
 
 /** The floor-area-ratio rule's budget, unless it's switched off or the district has none. */
 export function farBudget(steps: Step[]): FarBudget | null {
   const far = steps.find((s) => s.rule.kind === "far" && s.status !== "disabled");
-  return far ? { ratio: far.numbers.ratio!, budgetSqFt: far.numbers.budgetSqFt! } : null;
+  if (far?.rule.kind !== "far") return null;
+  return { ratio: far.numbers.ratio!, budgetSqFt: far.numbers.budgetSqFt!, homesCount: far.rule.params.appliesTo === "all_uses" };
+}
+
+/** The summary's name for the floor-area budget and what it covers. */
+export function farCapText(far: FarBudget): { label: string; note: string } {
+  return far.homesCount
+    ? { label: "Floor area cap", note: `FAR ${far.ratio}; homes count` }
+    : { label: "Non-residential cap", note: `FAR ${far.ratio}; homes aren't limited` };
 }

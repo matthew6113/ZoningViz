@@ -108,11 +108,17 @@ const parcels: [string, ParcelInput, string, EnvelopeOptions][] = [
   ["348 Hyde St, RC-4 (0334032)", loadParcel("0334032"), "RC-4", {}],
   ["69 Moss St, RED (3731060)", loadParcel("3731060"), "RED", {}],
   ["720 Clementina St, RED-MX (3729043)", loadParcel("3729043"), "RED-MX", {}],
+  ["2237 Powell St, C-2 (0041002)", loadParcel("0041002"), "C-2", {}],
+  ["463 Jackson St, C-2 corner, front 0 (0196017)", loadParcel("0196017"), "C-2", { frontSide: 0 }],
+  ["463 Jackson St, C-2 corner, front 1 (0196017)", loadParcel("0196017"), "C-2", { frontSide: 1 }],
+  ["1325 Columbus Ave, C-2 irregular (0024021)", loadParcel("0024021"), "C-2", {}],
+  ["555 Beach St, C-2 street band (0023003)", loadParcel("0023003"), "C-2", {}],
+  ["Z 25x45 street band", rectangularLot(25, 45), "C-2", {}],
 ];
 const variants: [string, EnvelopeOptions][] = [
   ["default setback", {}],
   ["no setback", NO_SETBACK],
-  ["rear yard off", { disabledRuleIds: ["rear-yard"] }],
+  ["rear yard or lot coverage off", { disabledRuleIds: ["rear-yard", "lot-coverage"] }],
 ];
 const programVariants: [string, EnvelopeOptions][] = [
   ["Housing Choice-SF", { localProgram: true }],

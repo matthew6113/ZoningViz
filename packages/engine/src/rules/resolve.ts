@@ -34,6 +34,15 @@ export interface ResolveContext {
   firstStory: FirstStory | null;
   /** The district's local program, or null if it has none. */
   program: LocalProgram | null;
+  /** Plan areas measured on the lot, for rules that set how much of it may be built (filled in by the geometry stage). */
+  areas: LotAreas;
+}
+
+export interface LotAreas {
+  /** How far back from the front line the lot runs before the part behind that line has this area. */
+  depthForRearArea(areaSqFt: number): number;
+  /** The lot's area within this distance of a street side. */
+  streetBandSqFt(withinFt: number): number;
 }
 
 /** A district's local program, resolved for one lot. */
@@ -70,6 +79,8 @@ export type Cut =
   | { type: "zone_heights"; heights: (number | null)[] }
   /** Keep only what lies within `depthFt` of the front line (rear yard); with `aboveFt`, only above that height (the first story may fill the yard). */
   | { type: "max_depth"; depthFt: number; aboveFt?: number }
+  /** Keep only what lies within `withinFt` of a street side (lot coverage); with `aboveFt`, only above that height. */
+  | { type: "street_band"; withinFt: number; aboveFt?: number }
   /** Keep only what lies at least `depthFt` behind the front line (front setback). */
   | { type: "min_depth"; depthFt: number }
   /** Keep what lies under a plane rising at `angleDeg` from `startHeightFt`, `fromDepthFt` behind the front line. */
@@ -262,12 +273,25 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
     case "bulk":
       return resolveBulk(rule, ctx);
 
+    case "lot_coverage":
+      return resolveLotCoverage(rule, ctx);
+
     case "local_program":
       return resolveLocalProgram(rule, ctx);
 
     case "far": {
-      const { ratio } = rule.params;
+      const { ratio, appliesTo } = rule.params;
       const budgetSqFt = ratio * ctx.lotAreaSqFt;
+      if (appliesTo === "all_uses") {
+        return {
+          status: "info",
+          sentence:
+            `${rule.title}: ${ratio} to 1, so all floor area, homes included, may total ${ratio} × ${sqft(ctx.lotAreaSqFt)} = ${sqft(budgetSqFt)}. ` +
+            "It limits how much of the envelope may be built, not its shape.",
+          numbers: { ratio, lotAreaSqFt: ctx.lotAreaSqFt, budgetSqFt },
+          cut: { type: "none" },
+        };
+      }
       return {
         status: "info",
         sentence:
@@ -306,6 +330,63 @@ export function resolveRule(rule: Rule, ctx: ResolveContext, options: EnvelopeOp
       };
     }
   }
+}
+
+// A street band within this much of the lot's area counts as the whole lot (outline noise).
+const WHOLE_LOT_TOLERANCE_SQFT = 0.5;
+
+/**
+ * Lot coverage leaves the code two ways to build a level with homes: cover the
+ * allowed share anywhere, or cover the whole level where every home is within
+ * the street distance. The card draws whichever builds more: the open share
+ * across the back (where the neighbors' rear yards are), or the street band.
+ */
+function resolveLotCoverage(rule: Extract<Rule, { kind: "lot_coverage" }>, ctx: ResolveContext): Resolved {
+  const { maxCoverage, appliesAt, streetExemptionFeet: withinFt } = rule.params;
+  const lotSqFt = ctx.lotAreaSqFt;
+  const coveredSqFt = maxCoverage * lotSqFt;
+  const openSqFt = lotSqFt - coveredSqFt;
+  const bandSqFt = Math.min(ctx.areas.streetBandSqFt(withinFt), lotSqFt);
+  const numbers = { maxCoverage, lotAreaSqFt: lotSqFt, coveredSqFt, openSqFt, withinFt, streetBandSqFt: bandSqFt };
+  const limit =
+    `${rule.title}: levels with homes may cover at most ${pct(maxCoverage)} of the ${sqft(lotSqFt)} lot (${sqft(coveredSqFt)}), ` +
+    `or all of it where every home on the level is within ${ft(withinFt)} of a street`;
+  if (bandSqFt >= lotSqFt - WHOLE_LOT_TOLERANCE_SQFT) {
+    return {
+      status: "not_applicable",
+      sentence: `${limit}. Every part of this lot is within ${ft(withinFt)} of a street, so it may be fully built.`,
+      numbers,
+      cut: { type: "none" },
+    };
+  }
+  // The schema requires a ground_story rule before an above-first-story limit, so the first story is known.
+  const aboveFt = appliesAt === "above_first_story" ? ctx.firstStory!.feet : undefined;
+  const above =
+    aboveFt === undefined
+      ? ""
+      : ` It starts above the ${ft(aboveFt)} first story, assuming a shop or other non-residential use there; a first story with homes would be limited too.`;
+  const withAbove: { aboveFt?: number } = aboveFt === undefined ? {} : { aboveFt };
+  const numbersAbove: Record<string, number> = aboveFt === undefined ? {} : { aboveFt };
+  if (bandSqFt > coveredSqFt) {
+    return {
+      status: "cut",
+      sentence:
+        `${limit}. Here the ${ft(withinFt)} band (${sqft(bandSqFt)}) builds more, so it is drawn and the ${sqft(lotSqFt - bandSqFt)} beyond it stays open, ` +
+        `one allowed layout.${above}`,
+      numbers: { ...numbers, ...numbersAbove },
+      cut: { type: "street_band", withinFt, ...withAbove },
+    };
+  }
+  const depthFt = ctx.areas.depthForRearArea(openSqFt);
+  const openDepthFt = Math.max(ctx.depthFt - depthFt, 0);
+  return {
+    status: "cut",
+    sentence:
+      `${limit} (here that band is only ${sqft(bandSqFt)}). The open ${sqft(openSqFt)} is drawn across the back, ${ft(openDepthFt)} deep, ` +
+      `since it must adjoin the neighbors' rear yards where they have them; that is one allowed layout, as the code sets its area, not its shape.${above}`,
+    numbers: { ...numbers, openDepthFt, ...numbersAbove },
+    cut: { type: "max_depth", depthFt, ...withAbove },
+  };
 }
 
 function resolveHeightReference(rule: Extract<Rule, { kind: "height_reference" }>, ctx: ResolveContext): Resolved {

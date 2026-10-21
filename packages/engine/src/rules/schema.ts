@@ -101,12 +101,29 @@ export const GroundStoryParams = z
   })
   .strict();
 
+/**
+ * A share of the lot that levels with homes may cover (SF: C districts, §134(d)(6)).
+ * Levels whose homes all lie within `streetExemptionFeet` of a lot line on a
+ * street may cover the whole lot.
+ */
+export const LotCoverageParams = z
+  .object({
+    maxCoverage: z.number().gt(0).lt(1),
+    /** As for rear yards: "above_first_story" lets the first story (set by an earlier ground_story rule) cover the whole lot. */
+    appliesAt: z.enum(["grade_and_every_story", "above_first_story"]),
+    streetExemptionFeet: z.number().min(0),
+  })
+  .strict();
+
 /** A floor-area budget for some uses, shown against the envelope's floor area; it doesn't cut the volume. */
 export const FarParams = z
   .object({
     ratio: z.number().positive(),
-    /** Which floor area the ratio limits. Residential floor area is exempt in SF's R, RC, NC and mixed-use districts (§124(b)). */
-    appliesTo: z.literal("non_residential"),
+    /**
+     * Which floor area the ratio limits. Residential floor area is exempt in SF's R, RC, NC and mixed-use
+     * districts (§124(b)), so there it limits non-residential uses only; in C districts it limits all of it.
+     */
+    appliesTo: z.enum(["non_residential", "all_uses"]),
   })
   .strict();
 
@@ -168,7 +185,7 @@ export const LocalProgramParams = z
       .strict(),
     /** Later rules that don't apply under the program. */
     waives: z.array(z.object({ ruleId, because: z.string().min(1), citation: z.string().min(1) }).strict()),
-    /** Later rules that keep their kind but take the program's params. */
+    /** Later rules (cutting or floor-area rules) that keep their kind but take the program's params. */
     replaces: z.array(z.object({ ruleId, params: z.record(z.string(), z.unknown()), citation: z.string().min(1) }).strict()),
     /** What the drawn envelope assumes about the project (eligibility the app can't check). */
     assumes: z.string().min(1),
@@ -186,9 +203,15 @@ const CUTTING_PARAMS = {
   side_yard: SideYardParams,
   height_by_slope: HeightBySlopeParams,
   bulk: BulkParams,
+  lot_coverage: LotCoverageParams,
 } as const;
 type CuttingKind = keyof typeof CUTTING_PARAMS;
 const isCutting = (kind: string): kind is CuttingKind => kind in CUTTING_PARAMS;
+
+/** Params schemas of the kinds a local program may replace: the cutting kinds and the floor-area budget. */
+const REPLACEABLE_PARAMS = { ...CUTTING_PARAMS, far: FarParams } as const;
+type ReplaceableKind = keyof typeof REPLACEABLE_PARAMS;
+const isReplaceable = (kind: string): kind is ReplaceableKind => kind in REPLACEABLE_PARAMS;
 
 export const RuleSchema = z
   .discriminatedUnion("kind", [
@@ -205,6 +228,7 @@ export const RuleSchema = z
     z.object({ ...common, kind: z.literal("far"), params: FarParams }).strict(),
     z.object({ ...common, kind: z.literal("bulk"), params: BulkParams }).strict(),
     z.object({ ...common, kind: z.literal("local_program"), params: LocalProgramParams }).strict(),
+    z.object({ ...common, kind: z.literal("lot_coverage"), params: LotCoverageParams }).strict(),
   ])
   .superRefine((rule, ctx) => {
     if (rule.verified && rule.effectiveDate === null) {
@@ -231,11 +255,11 @@ export const DistrictFileSchema = z
       }
       seen.add(rule.id);
       if (rule.kind === "ground_story") groundStory = true;
-      if (rule.kind === "rear_yard" && needsGroundStory(rule.params) && !groundStory) {
+      if ((rule.kind === "rear_yard" || rule.kind === "lot_coverage") && needsGroundStory(rule.params) && !groundStory) {
         ctx.addIssue({
           code: "custom",
           path: ["rules", index, "params", "appliesAt"],
-          message: "a rear yard above the first story needs a ground_story rule before it",
+          message: `a ${rule.kind === "rear_yard" ? "rear yard" : "lot coverage limit"} above the first story needs a ground_story rule before it`,
         });
       }
     });
@@ -245,20 +269,20 @@ export const DistrictFileSchema = z
       ctx.addIssue({ code: "custom", path: ["rules", programs[1]!.index], message: "a district file can have only one local_program rule" });
     }
     for (const { rule, index } of programs) {
-      const later = (ruleId: string, path: (string | number)[]) => {
+      const later = (ruleId: string, path: (string | number)[], allowed: (kind: string) => boolean, what: string) => {
         const target = file.rules.findIndex((r) => r.id === ruleId);
         const found = target > index ? file.rules[target]! : undefined;
-        if (!found || !isCutting(found.kind)) {
-          ctx.addIssue({ code: "custom", path: ["rules", index, "params", ...path], message: `"${ruleId}" must name a later rule that cuts volume` });
+        if (!found || !allowed(found.kind)) {
+          ctx.addIssue({ code: "custom", path: ["rules", index, "params", ...path], message: `"${ruleId}" must name a later rule that ${what}` });
           return undefined;
         }
         return { target: found, targetIndex: target };
       };
-      rule.params.waives.forEach((waiver, i) => later(waiver.ruleId, ["waives", i, "ruleId"]));
+      rule.params.waives.forEach((waiver, i) => later(waiver.ruleId, ["waives", i, "ruleId"], isCutting, "cuts volume"));
       rule.params.replaces.forEach((replacement, i) => {
-        const found = later(replacement.ruleId, ["replaces", i, "ruleId"]);
+        const found = later(replacement.ruleId, ["replaces", i, "ruleId"], isReplaceable, "cuts volume or sets a floor-area ratio");
         if (!found) return;
-        const parsed = CUTTING_PARAMS[found.target.kind as CuttingKind].safeParse(replacement.params);
+        const parsed = REPLACEABLE_PARAMS[found.target.kind as ReplaceableKind].safeParse(replacement.params);
         if (!parsed.success) {
           ctx.addIssue({
             code: "custom",
@@ -266,14 +290,14 @@ export const DistrictFileSchema = z
             message: `these params don't fit a ${found.target.kind} rule: ${z.prettifyError(parsed.error)}`,
           });
         } else if (
-          found.target.kind === "rear_yard" &&
+          (found.target.kind === "rear_yard" || found.target.kind === "lot_coverage") &&
           needsGroundStory(parsed.data) &&
           !file.rules.slice(0, found.targetIndex).some((r) => r.kind === "ground_story")
         ) {
           ctx.addIssue({
             code: "custom",
             path: ["rules", index, "params", "replaces", i, "params", "appliesAt"],
-            message: "a rear yard above the first story needs a ground_story rule before it",
+            message: `a ${found.target.kind === "rear_yard" ? "rear yard" : "lot coverage limit"} above the first story needs a ground_story rule before it`,
           });
         }
       });
@@ -286,8 +310,8 @@ export type DistrictFile = z.infer<typeof DistrictFileSchema>;
 
 /** The rule with a local program's replacement params (already checked by the schema) and both citations. */
 export function withReplacedParams(rule: Rule, params: unknown, citation: string): Rule {
-  if (!isCutting(rule.kind)) throw new Error(`a ${rule.kind} rule can't take replacement params`);
-  return { ...rule, params: CUTTING_PARAMS[rule.kind].parse(params), citation: `${rule.citation}; ${citation}` } as Rule;
+  if (!isReplaceable(rule.kind)) throw new Error(`a ${rule.kind} rule can't take replacement params`);
+  return { ...rule, params: REPLACEABLE_PARAMS[rule.kind].parse(params), citation: `${rule.citation}; ${citation}` } as Rule;
 }
 
 /** Validates a district file, throwing a readable error that names the bad fields. */

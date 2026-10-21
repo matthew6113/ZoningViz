@@ -15,7 +15,16 @@ const STATUS_LABEL: Record<Step["status"], string> = {
 };
 
 /** Rules that cut the volume; only these can be switched off to see what they cost. */
-const TOGGLEABLE: ReadonlySet<Step["rule"]["kind"]> = new Set(["height_cap", "height_by_slope", "rear_yard", "front_setback", "side_yard", "sky_plane", "bulk"]);
+const TOGGLEABLE: ReadonlySet<Step["rule"]["kind"]> = new Set([
+  "height_cap",
+  "height_by_slope",
+  "rear_yard",
+  "front_setback",
+  "side_yard",
+  "sky_plane",
+  "bulk",
+  "lot_coverage",
+]);
 
 export interface RuleCardsProps {
   steps: Step[];
@@ -92,7 +101,11 @@ export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onTog
               </p>
             )}
             {step.rule.kind === "far" && step.status !== "disabled" && (
-              <FarGauge budgetSqFt={step.numbers.budgetSqFt ?? 0} floorAreaSqFt={floorAreaSqFt} />
+              <FarGauge
+                budgetSqFt={step.numbers.budgetSqFt ?? 0}
+                floorAreaSqFt={floorAreaSqFt}
+                homesCount={step.rule.params.appliesTo === "all_uses"}
+              />
             )}
             {step.rule.kind === "front_setback" && step.rule.params.userOverride && step.status !== "disabled" && (
               <label className="setback-slider">
@@ -125,14 +138,18 @@ export function RuleCards({ steps, floorAreaSqFt, current, onSetback, off, onTog
   );
 }
 
-/** The non-residential floor-area budget against the envelope's whole floor area. */
-function FarGauge({ budgetSqFt, floorAreaSqFt }: { budgetSqFt: number; floorAreaSqFt: number }) {
+/** The floor-area budget (non-residential, or all uses where homes count) against the envelope's whole floor area. */
+function FarGauge({ budgetSqFt, floorAreaSqFt, homesCount }: { budgetSqFt: number; floorAreaSqFt: number; homesCount: boolean }) {
   const span = Math.max(budgetSqFt, floorAreaSqFt, 1);
   const usable = Math.min(budgetSqFt, floorAreaSqFt);
-  const text =
-    budgetSqFt >= floorAreaSqFt
+  const share = `${num((budgetSqFt / floorAreaSqFt) * 100)}%`;
+  const text = homesCount
+    ? budgetSqFt >= floorAreaSqFt
+      ? `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area, within the ${num(budgetSqFt)} sq ft limit.`
+      : `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area, more than the ${num(budgetSqFt)} sq ft limit: a building may fill only ${share} of it.`
+    : budgetSqFt >= floorAreaSqFt
       ? `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area, all within the ${num(budgetSqFt)} sq ft non-residential budget.`
-      : `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area; up to ${num(budgetSqFt)} sq ft (${num((budgetSqFt / floorAreaSqFt) * 100)}%) ` +
+      : `This envelope holds ${num(floorAreaSqFt)} sq ft of floor area; up to ${num(budgetSqFt)} sq ft (${share}) ` +
         "could be non-residential, and homes may use any of it.";
   return (
     <div className="far-gauge" data-testid="far-gauge">
