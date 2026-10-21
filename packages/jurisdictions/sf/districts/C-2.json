@@ -11,8 +11,8 @@
       "params": {},
       "citation": "§210.1 (Table 210.1 and note 8), §207, §135",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts#210.1",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-04-11"
     },
     {
       "id": "height-reference",
@@ -64,8 +64,8 @@
       },
       "citation": "§206.10(b), (d)(1)(A), (d)(1)(C), (d)(1)(E), (d)(1)(F), (d)(1)(G); §263.19(b)(2)",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2-use-districts/sec.-206.-the-affordable-housing-and-educator-housing-programs/sec.-206.10.-housing-choice-san-francisco-program",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "mapped-height",
@@ -99,8 +99,8 @@
       },
       "citation": "§145.1(c)(4)(C); Table 210.1",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces/sec.-145.-frontages-outdoor-activity-areas-walkup-facilities-and-ground-floor-uses-and-standa/sec.-145.1.-street-frontages-in-neighborhood-commercial-residential-commercial-commercial-and",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2018-09-10"
     },
     {
       "id": "lot-coverage",
@@ -114,8 +114,8 @@
       },
       "citation": "§134(d)(6); Table 210.1",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#134",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "bulk",
@@ -223,8 +223,8 @@
       },
       "citation": "§124(a)–(c), (e), Table 124; Table 210.1",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-1.2-dimensions-areas-and-open-spaces#124",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "large-lots",
@@ -234,8 +234,8 @@
       "params": {},
       "citation": "§270.3(c)–(d); Table 210.1",
       "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-2.5-height-and-bulk-districts",
-      "verified": false,
-      "effectiveDate": null
+      "verified": true,
+      "effectiveDate": "2026-01-12"
     },
     {
       "id": "cross-slope",

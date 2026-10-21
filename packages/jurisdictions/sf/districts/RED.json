@@ -73,6 +73,20 @@
       "effectiveDate": "2016-08-28"
     },
     {
+      "id": "ground-floor",
+      "kind": "ground_story",
+      "title": "Ground floor height",
+      "plain": "Where a shop or other non-residential use is permitted on the ground floor, that floor must be at least 14 feet from floor to floor, in every height district.",
+      "params": {
+        "minFloorToFloorFeet": 14,
+        "exceptions": []
+      },
+      "citation": "§834 (Table 834); §145.1(c)(4)",
+      "url": "https://gocodebook.com/library/us/ca/san-francisco-planning/article-8-mixed-use-districts#834",
+      "verified": false,
+      "effectiveDate": null
+    },
+    {
       "id": "rear-yard",
       "kind": "rear_yard",
       "title": "Rear yard",

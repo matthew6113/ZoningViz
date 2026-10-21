@@ -46,16 +46,18 @@ describe("RED and RED-MX", () => {
     const r = envelope("RED");
     expect(step(r, "rear-yard").rule.params).toMatchObject({ appliesAt: "grade_and_every_story" });
     expect(r.totals.volume).toBeCloseTo(75_000, 3);
-    expect(r.floors.map((f) => [f.bottomFt, f.topFt])).toEqual([[0, 10], [10, 20], [20, 30], [30, 40]]);
     expect(step(r, "far").numbers.budgetSqFt).toBeCloseTo(2500, 6);
     expect(step(r, "large-lots").status).toBe("not_modeled");
   });
 
-  it("RED-MX draws a 14 ft first story (§145.1(c)(4)(B)) under the same yard", () => {
-    const r = envelope("RED-MX");
-    expect(step(r, "ground-floor").numbers.firstStoryFt).toBe(14);
-    expect(r.totals.volume).toBeCloseTo(75_000, 3);
-    expect(r.floors.map((f) => [f.bottomFt, f.topFt])).toEqual([[0, 14], [14, 24], [24, 34], [34, 44]]);
+  it("draw a 14 ft first story in every height district (Table 834; §145.1(c)(4)(B) for RED-MX) under the same yard", () => {
+    for (const code of ["RED", "RED-MX"]) {
+      const r = envelope(code);
+      expect(step(r, "ground-floor").numbers.firstStoryFt, code).toBe(14);
+      expect(r.totals.volume).toBeCloseTo(75_000, 3);
+      expect(r.floors.map((f) => [f.bottomFt, f.topFt]), code).toEqual([[0, 14], [14, 24], [24, 34], [34, 44]]);
+      expect(r.totals.grossFloorAreaSqFt).toBeCloseTo(4 * 1875, 3);
+    }
   });
 
   it("under Housing Choice-SF take fixture V's 18% yard at every level: 133,250 cu ft", () => {
